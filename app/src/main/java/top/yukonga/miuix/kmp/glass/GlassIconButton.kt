@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.animation.core.animateFloat
@@ -34,7 +31,6 @@ import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
 import top.yukonga.miuix.kmp.glass.internal.drawGlassMask
 import top.yukonga.miuix.kmp.glass.internal.drawGlassShadow
 import top.yukonga.miuix.kmp.glass.internal.drawGlassStroke
-
 
 @Composable
 fun GlassIconButton(
@@ -85,7 +81,6 @@ fun GlassIconButton(
     )
 }
 
-
 @Composable
 
 @Suppress("ktlint:compose:modifier-reused-check", "ktlint:compose:state-param-check")
@@ -130,7 +125,6 @@ private fun GlassButtonSurface(
     val keepMaterial = sharedKeepMaterial ?: ownKeepMaterial
     val opacity = surfaceAlpha.coerceIn(0f, 1f)
 
-
     val materialOn = opacity > 0.002f
     val anchorSurface = remember(backdrop, style, material, underlayMaterial, stroke, fill) {
         GlassAnchorSurface(backdrop, style, material, underlayMaterial, stroke, fill)
@@ -156,9 +150,6 @@ private fun GlassButtonSurface(
         if (down) 1f else 0f
     }
     val pressedOverlay = GlassTopAppBarDefaults.buttonPressedOverlay()
-
-
-
 
     val shadowPad = if (shadow != null) {
         ((shadow.radius / GlassDefaults.SourceDensity) + 18f).dp
@@ -193,10 +184,6 @@ private fun GlassButtonSurface(
         Box(
             modifier = Modifier
                 .matchParentSize()
-
-
-
-
 
                 .graphicsLayer { alpha = progress.value * opacity }
                 .then(

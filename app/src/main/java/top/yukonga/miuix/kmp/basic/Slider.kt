@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.annotation.IntRange
@@ -59,7 +56,6 @@ import androidx.compose.ui.util.fastRoundToInt
 import androidx.compose.ui.util.lerp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.abs
-
 
 @Composable
 fun Slider(
@@ -246,7 +242,6 @@ fun Slider(
     }
 }
 
-
 @Composable
 fun VerticalSlider(
     value: Float,
@@ -427,7 +422,6 @@ fun VerticalSlider(
         )
     }
 }
-
 
 @Composable
 fun RangeSlider(
@@ -750,7 +744,6 @@ fun RangeSlider(
     }
 }
 
-
 @Composable
 private fun SliderTrack(
     backgroundColor: Color,
@@ -860,7 +853,6 @@ private fun SliderTrack(
     }
 }
 
-
 @Composable
 private fun RangeSliderTrack(
     backgroundColor: Color,
@@ -946,7 +938,6 @@ private fun RangeSliderTrack(
         )
     }
 }
-
 
 @Stable
 internal class SliderHapticState {
@@ -1039,7 +1030,6 @@ internal class SliderHapticState {
         isAtKeyPoint = currentlyAtKeyPoint
     }
 }
-
 
 @Stable
 internal class RangeSliderHapticState {
@@ -1232,7 +1222,6 @@ private fun verticalVisualFraction(offsetY: Float, sizeHeight: Int, sizeWidth: I
     return if (availableHeight == 0f) 0f else ((offsetY - thumbRadius) / availableHeight).coerceIn(0f, 1f)
 }
 
-
 private fun pointsToFractions(
     points: List<Float>,
     valueRange: ClosedFloatingPointRange<Float>,
@@ -1240,7 +1229,6 @@ private fun pointsToFractions(
     ((point - valueRange.start) / (valueRange.endInclusive - valueRange.start))
         .coerceIn(0f, 1f)
 }.toFloatArray()
-
 
 private fun computeKeyPointFractions(
     keyPoints: List<Float>?,
@@ -1252,7 +1240,6 @@ private fun computeKeyPointFractions(
     showKeyPoints -> stepFractions
     else -> floatArrayOf()
 }
-
 
 private fun computeAllKeyPointFractions(
     keyPoints: List<Float>?,
@@ -1268,21 +1255,16 @@ object SliderDefaults {
 
     val MinHeight = 28.dp
 
-
     val KeyPointRadius = 3.855.dp
-
 
     enum class SliderHapticEffect {
 
         None,
 
-
         Edge,
-
 
         Step,
     }
-
 
     val DefaultHapticEffect = SliderHapticEffect.Edge
 

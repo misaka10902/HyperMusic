@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.foundation.background
@@ -11,7 +8,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import top.yukonga.miuix.kmp.blur.Backdrop
-
 
 fun glassSurface(
     backdrop: Backdrop?,
@@ -30,7 +26,6 @@ fun glassSurface(
         fallback = Modifier.clip(providedShape).background(visuals.containerColor),
     )
 }
-
 
 internal fun resolveGlassSurfaceShape(providedShape: Shape, fallbackCornerRadius: Dp): GlassShape = when (providedShape) {
     is GlassShape -> providedShape

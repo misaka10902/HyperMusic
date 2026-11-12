@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.foundation.shape.CornerBasedShape
@@ -15,7 +12,6 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
-
 
 @Immutable
 class GlassShape(
@@ -78,7 +74,6 @@ class GlassShape(
         "bottomStart=$bottomStart, smoothing=$smoothing)"
 }
 
-
 fun GlassShape(cornerRadius: Dp, smoothing: Float = GlassDefaults.Smoothing): GlassShape = GlassShape(
     CornerSize(cornerRadius),
     CornerSize(cornerRadius),
@@ -86,7 +81,6 @@ fun GlassShape(cornerRadius: Dp, smoothing: Float = GlassDefaults.Smoothing): Gl
     CornerSize(cornerRadius),
     smoothing,
 )
-
 
 fun GlassShape(
     topStart: Dp,
@@ -102,11 +96,6 @@ fun GlassShape(
     smoothing,
 )
 
-
-/**
- * miuix-glass 风格的胶囊形状（两端为半圆），用于替代 com.kyant.capsule.ContinuousCapsule。
- * cornerRadius 取短边的 50%，对任意宽高比都得到标准胶囊轮廓。
- */
 @Stable
 fun GlassCapsule(): Shape =
     GlassShape(CornerSize(50), CornerSize(50), CornerSize(50), CornerSize(50))

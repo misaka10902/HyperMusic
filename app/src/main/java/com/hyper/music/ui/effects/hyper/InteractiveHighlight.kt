@@ -122,7 +122,6 @@ half4 main(float2 coord) {
             }
         }
 
-
     val pressOnlyModifier: Modifier =
         Modifier.pointerInput(animationScope) {
             awaitEachGesture {

@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.layout
 
 import androidx.compose.foundation.background
@@ -53,7 +50,6 @@ private val CascadeShadow: Shadow = Shadow(
     spread = 0.dp,
     offset = DpOffset(0.dp, 6.dp),
 )
-
 
 @Composable
 internal fun CascadingPrimaryContent(
@@ -206,7 +202,6 @@ private fun CascadingPrimaryRow(
     }
 }
 
-
 @Composable
 internal fun CascadingSecondaryContent(
     triggerItem: DropdownItem,
@@ -247,7 +242,6 @@ internal fun CascadingSecondaryContent(
                 onDrawWithContent {
                     val frac = expandFraction()
                     val rTop = cornerPx * frac
-
 
                     val rBottom = if (isAnchorPopupLast) cornerPx else rTop
                     val topRadius = CornerRadius(rTop, rTop)
@@ -292,7 +286,6 @@ internal fun CascadingSecondaryContent(
                 }
             }
 
-
             .layout { measurable, _ ->
                 val placeable = measurable.measure(
                     Constraints.fixed(unionSize.width, unionSize.height),
@@ -300,7 +293,6 @@ internal fun CascadingSecondaryContent(
                 layout(unionSize.width, unionSize.height) { placeable.place(0, 0) }
             },
     ) {
-
 
         Box(
             modifier = Modifier
@@ -346,7 +338,6 @@ internal fun CascadingSecondaryContent(
         }
     }
 }
-
 
 @Composable
 internal fun CascadingSecondaryColumn(

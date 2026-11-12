@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.theme
 
 import android.graphics.Insets
@@ -17,7 +14,6 @@ import androidx.compose.ui.platform.LocalView
 import java.util.WeakHashMap
 
 private val cutoutFixRegistrations = WeakHashMap<View, CutoutFixRegistration>()
-
 
 @Composable
 fun ProvideDisplayCutoutFix() {
@@ -45,7 +41,6 @@ fun ProvideDisplayCutoutFix() {
         }
     }
 }
-
 
 @RequiresApi(Build.VERSION_CODES.R)
 private class CutoutFixRegistration(private val view: View) {

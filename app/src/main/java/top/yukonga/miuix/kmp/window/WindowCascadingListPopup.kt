@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.window
 
 import androidx.compose.runtime.Composable
@@ -13,14 +10,12 @@ import androidx.compose.ui.window.Dialog
 import top.yukonga.miuix.kmp.basic.DropdownColors
 import top.yukonga.miuix.kmp.basic.DropdownDefaults
 import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.ListPopupDefaults
 import top.yukonga.miuix.kmp.basic.PopupPositionProvider
 import top.yukonga.miuix.kmp.layout.CascadingListPopupLayout
 import top.yukonga.miuix.kmp.utils.RemovePlatformDialogDefaultEffects
 import top.yukonga.miuix.kmp.utils.WindowNavigationEventScope
 import top.yukonga.miuix.kmp.utils.platformDialogProperties
-
 
 @Composable
 fun WindowCascadingListPopup(
@@ -53,7 +48,6 @@ fun WindowCascadingListPopup(
         surface = null,
     )
 }
-
 
 @Composable
 fun WindowCascadingListPopup(

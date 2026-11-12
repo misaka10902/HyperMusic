@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass.internal
 
 import androidx.compose.ui.graphics.Color
@@ -16,7 +13,6 @@ import top.yukonga.miuix.kmp.glass.GlassStyle
 import kotlin.math.PI
 import kotlin.math.max
 import kotlin.math.min
-
 
 internal fun BackdropEffectScope.glassEffect(
     style: GlassStyle,
@@ -129,7 +125,6 @@ internal fun BackdropEffectScope.glassEffect(
     }
 }
 
-
 internal fun BackdropEffectScope.colorBlendEffect(
     material: GlassMaterial,
     alpha: Float,
@@ -154,7 +149,6 @@ internal fun BackdropEffectScope.colorBlendEffect(
         )
     }
 }
-
 
 private val GlassColorBlendMode.id: Float
     get() = when (this) {

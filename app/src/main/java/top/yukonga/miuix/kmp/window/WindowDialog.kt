@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.window
 
 import androidx.compose.foundation.layout.WindowInsets
@@ -23,7 +20,6 @@ import top.yukonga.miuix.kmp.theme.LocalDismissState
 import top.yukonga.miuix.kmp.utils.RemovePlatformDialogDefaultEffects
 import top.yukonga.miuix.kmp.utils.WindowNavigationEventScope
 import top.yukonga.miuix.kmp.utils.platformDialogProperties
-
 
 @Composable
 fun WindowDialog(

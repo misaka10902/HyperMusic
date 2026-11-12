@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.overlay
 
 import androidx.compose.animation.EnterTransition
@@ -15,12 +12,10 @@ import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.DropdownColors
 import top.yukonga.miuix.kmp.basic.DropdownDefaults
 import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.ListPopupDefaults
 import top.yukonga.miuix.kmp.basic.PopupPositionProvider
 import top.yukonga.miuix.kmp.layout.CascadingListPopupLayout
 import top.yukonga.miuix.kmp.utils.MiuixPopupUtils.Companion.PopupLayout
-
 
 @Composable
 fun OverlayCascadingListPopup(
@@ -55,7 +50,6 @@ fun OverlayCascadingListPopup(
         surface = null,
     )
 }
-
 
 @Composable
 fun OverlayCascadingListPopup(

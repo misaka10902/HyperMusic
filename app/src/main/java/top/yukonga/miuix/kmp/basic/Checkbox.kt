@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.animation.animateColor
@@ -45,7 +42,6 @@ import androidx.compose.ui.util.lerp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.SinkFeedback
 import top.yukonga.miuix.kmp.utils.pressable
-
 
 @Composable
 fun Checkbox(

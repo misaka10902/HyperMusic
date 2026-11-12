@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.anim.folmeSpring
 
-
 class ChipBounce internal constructor(
     private val anim: Animatable<Float, AnimationVector1D>,
 ) {
@@ -26,12 +25,9 @@ class ChipBounce internal constructor(
     val scale: State<Float> = derivedStateOf { anim.value }
 }
 
-
 private const val PressedScale = 0.952f
 
-
 private const val TapDipScale = 0.93f
-
 
 private const val TapThresholdMs = 120L
 
@@ -55,7 +51,6 @@ fun rememberChipBounce(interactionSource: MutableInteractionSource): ChipBounce 
                 is PressInteraction.Release -> {
                     val heldMs = System.currentTimeMillis() - pressedAt
                     scope.launch {
-
 
                         if (heldMs < TapThresholdMs && anim.value > 0.975f) {
                             anim.animateTo(
@@ -81,7 +76,6 @@ fun rememberChipBounce(interactionSource: MutableInteractionSource): ChipBounce 
 
     return remember(interactionSource) { ChipBounce(anim) }
 }
-
 
 @Composable
 fun Modifier.chipBounce(bounce: ChipBounce): Modifier = this.graphicsLayer {

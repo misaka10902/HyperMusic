@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.animation.core.spring
@@ -69,7 +66,6 @@ private fun PopupPositionProvider.Align.resolve(layoutDirection: LayoutDirection
 
 private const val MAX_ITEMS_FOR_WIDTH = 8
 private const val MAX_ITEMS_FOR_HEIGHT = 8
-
 
 @Composable
 fun ListPopupColumn(
@@ -163,9 +159,7 @@ interface PopupPositionProvider {
         alignment: Align,
     ): IntOffset
 
-
     fun getMargins(): PaddingValues
-
 
     enum class Align {
         Start,
@@ -181,27 +175,19 @@ object ListPopupDefaults {
 
     val FractionAnimationSpec = spring(dampingRatio = 0.82f, stiffness = 362.5f, visibilityThreshold = 0.0001f)
 
-
     val AlphaEnterAnimationSpec = tween<Float>(durationMillis = 200)
-
 
     val AlphaExitAnimationSpec = tween<Float>(durationMillis = 150)
 
-
     val DimEnterAnimationSpec = tween<Float>(durationMillis = 300, easing = SinOutEasing)
-
 
     val DimExitAnimationSpec = tween<Float>(durationMillis = 150, easing = SinOutEasing)
 
-
     val ResetAnimationSpec = spring(dampingRatio = 0.82f, stiffness = 362.5f, visibilityThreshold = 0.0001f)
-
 
     val MinWidth = 200.dp
 
-
     val MinPopupHeight = 50.dp
-
 
     fun dropdownPositionProvider(
         verticalMargin: Dp = 8.dp,
@@ -247,9 +233,7 @@ object ListPopupDefaults {
         override fun getMargins(): PaddingValues = margins
     }
 
-
     val DropdownPositionProvider: PopupPositionProvider = dropdownPositionProvider()
-
 
     val ContextMenuPositionProvider = object : PopupPositionProvider {
         override fun calculatePosition(
@@ -324,14 +308,12 @@ internal fun safeTransformOrigin(x: Float, y: Float): TransformOrigin {
     return TransformOrigin(safeX, safeY)
 }
 
-
 @Immutable
 data class PopupLayoutPosition(
     val showBelow: Boolean,
     val showAbove: Boolean,
     val isRightAligned: Boolean,
 )
-
 
 @Immutable
 data class ListPopupLayoutInfo(
@@ -341,7 +323,6 @@ data class ListPopupLayoutInfo(
     val localTransformOrigin: TransformOrigin,
     val popupLayoutPosition: PopupLayoutPosition,
 )
-
 
 @Composable
 fun rememberListPopupLayoutInfo(
@@ -525,7 +506,6 @@ fun rememberListPopupLayoutInfo(
     )
 }
 
-
 @Composable
 fun ListPopupContent(
     popupContentSize: IntSize,
@@ -562,7 +542,6 @@ fun ListPopupContent(
         content()
     }
 }
-
 
 fun Modifier.popupClipReveal(
     fractionProgress: () -> Float,

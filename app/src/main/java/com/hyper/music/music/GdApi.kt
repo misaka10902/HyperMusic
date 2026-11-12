@@ -101,7 +101,6 @@ object GdApi {
     fun coverUrl(song: Song, size: Int = 300): String {
         if (song.cover.isNotBlank()) {
 
-
             if (song.cover.startsWith("file://") ||
                 song.cover.startsWith("content://") ||
                 song.cover.startsWith("/")

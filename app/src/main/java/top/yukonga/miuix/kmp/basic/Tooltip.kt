@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.animation.AnimatedVisibility
@@ -86,7 +83,6 @@ import kotlin.jvm.JvmInline
 import kotlin.math.max
 import kotlin.time.Duration.Companion.milliseconds
 
-
 @JvmInline
 value class TooltipAnchorPosition private constructor(private val value: Int) {
     override fun toString(): String = when (this) {
@@ -109,12 +105,10 @@ value class TooltipAnchorPosition private constructor(private val value: Int) {
     }
 }
 
-
 @Stable
 sealed interface TooltipScope {
 
     val positioning: TooltipAnchorPosition
-
 
     fun obtainAnchorBounds(): LayoutCoordinates?
 }
@@ -126,24 +120,18 @@ private class TooltipScopeImpl(
     override fun obtainAnchorBounds(): LayoutCoordinates? = anchorBounds()
 }
 
-
 @Stable
 interface TooltipState {
 
     val transition: MutableTransitionState<Boolean>
 
-
     val isVisible: Boolean
-
 
     val isPersistent: Boolean
 
-
     suspend fun show(mutatePriority: MutatePriority = MutatePriority.Default)
 
-
     fun dismiss()
-
 
     fun onDispose()
 }
@@ -160,14 +148,9 @@ private class TooltipStateImpl(
 
     override val isVisible: Boolean
 
-
-
-
         get() = transition.targetState || !transition.isIdle
 
-
     private var job: (CancellableContinuation<Unit>)? = null
-
 
     override suspend fun show(mutatePriority: MutatePriority) {
         val cancellableShow: suspend () -> Unit = {
@@ -176,8 +159,6 @@ private class TooltipStateImpl(
                 job = continuation
             }
         }
-
-
 
         mutatorMutex.mutate(mutatePriority) {
             try {
@@ -195,7 +176,6 @@ private class TooltipStateImpl(
         }
     }
 
-
     override fun dismiss() {
         transition.targetState = false
         if (isPersistent) {
@@ -203,12 +183,10 @@ private class TooltipStateImpl(
         }
     }
 
-
     override fun onDispose() {
         job?.cancel()
     }
 }
-
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -220,10 +198,8 @@ fun rememberTooltipState(
     TooltipStateImpl(initialIsVisible, isPersistent, mutatorMutex)
 }
 
-
 private val TooltipExitScaleSpec: FiniteAnimationSpec<Float> =
     spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium, visibilityThreshold = 0.0001f)
-
 
 @Composable
 fun TooltipBox(
@@ -262,7 +238,6 @@ fun TooltipBox(
 
 private const val TOOLTIP_LONG_PRESS_LABEL = "Show tooltip"
 private const val TOOLTIP_PANE_TITLE = "Tooltip"
-
 
 @Composable
 private fun TooltipBoxImpl(
@@ -317,7 +292,6 @@ private fun TooltipPopup(
     }
 }
 
-
 private fun Modifier.tooltipGestures(enabled: Boolean, state: TooltipState): Modifier = if (enabled) {
     this
         .pointerInput(state) {
@@ -331,7 +305,6 @@ private fun Modifier.tooltipGestures(enabled: Boolean, state: TooltipState): Mod
                                 waitForUpOrCancellation(pass = pass)
                             }
                         } catch (_: PointerEventTimeoutCancellationException) {
-
 
                             launch { state.show(MutatePriority.UserInput) }
                             val changes = awaitPointerEvent(pass = pass).changes
@@ -384,7 +357,6 @@ private fun Modifier.tooltipAnchorSemantics(
     this
 }
 
-
 @Composable
 fun TooltipScope.PlainTooltip(
     modifier: Modifier = Modifier,
@@ -412,7 +384,6 @@ fun TooltipScope.PlainTooltip(
         }
     }
 }
-
 
 @Composable
 fun TooltipScope.RichTooltip(
@@ -525,7 +496,6 @@ private fun TooltipScope.TooltipSurface(
     }
 }
 
-
 @Composable
 fun TooltipBox(
     text: String,
@@ -557,7 +527,6 @@ fun TooltipBox(
         content = content,
     )
 }
-
 
 @Composable
 fun RichTooltipBox(
@@ -622,7 +591,6 @@ fun RichTooltipBox(
     )
 }
 
-
 @Immutable
 data class RichTooltipColors(
     val containerColor: Color,
@@ -630,7 +598,6 @@ data class RichTooltipColors(
     val titleContentColor: Color,
     val actionContentColor: Color,
 )
-
 
 @Immutable
 private class TooltipPopupPositionProvider(
@@ -695,46 +662,33 @@ private fun TooltipAnchorPosition.resolve(layoutDirection: LayoutDirection): Too
     else -> this
 }
 
-
 object TooltipDefaults {
 
     val SpacingBetweenTooltipAndAnchor = 8.dp
 
-
     val caretSize = DpSize(16.dp, 8.dp)
-
 
     val PlainTooltipMaxWidth = 200.dp
 
-
     val PlainTooltipCornerRadius = 12.dp
 
-
     val PlainTooltipInsideMargin = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-
 
     val plainTooltipContainerColor: Color
         @Composable get() = MiuixTheme.colorScheme.onSecondaryVariant
 
-
     val plainTooltipContentColor: Color
         @Composable get() = MiuixTheme.colorScheme.secondaryVariant
 
-
     val RichTooltipMaxWidth = 320.dp
-
 
     val RichTooltipCornerRadius = 16.dp
 
-
     val RichTooltipInsideMargin = PaddingValues(all = 16.dp)
-
 
     val RichTooltipActionCornerRadius = 8.dp
 
-
     val RichTooltipActionInsideMargin = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-
 
     fun caretShape(): Shape = TooltipCaretShape
 
@@ -752,7 +706,6 @@ object TooltipDefaults {
             actionContentColor = actionContentColor,
         )
     }
-
 
     @Composable
     fun rememberTooltipPositionProvider(

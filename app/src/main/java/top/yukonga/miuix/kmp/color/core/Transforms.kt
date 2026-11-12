@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.color.core
 
 import androidx.annotation.IntRange
@@ -17,7 +14,6 @@ import kotlin.math.sin
 private fun toDegrees(rad: Double): Double = rad * 180.0 / PI
 private fun toRadians(deg: Double): Double = deg * PI / 180.0
 
-
 object Transforms {
 
     fun rgbToOkLab(color: FloatArray): FloatArray {
@@ -31,7 +27,6 @@ object Transforms {
             0.0259040371f * l + 0.7827717662f * m - 0.8086757660f * s,
         )
     }
-
 
     fun okLabToRgb(color: FloatArray): FloatArray {
         val l1 = color[0] + 0.3963377774f * color[1] + 0.2158037573f * color[2]
@@ -49,7 +44,6 @@ object Transforms {
         )
     }
 
-
     fun okLabToOklch(lab: FloatArray): FloatArray {
         val l = lab[0]
         val a = lab[1]
@@ -60,7 +54,6 @@ object Transforms {
         return floatArrayOf(l, c, h)
     }
 
-
     fun oklchToOkLab(lch: FloatArray): FloatArray {
         val l = lch[0]
         val c = lch[1]
@@ -70,12 +63,10 @@ object Transforms {
         return floatArrayOf(l, a, b)
     }
 
-
     fun okLabToColor(okLab: FloatArray, alpha: Float = 1f): Color {
         val rgb = okLabToRgb(okLab)
         return Color(rgb[0], rgb[1], rgb[2], alpha)
     }
-
 
     fun oklchToColor(l: Float, c: Float, h: Float, alpha: Float = 1f): Color {
         val norm = normalizeOklch(l, c, h)
@@ -83,12 +74,10 @@ object Transforms {
         return okLabToColor(lab, alpha)
     }
 
-
     fun colorToOkLab(color: Color): FloatArray {
         val rgb = floatArrayOf(color.red, color.green, color.blue)
         return rgbToOkLab(rgb)
     }
-
 
     fun colorToOklch(color: Color): FloatArray {
         val lab = colorToOkLab(color)
@@ -99,7 +88,6 @@ object Transforms {
         if (h < 0f) h += 360f
         return floatArrayOf(lch[0].coerceIn(0f, 1f), c, h)
     }
-
 
     fun rgbToHsv(
         @IntRange(0, 255) r: Int,
@@ -127,7 +115,6 @@ object Transforms {
         hsv[2] = max.coerceIn(0f, 1f)
     }
 
-
     fun colorToHsv(color: Color): FloatArray {
         val hsvArr = FloatArray(3)
         rgbToHsv(
@@ -138,7 +125,6 @@ object Transforms {
         )
         return hsvArr
     }
-
 
     fun srgbToOkhsv(r: Float, g: Float, b: Float): FloatArray {
         val lab = linearSrgbToOklab(
@@ -181,7 +167,6 @@ object Transforms {
         return floatArrayOf(h, s, v)
     }
 
-
     fun okhsvToSrgb(h: Float, s: Float, v: Float): FloatArray {
         val a = cos(2f * PI.toFloat() * h)
         val b = sin(2f * PI.toFloat() * h)
@@ -221,9 +206,7 @@ object Transforms {
         )
     }
 
-
     fun colorToOkhsv(color: Color): FloatArray = srgbToOkhsv(color.red, color.green, color.blue)
-
 
     fun okhsvToColor(h: Float, s: Float, v: Float, alpha: Float = 1f): Color {
         val srgb = okhsvToSrgb(h, s, v)
@@ -379,7 +362,6 @@ object Transforms {
         return floatArrayOf(c / l, c / (1f - l))
     }
 
-
     fun generateHsvHueColors(): List<Color> {
         val steps = 36
         return (0 until steps).map { i ->
@@ -387,7 +369,6 @@ object Transforms {
             Hsv(hue, 100f, 100f).toColor()
         }
     }
-
 
     fun generateOkHsvHueColors(): List<Color> {
         val steps = 36
@@ -397,9 +378,7 @@ object Transforms {
         }
     }
 
-
     private val okLchHueCache = mutableMapOf<String, List<Color>>()
-
 
     fun generateOkLchHueColors(l: Float, c: Float, steps: Int = 36): List<Color> {
         val lClamped = l.coerceIn(0f, 1f)
@@ -413,7 +392,6 @@ object Transforms {
             }
         }
     }
-
 
     fun normalizeOklch(l: Float, c: Float, h: Float): FloatArray {
         val ln = l.coerceIn(0f, 1f)

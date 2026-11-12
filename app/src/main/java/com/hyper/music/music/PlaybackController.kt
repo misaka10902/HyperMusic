@@ -408,7 +408,6 @@ object PlaybackController {
         sync()
     }
 
-
     fun removeByLocalUri(uris: Set<String>) {
         val p = player ?: return
         if (uris.isEmpty() || queue.isEmpty()) return
@@ -416,7 +415,6 @@ object PlaybackController {
 
         val removeIndexes = queue.mapIndexedNotNull { i, s -> if (matched(s)) i else null }
         if (removeIndexes.isEmpty()) return
-
 
         for (i in removeIndexes.sortedDescending()) {
             runCatching { p.removeMediaItem(i) }
@@ -499,7 +497,6 @@ object PlaybackController {
 
     private fun Song.toMediaItem(br: Int): MediaItem {
         val song = this
-
 
         val uri: String = if (isLocal) localUri else GdApi.streamEndpoint(id, br, source)
         return MediaItem.Builder()

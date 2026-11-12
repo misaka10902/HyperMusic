@@ -23,10 +23,6 @@ object MediaCache {
 
     private const val URL_PREFS = "hyper_stream_url_cache"
 
-
-    // 流媒体边播边缓存上限：2GB 对一个音乐 App 过量，会默默吃掉大量设备存储。
-    // 下调到 512MB——足够缓存约上百首歌曲的播放片段，又不会让缓存无限膨胀。
-    // 用户仍可在「设置 → 清理缓存」里手动清空。
     private const val MAX_BYTES = 512L * 1024 * 1024
 
     private const val UA =
@@ -63,16 +59,10 @@ object MediaCache {
             .setConnectTimeoutMs(10_000)
             .setReadTimeoutMs(15_000)
 
-
-
-
-
         val upstream = DefaultDataSource.Factory(
             context.applicationContext,
             GdStreamDataSource.Factory(http),
         )
-
-
 
         val cached = CacheDataSource.Factory()
             .setCache(cache(context))
@@ -85,7 +75,6 @@ object MediaCache {
         ensureContext(context)
         return runCatching { cache(context).cacheSpace }.getOrDefault(0L)
     }
-
 
     fun removeByLocalUris(context: Context, uris: Collection<String>) {
         if (uris.isEmpty()) return
@@ -100,7 +89,6 @@ object MediaCache {
 
     fun clear(context: Context) {
         ensureContext(context)
-
 
         runCatching {
             val c = cache(context)
@@ -132,7 +120,6 @@ object MediaCache {
                 openResolved(real)
             } catch (e: Exception) {
 
-
                 StreamUrlCache.invalidateOne(id, br, source)
                 val fresh = resolveWithFallback(id, br, source)
                 if (fresh.isNullOrBlank()) throw e
@@ -145,7 +132,6 @@ object MediaCache {
                 GdStreamDataSource(upstreamFactory.createDataSource())
         }
     }
-
 
     private class LocalAwareDataSource(
         private val cachedFactory: DataSource.Factory,
@@ -209,7 +195,6 @@ object MediaCache {
 
     private object StreamUrlCache {
 
-
         private const val MEM_TTL_MS = 20 * 60 * 1000L
         private const val DISK_TTL_MS = 12 * 60 * 60 * 1000L
         private val map = ConcurrentHashMap<String, Entry>()
@@ -245,7 +230,6 @@ object MediaCache {
             map[k] = Entry(url, now)
             urlPrefs()?.edit()?.putString(k, "$now|$url")?.apply()
         }
-
 
         fun invalidateOne(id: String, br: Int, source: String) {
             val k = key(id, br, source)

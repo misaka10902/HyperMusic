@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.icon.basic
 
 import androidx.compose.ui.graphics.Color

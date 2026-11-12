@@ -1,0 +1,51 @@
+# Hyper音乐 - Git 忽略规则
+
+# --- Android / Gradle 构建输出 ---
+/build
+app/build
+app/release
+local.properties
+
+# --- IDE 配置 ---
+.idea/
+*.iml
+*.iws
+
+# --- Kotlin 编译缓存 ---
+.kotlin/
+
+# --- OS 文件 ---
+.DS_Store
+Thumbs.db
+
+# --- 签名文件（敏感信息！） ---
+keystore/
+
+# --- 部署相关（敏感：SSH 私钥） ---
+.deploy/
+
+# --- 后端服务（独立部署到 ECS，不进公开仓库） ---
+server/
+
+# --- Gradle 包装器缓存 ---
+.gradle/
+
+# --- 其他 ---
+/captures
+.externalNativeBuild
+.cxx
+temp_*/
+
+*.apk
+
+# --- 签名密钥（切勿提交到公开仓库）---
+*.jks
+*.keystore
+
+# --- 本地专用（密钥/内部文档，切勿上传）---
+_local/
+
+# --- 本地临时产物 ---
+*.log
+*.tar.gz
+*.tgz

@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.squircle
 
 import androidx.compose.foundation.background
@@ -36,14 +33,12 @@ import top.yukonga.miuix.kmp.squircle.internal.makeLinearShader
 import kotlin.math.ceil
 import kotlin.math.floor
 
-
 @Composable
 fun Modifier.squircleBackground(
     color: Color,
     cornerRadius: Dp,
     extension: Float = SquircleDefaults.Extension,
 ): Modifier = squircleBackground(color, cornerRadius, cornerRadius, cornerRadius, cornerRadius, extension)
-
 
 @Composable
 fun Modifier.squircleBackground(
@@ -62,13 +57,11 @@ fun Modifier.squircleBackground(
     return this.background(brush = brush, shape = RectangleShape)
 }
 
-
 @Composable
 fun Modifier.squircleClip(
     cornerRadius: Dp,
     extension: Float = SquircleDefaults.Extension,
 ): Modifier = squircleClip(cornerRadius, cornerRadius, cornerRadius, cornerRadius, extension)
-
 
 @Composable
 fun Modifier.squircleClip(
@@ -83,14 +76,12 @@ fun Modifier.squircleClip(
     return this.squircleShaderMask(brush, fillColor = null)
 }
 
-
 @Composable
 fun Modifier.squircleSurface(
     color: Color,
     cornerRadius: Dp,
     extension: Float = SquircleDefaults.Extension,
 ): Modifier = squircleSurface(color, cornerRadius, cornerRadius, cornerRadius, cornerRadius, extension)
-
 
 @Composable
 fun Modifier.squircleSurface(
@@ -107,7 +98,6 @@ fun Modifier.squircleSurface(
             .background(color)
     return this.squircleShaderMask(brush, fillColor = color)
 }
-
 
 @Composable
 fun Modifier.absoluteSquircleBackground(
@@ -126,7 +116,6 @@ fun Modifier.absoluteSquircleBackground(
     return this.background(brush = brush, shape = RectangleShape)
 }
 
-
 @Composable
 fun Modifier.absoluteSquircleClip(
     topLeft: Dp,
@@ -139,7 +128,6 @@ fun Modifier.absoluteSquircleClip(
         ?: return this.clip(AbsoluteRoundedCornerShape(topLeft, topRight, bottomRight, bottomLeft))
     return this.squircleShaderMask(brush, fillColor = null)
 }
-
 
 @Composable
 fun Modifier.absoluteSquircleSurface(
@@ -156,7 +144,6 @@ fun Modifier.absoluteSquircleSurface(
             .background(color)
     return this.squircleShaderMask(brush, fillColor = color)
 }
-
 
 private fun Modifier.squircleShaderMask(
     brush: SquircleShaderBrush,
@@ -183,7 +170,6 @@ private fun Modifier.squircleShaderMask(
         }
     }
 
-
 private fun ContentDrawScope.drawSquircleFast(
     brush: SquircleShaderBrush,
     fillColor: Color?,
@@ -192,8 +178,6 @@ private fun ContentDrawScope.drawSquircleFast(
     drawContent()
     maskSquircleCorners(brush, top = true, bottom = true)
 }
-
-
 
 private fun ContentDrawScope.drawSquircleBanded(
     brush: SquircleShaderBrush,
@@ -207,7 +191,6 @@ private fun ContentDrawScope.drawSquircleBanded(
     val topBand = brush.topBandHeightPx(size)
     val bottomBand = brush.bottomBandHeightPx(size)
 
-
     fun maskedBand(top: Float, bottom: Float, maskTop: Boolean, maskBottom: Boolean, clip: Boolean) {
         canvas.saveLayer(Rect(0f, top, width, bottom), layerPaint)
         if (clip) canvas.clipRect(0f, top, width, bottom)
@@ -217,12 +200,10 @@ private fun ContentDrawScope.drawSquircleBanded(
         canvas.restore()
     }
 
-
     if (height <= topBand + bottomBand) {
         maskedBand(0f, height, maskTop = true, maskBottom = true, clip = false)
         return
     }
-
 
     val midTop = ceil(topBand)
     val midBottom = floor(height - bottomBand)
@@ -233,8 +214,6 @@ private fun ContentDrawScope.drawSquircleBanded(
     }
     if (bottomBand > 0f) maskedBand(midBottom, height, maskTop = false, maskBottom = true, clip = true)
 }
-
-
 
 private fun ContentDrawScope.maskSquircleCorners(
     brush: SquircleShaderBrush,
@@ -321,11 +300,9 @@ private class SquircleShaderBrush(
         return runtimeShader.asComposeShader()
     }
 
-
     fun topBandHeightPx(size: Size): Float = maxOf(effectiveCornerPx(0, size), effectiveCornerPx(1, size))
 
     fun bottomBandHeightPx(size: Size): Float = maxOf(effectiveCornerPx(2, size), effectiveCornerPx(3, size))
-
 
     fun effectiveCornerPx(index: Int, size: Size): Float {
         val halfMin = minOf(size.width, size.height) * 0.5f
@@ -333,14 +310,9 @@ private class SquircleShaderBrush(
     }
 }
 
-
-
 private const val MAX_OFFSCREEN_PX = 2048f
 
-
-
 private const val BLEND_THRESHOLD_RATIO = 0.7853982f
-
 
 private val bakedSdfShader: Shader by lazy {
     makeLinearShader(makeAlphaImageBitmap(BakedSquircleSdf.SIZE, BakedSquircleSdf.bytes))

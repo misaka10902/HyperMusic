@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.blur.internal
 
 import androidx.compose.ui.geometry.Offset
@@ -23,7 +20,6 @@ import androidx.compose.ui.unit.Density
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
-
 
 internal class InverseLayerScope : GraphicsLayerScope {
 

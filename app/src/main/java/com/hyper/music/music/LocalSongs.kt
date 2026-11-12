@@ -11,7 +11,6 @@ import java.security.MessageDigest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-
 object LocalSongs {
 
     private const val UNKNOWN = "未知"
@@ -37,13 +36,10 @@ object LocalSongs {
         ?.trim()
         ?.takeIf { it.isNotBlank() && !it.equals(UNKNOWN_TAG, ignoreCase = true) }
 
-
     suspend fun scan(context: Context): List<Song> = withContext(Dispatchers.IO) {
         val app = context.applicationContext
         val settings = MusicLibrary.settings.value
         val found = LinkedHashMap<String, Entry>()
-
-
 
         settings.downloadTreeUri.takeIf { it.isNotBlank() }?.let { raw ->
             runCatching {
@@ -53,9 +49,7 @@ object LocalSongs {
 
         val downloadPath = settings.downloadPath
 
-
         runCatching { collectFromMediaStore(app, downloadPath, found) }
-
 
         runCatching { collectFromPath(downloadPath, found) }
 
@@ -65,7 +59,6 @@ object LocalSongs {
     }
 
     private fun put(found: MutableMap<String, Entry>, entry: Entry) {
-
 
         val key = "${entry.displayName.lowercase()}#${entry.size}"
         found.putIfAbsent(key, entry)
@@ -210,7 +203,6 @@ object LocalSongs {
         )
     }
 
-
     fun deletePlan(songs: List<Song>): DeletePlan {
         val media = mutableListOf<Song>()
         val direct = mutableListOf<Song>()
@@ -227,7 +219,6 @@ object LocalSongs {
         }
         return DeletePlan(mediaStoreSongs = media, directSongs = direct)
     }
-
 
     fun deleteDirect(context: Context, songs: List<Song>): List<Song> {
         val app = context.applicationContext
@@ -253,8 +244,6 @@ object LocalSongs {
         val mediaStoreSongs: List<Song>,
         val directSongs: List<Song>,
     )
-
-
 
     private fun saveCover(app: Context, key: String, bytes: ByteArray): String {
         val dir = File(app.cacheDir, "local_covers").apply { mkdirs() }

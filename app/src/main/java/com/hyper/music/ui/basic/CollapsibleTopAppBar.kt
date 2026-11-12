@@ -57,7 +57,6 @@ import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Stable
 class SharedScrollBehavior(
     private val delegate: ScrollBehavior,
@@ -143,17 +142,6 @@ fun CollapsibleTopAppBar(
         }
     }
     val density = LocalDensity.current
-
-
-
-
-
-
-
-
-
-
-
 
     val showButtonShadow = remember(scrollBehavior, showShadow, effectiveShowLargeTitle) {
         derivedStateOf {
@@ -257,7 +245,6 @@ fun CollapsibleTopAppBar(
                             translationY = smallTitleTranslationY.value
                         }
                         .then(
-
 
                             if (advancedMaterial && !wallpaperActive) {
                                 Modifier.blur(Dp(smallTitleBlur.value))

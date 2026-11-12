@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -9,10 +6,7 @@ import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 
 @Stable
 enum class ColorSchemeMode {
@@ -23,7 +17,6 @@ enum class ColorSchemeMode {
     MonetLight,
     MonetDark,
 }
-
 
 @Stable
 class ThemeController(
@@ -47,7 +40,6 @@ class ThemeController(
         ColorSchemeMode.Light -> lightColors
 
         ColorSchemeMode.Dark -> darkColors
-
 
         ColorSchemeMode.MonetSystem -> {
             val dark = isDark ?: isSystemInDarkTheme()

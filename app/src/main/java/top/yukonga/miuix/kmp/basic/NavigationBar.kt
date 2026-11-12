@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.animation.core.animateDpAsState
@@ -60,7 +57,6 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.Platform
 import top.yukonga.miuix.kmp.utils.platform
 
-
 @Composable
 fun NavigationBar(
     modifier: Modifier = Modifier,
@@ -119,7 +115,6 @@ fun NavigationBar(
         }
     }
 }
-
 
 @Composable
 fun RowScope.NavigationBarItem(
@@ -237,7 +232,6 @@ fun RowScope.NavigationBarItem(
     }
 }
 
-
 @Suppress("ktlint:compose:modifier-not-used-at-root")
 @Composable
 fun FloatingNavigationBar(
@@ -329,7 +323,6 @@ fun FloatingNavigationBar(
     }
 }
 
-
 @Composable
 fun FloatingNavigationBarItem(
     selected: Boolean,
@@ -376,7 +369,6 @@ fun FloatingNavigationBarItem(
     }
 }
 
-
 @Composable
 internal fun NavigationItemIcon(
     badge: (@Composable () -> Unit)?,
@@ -386,32 +378,23 @@ internal fun NavigationItemIcon(
     BadgedBox(modifier = modifier, badge = { badge?.invoke() }) { content(Modifier) }
 }
 
-
 object NavigationBarDefaults {
 
     val ItemHeight = 64.dp
 
-
     val IconSize = 26.dp
-
 
     val LabelFontSize = 12.sp
 
-
     val IconTopPadding = 8.dp
-
 
     val BottomPadding = 8.dp
 
-
     val SelectedPressedAlpha = 0.5f
-
 
     val UnselectedPressedAlpha = 0.6f
 
-
     val UnselectedAlpha = 0.4f
-
 
     @Composable
     fun navigationBarItemColors(
@@ -424,7 +407,6 @@ object NavigationBarDefaults {
         )
     }
 }
-
 
 @Immutable
 data class NavigationBarItemColors(
@@ -445,45 +427,33 @@ data class NavigationBarItemColors(
     }
 }
 
-
 object FloatingNavigationBarDefaults {
 
     val HorizontalOutSidePadding = 36.dp
 
-
     val ShadowElevation = 1.dp
-
 
     val HorizontalPadding = 12.dp
 
-
     val ItemSpacing = 12.dp
-
 
     val IconSize = 28.dp
 
-
     val IconPadding = 10.dp
-
 
     val UnselectedAlpha = 0.4f
 }
-
 
 enum class NavigationBarDisplayMode {
 
     IconAndText,
 
-
     IconOnly,
-
 
     IconWithSelectedLabel,
 }
 
-
 val LocalNavigationBarDisplayMode = compositionLocalOf { NavigationBarDisplayMode.IconAndText }
-
 
 @Immutable
 data class NavigationItem(

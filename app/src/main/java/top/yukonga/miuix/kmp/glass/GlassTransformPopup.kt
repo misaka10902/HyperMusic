@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.animation.core.animateFloat
@@ -40,59 +37,43 @@ import androidx.compose.ui.util.lerp
 import top.yukonga.miuix.kmp.blur.Backdrop
 import kotlin.math.roundToInt
 
-
 @Stable
 class GlassPopupAnchor {
 
     internal var secondaryBackProgressState: State<Float>? by mutableStateOf(null)
 
-
     internal var dropdownBackProgressState: State<Float>? by mutableStateOf(null)
-
 
     internal var dropdownRetainedValueAlpha: Float by mutableFloatStateOf(0f)
 
-
     val secondaryBackProgress: Float get() = secondaryBackProgressState?.value ?: 0f
-
 
     internal var surface: GlassAnchorSurface? by mutableStateOf(null)
 
-
     internal var popupVisuals: GlassPopupVisuals? by mutableStateOf(null)
-
 
     internal var surfaceProgress: State<Float>? by mutableStateOf(null)
     internal var surfaceMaterialAlpha: Float by mutableFloatStateOf(1f)
     internal val surfaceVisibility: Float get() = surfaceProgress?.value ?: 1f
     internal var surfaceFloating: Boolean by mutableStateOf(false)
 
-
     internal var containerBounds: Rect by mutableStateOf(Rect.Zero)
-
 
     internal var contentBounds: Rect by mutableStateOf(Rect.Zero)
 
-
     internal var dropdownValueBounds: Rect? by mutableStateOf(null)
-
 
     internal var cornerRadius: Dp by mutableStateOf(0.dp)
 
-
     internal var floating: Boolean by mutableStateOf(false)
-
 
     internal var contentHidden: Boolean by mutableStateOf(false)
 
-
     internal var valueAlpha: Float by mutableFloatStateOf(1f)
-
 
     internal val dropdownValueAlpha: Float
         get() = (dropdownBackProgressState?.value ?: dropdownRetainedValueAlpha).coerceIn(0f, 1f)
 }
-
 
 internal data class GlassAnchorSurface(
     val backdrop: Backdrop?,
@@ -103,9 +84,7 @@ internal data class GlassAnchorSurface(
     val fill: Color,
 )
 
-
 internal data class GlassPopupAnchorElement(val anchor: GlassPopupAnchor) : Modifier.Element
-
 
 @Composable
 fun rememberGlassPopupAnchor(): GlassPopupAnchor {
@@ -118,7 +97,6 @@ fun rememberGlassPopupAnchor(): GlassPopupAnchor {
     SideEffect { anchor.valueAlpha = alpha }
     return anchor
 }
-
 
 @Stable
 fun Modifier.glassPopupAnchor(
@@ -134,14 +112,11 @@ fun Modifier.glassPopupAnchor(
     }
     .graphicsLayer { alpha = if (anchor.contentHidden) 0f else 1f }
 
-
 @Stable
 fun Modifier.glassPopupAnchorContent(anchor: GlassPopupAnchor): Modifier = this.onGloballyPositioned { anchor.contentBounds = it.boundsInRoot() }
 
-
 @Stable
 fun Modifier.glassPopupAnchorRow(anchor: GlassPopupAnchor): Modifier = this.onGloballyPositioned { anchor.containerBounds = it.boundsInRoot() }
-
 
 @Stable
 fun Modifier.glassPopupAnchorValue(anchor: GlassPopupAnchor): Modifier = this
@@ -149,7 +124,6 @@ fun Modifier.glassPopupAnchorValue(anchor: GlassPopupAnchor): Modifier = this
     .graphicsLayer {
         alpha = maxOf(anchor.valueAlpha, anchor.dropdownValueAlpha)
     }
-
 
 @Composable
 fun BoxScope.GlassTransformPopup(
@@ -381,12 +355,9 @@ fun BoxScope.GlassTransformPopup(
     }
 }
 
-
 internal fun shouldRenderAnchorContent(simplified: Boolean, show: Boolean): Boolean = !simplified || !show
 
-
 internal fun isTransformPopupInteractive(show: Boolean, stacked: Boolean): Boolean = show && !stacked
-
 
 internal fun transformPanelAlpha(
     floating: Boolean,
@@ -398,7 +369,6 @@ internal fun transformPanelAlpha(
 } else {
     iconMaterial
 }
-
 
 private fun transformFrame(
     anchor: Rect,
@@ -427,7 +397,6 @@ private fun transformFrame(
         cornerRadius = startRadius + (endRadius - startRadius) * sizeFraction,
     )
 }
-
 
 private class TransformTravel {
     var endCenterX: Float = 0f

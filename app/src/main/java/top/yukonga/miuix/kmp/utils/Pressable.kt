@@ -1,16 +1,11 @@
-
-
-
 package top.yukonga.miuix.kmp.utils
 
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.IndicationNodeFactory
-import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.gestures.GestureCancellationException
 import androidx.compose.foundation.gestures.PressGestureScope
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -48,7 +43,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 
-
 @Stable
 fun Modifier.pressable(
     interactionSource: MutableInteractionSource?,
@@ -69,7 +63,6 @@ fun Modifier.pressable(
     )
 }
 
-
 @Stable
 internal inline fun Modifier.pressableWithIndicationIfNeeded(
     interactionSource: MutableInteractionSource?,
@@ -83,17 +76,10 @@ internal inline fun Modifier.pressableWithIndicationIfNeeded(
             indication,
         )
 
-
         indication == null -> createPressable(interactionSource, null)
-
 
         interactionSource != null -> Modifier.indication(interactionSource, indication)
             .then(createPressable(interactionSource, null))
-
-
-
-
-
 
         else -> Modifier.composed {
             val newInteractionSource = remember { MutableInteractionSource() }
@@ -101,7 +87,6 @@ internal inline fun Modifier.pressableWithIndicationIfNeeded(
         }
     },
 )
-
 
 internal const val TAP_INDICATION_DELAY: Long = 150L
 
@@ -179,8 +164,6 @@ internal abstract class AbstractPressableNode(
     private var pressInteraction: PressInteraction.Press? = null
     private var centerOffset: Offset = Offset.Zero
 
-
-
     private var userProvidedInteractionSource: MutableInteractionSource? = interactionSource
 
     private var lazilyCreateIndication = shouldLazilyCreateIndication()
@@ -197,7 +180,6 @@ internal abstract class AbstractPressableNode(
         delay: Long?,
     ) {
         var isIndicationNodeDirty = false
-
 
         if (userProvidedInteractionSource != interactionSource) {
             disposeInteractions()
@@ -227,7 +209,6 @@ internal abstract class AbstractPressableNode(
         if (lazilyCreateIndication != shouldLazilyCreateIndication()) {
             lazilyCreateIndication = shouldLazilyCreateIndication()
 
-
             if (!lazilyCreateIndication && indicationNode == null) isIndicationNodeDirty = true
         }
 
@@ -249,8 +230,6 @@ internal abstract class AbstractPressableNode(
 
     final override fun onDetach() {
         disposeInteractions()
-
-
 
         if (userProvidedInteractionSource == null) {
             interactionSource = null
@@ -363,8 +342,6 @@ internal abstract class AbstractPressableNode(
                 if (delayJob.isActive) {
                     delayJob.cancelAndJoin()
 
-
-
                     if (success) {
                         val press = PressInteraction.Press(offset)
                         val release = PressInteraction.Release(press)
@@ -391,14 +368,12 @@ internal abstract class AbstractPressableNode(
     companion object TraverseKey
 }
 
-
 internal class PressGestureScopeImpl(density: Density) :
     PressGestureScope,
     Density by density {
     private var isReleased = false
     private var isCanceled = false
     private val mutex = Mutex(locked = false)
-
 
     fun cancel() {
         isCanceled = true
@@ -407,14 +382,12 @@ internal class PressGestureScopeImpl(density: Density) :
         }
     }
 
-
     fun release() {
         isReleased = true
         if (mutex.isLocked) {
             mutex.unlock()
         }
     }
-
 
     suspend fun reset() {
         mutex.lock()

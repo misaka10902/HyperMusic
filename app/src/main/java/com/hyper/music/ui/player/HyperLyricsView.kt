@@ -71,8 +71,6 @@ fun HyperLyricsView(
             snapshotFlow { listState.isScrollInProgress }.first { !it }
         }
 
-
-
         suspend fun centerDelta(): Float? {
             val info = listState.layoutInfo
             val viewportCenter = (info.viewportStartOffset + info.viewportEndOffset) / 2f
@@ -98,8 +96,6 @@ fun HyperLyricsView(
                 delta,
                 animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing),
             )
-
-
 
             val settle = centerDelta()
             if (settle != null && abs(settle) > 0.5f) {
@@ -143,7 +139,6 @@ fun HyperLyricsView(
                         drawContent()
                         drawRect(brush = edgeFade, blendMode = BlendMode.DstIn)
                     },
-
 
                 contentPadding = PaddingValues(
                     start = sideInset,
@@ -204,7 +199,6 @@ private fun LyricRow(
     )
 
     val align = if (centered) TextAlign.Center else TextAlign.Start
-
 
     val fontSize = (baseFontSize + 2f * focus).sp
     val translationSize = (baseFontSize * 0.81f + focus).sp

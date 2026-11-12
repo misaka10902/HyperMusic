@@ -27,7 +27,6 @@ import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.preference.SliderPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 
-
 @Composable
 fun PlayerSettingsScreen(
     onBack: () -> Unit,
@@ -171,7 +170,6 @@ fun PlayerSettingsScreen(
         }
     }
 }
-
 
 private fun weightLabel(weight: Int): String = when (weight) {
     300 -> "细"

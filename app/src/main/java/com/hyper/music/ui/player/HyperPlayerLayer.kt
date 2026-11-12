@@ -26,10 +26,6 @@ fun HyperPlayerLayer(
         state.collapse()
     }
 
-
-
-
-
     val progress = state.expandProgress
     Box(
         modifier = modifier

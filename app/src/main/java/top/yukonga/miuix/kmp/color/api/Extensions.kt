@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.color.api
 
 import androidx.compose.ui.graphics.Color
@@ -8,7 +5,6 @@ import top.yukonga.miuix.kmp.color.core.Transforms
 import top.yukonga.miuix.kmp.color.space.Hsv
 import top.yukonga.miuix.kmp.color.space.OkLab
 import top.yukonga.miuix.kmp.color.space.OkLch
-
 
 fun Color.toOkLab(): OkLab {
     val lab = Transforms.colorToOkLab(this)
@@ -18,7 +14,6 @@ fun Color.toOkLab(): OkLab {
     return OkLab(l, a, b)
 }
 
-
 fun Color.toHsv(): Hsv {
     val hsvArr = Transforms.colorToHsv(this)
     val h = hsvArr[0]
@@ -26,7 +21,6 @@ fun Color.toHsv(): Hsv {
     val v = (hsvArr[2] * 100f).coerceIn(0f, 100f)
     return Hsv(h, s, v)
 }
-
 
 fun Color.toOkLch(): OkLch {
     val lch = Transforms.colorToOklch(this)

@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.animation.animateColorAsState
@@ -52,7 +49,6 @@ import top.yukonga.miuix.kmp.theme.LocalColors
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.isDynamicColor
 import kotlin.math.absoluteValue
-
 
 @Composable
 fun Switch(
@@ -214,7 +210,6 @@ fun Switch(
 }
 
 object SwitchDefaults {
-
 
     @Composable
     fun switchColors(

@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.utils
 
 import androidx.compose.runtime.Composable
@@ -12,7 +9,6 @@ import androidx.navigationevent.findViewTreeNavigationEventDispatcherOwner
 
 @Composable
 fun WindowNavigationEventScope(content: @Composable () -> Unit) {
-
 
     val view = LocalView.current
     val owner = remember(view) { view.findViewTreeNavigationEventDispatcherOwner() }

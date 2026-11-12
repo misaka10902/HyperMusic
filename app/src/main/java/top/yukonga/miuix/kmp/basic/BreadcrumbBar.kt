@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.foundation.Image
@@ -60,13 +57,11 @@ import top.yukonga.miuix.kmp.icon.basic.ArrowRight
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollHorizontal
 
-
 @Stable
 data class BreadcrumbItem(
     val path: String,
     val text: String? = null,
 )
-
 
 @Composable
 fun BreadcrumbBar(
@@ -293,18 +288,13 @@ private fun BreadcrumbSeparator(
 
 object BreadcrumbBarDefaults {
 
-
     val InsideMargin = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-
 
     val ItemHeight = 32.dp
 
-
     val ItemHorizontalPadding = 10.dp
 
-
     val ItemMaxWidth = 160.dp
-
 
     @Composable
     fun breadcrumbBarColors(
@@ -346,6 +336,5 @@ data class BreadcrumbBarColors(
     val highlightBackgroundColor: Color,
     val disabledBackgroundColor: Color,
 )
-
 
 fun List<BreadcrumbItem>.joinToPath(separator: String = "/"): String = joinToString(separator = separator) { it.path }

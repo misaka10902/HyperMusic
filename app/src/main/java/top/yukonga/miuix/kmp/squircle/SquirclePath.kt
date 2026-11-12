@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.squircle
 
 import androidx.compose.ui.geometry.CornerRadius
@@ -10,22 +7,16 @@ import androidx.compose.ui.graphics.Path
 import kotlin.math.max
 import kotlin.math.min
 
-
 object SquircleDefaults {
-
 
     val Extension = 1.1f
 
-
     val ExtensionMin = 1f
-
 
     val ExtensionMax = 2f
 }
 
-
 internal const val SQUIRCLE_CONTROL = 0.643f
-
 
 fun Path.addSquircleRect(
     width: Float,

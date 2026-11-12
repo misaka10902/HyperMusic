@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.popup
 
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,7 +23,6 @@ import top.yukonga.miuix.kmp.theme.LocalDismissState
 import top.yukonga.miuix.kmp.window.WindowDialog
 import top.yukonga.miuix.kmp.window.WindowListPopup
 
-
 @Composable
 fun WindowDropdownPopup(
     entry: DropdownEntry,
@@ -48,7 +44,6 @@ fun WindowDropdownPopup(
         collapseOnSelection = collapseOnSelection,
     )
 }
-
 
 @Composable
 fun WindowDropdownPopup(
@@ -94,7 +89,6 @@ fun WindowDropdownPopup(
     }
 }
 
-
 @Composable
 fun WindowDropdownDialog(
     entry: DropdownEntry,
@@ -120,7 +114,6 @@ fun WindowDropdownDialog(
         collapseOnSelection = collapseOnSelection,
     )
 }
-
 
 @Composable
 fun WindowDropdownDialog(

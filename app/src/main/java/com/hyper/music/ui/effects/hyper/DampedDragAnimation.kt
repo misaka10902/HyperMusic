@@ -30,10 +30,8 @@ class DampedDragAnimation(
     val onDrag: DampedDragAnimation.(size: IntSize, dragAmount: Offset) -> Unit,
 ) {
 
-
     private val valueAnimationSpec =
         spring(1f, 1000f, visibilityThreshold)
-
 
     private val settleAnimationSpec: SpringSpec<Float> = GlassMotion.navIndicator()
     private val velocityAnimationSpec =

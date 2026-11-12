@@ -8,9 +8,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 
-
 data class TrackRef(val name: String, val artist: String)
-
 
 data class PlaylistImportResult(
     val name: String,
@@ -19,7 +17,6 @@ data class PlaylistImportResult(
     val skipped: Int,
 )
 
-
 object PlaylistImporter {
 
     enum class Platform { NETEASE, QQ, KUGOU }
@@ -27,9 +24,6 @@ object PlaylistImporter {
     private const val UA =
         "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 " +
             "(KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36"
-
-
-
 
     fun extractUrl(text: String): String {
         val raw = text.trim()
@@ -73,8 +67,6 @@ object PlaylistImporter {
         if (Regex("""^\d{3,}$""").matches(url.trim())) return url.trim()
         return null
     }
-
-
 
     suspend fun importFromLink(
         raw: String,
@@ -126,8 +118,6 @@ object PlaylistImporter {
         }
     }
 
-
-
     suspend fun importFromJson(
         text: String,
         onProgress: ((done: Int, total: Int) -> Unit)? = null,
@@ -145,7 +135,6 @@ object PlaylistImporter {
 
         val arr = runCatching { JSONArray(trimmed) }.getOrNull()
             ?: throw IllegalArgumentException("无法识别的 JSON 格式")
-
 
         val first = arr.optJSONObject(0)
         if (first != null && (first.has("songs") || first.has("tracks"))) {
@@ -188,8 +177,6 @@ object PlaylistImporter {
         )
     }
 
-
-
     fun exportJson(playlist: Playlist): String = JSONObject().apply {
         put("format", "hyper-playlist")
         put("version", 1)
@@ -197,8 +184,6 @@ object PlaylistImporter {
         put("exportedAt", System.currentTimeMillis())
         put("songs", JSONArray().also { a -> playlist.songs.forEach { a.put(it.toJson()) } })
     }.toString(2)
-
-
 
     private suspend fun matchRefs(
         refs: List<TrackRef>,
@@ -241,8 +226,6 @@ object PlaylistImporter {
         return results.firstOrNull { it.name.contains(name, ignoreCase = true) }
     }
 
-
-
     private suspend fun fetchQq(id: String): Pair<String, List<TrackRef>> = withContext(Dispatchers.IO) {
         val url = "https://i.y.qq.com/qzone-music/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg" +
             "?type=1&json=1&utf8=1&nosign=1&disstid=" + URLEncoder.encode(id, "UTF-8") +
@@ -274,9 +257,6 @@ object PlaylistImporter {
         }
         name to refs
     }
-
-
-
 
     private suspend fun fetchKugou(id: String): Pair<String, List<TrackRef>> =
         withContext(Dispatchers.IO) {
@@ -320,7 +300,6 @@ object PlaylistImporter {
             name to refs
         }
 
-
     private fun splitKugouFilename(filename: String): Pair<String, String> {
         if (filename.isBlank()) return "" to ""
         val idx = filename.indexOf(" - ")
@@ -334,8 +313,6 @@ object PlaylistImporter {
         val m = Regex("""^[\w$.]+\s*\(([\s\S]*)\)\s*;?$""").find(t)
         return m?.groupValues?.getOrNull(1) ?: t
     }
-
-
 
     private fun resolveShortLink(url: String): String? {
         var conn: HttpURLConnection? = null

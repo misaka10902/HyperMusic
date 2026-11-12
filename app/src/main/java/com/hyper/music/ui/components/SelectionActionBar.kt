@@ -67,6 +67,7 @@ fun SelectionActionBar(
     state: SelectionBarState,
     backdrop: Backdrop? = null,
     modifier: Modifier = Modifier,
+    widthFraction: Float = BottomFloatingWidthFraction,
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -74,7 +75,7 @@ fun SelectionActionBar(
             .padding(bottom = SelectionBarBottomPadding),
         contentAlignment = Alignment.Center,
     ) {
-        val maxBarWidth = maxWidth * BottomFloatingWidthFraction
+        val maxBarWidth = maxWidth * widthFraction
         val pitch = (maxBarWidth - BottomFloatingPadding * 2) / 4
         val buttonCount = 1 + state.actions.size
         val targetWidth = (pitch * buttonCount)

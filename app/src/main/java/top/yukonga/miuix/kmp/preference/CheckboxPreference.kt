@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.preference
 
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,7 +21,6 @@ import top.yukonga.miuix.kmp.basic.Checkbox
 import top.yukonga.miuix.kmp.basic.CheckboxColors
 import top.yukonga.miuix.kmp.basic.CheckboxDefaults
 import top.yukonga.miuix.kmp.preference.internal.StartActionSlot
-
 
 @Composable
 @NonRestartableComposable

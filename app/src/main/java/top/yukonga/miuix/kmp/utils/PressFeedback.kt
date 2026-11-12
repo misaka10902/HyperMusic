@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.utils
 
 import androidx.compose.animation.core.Animatable
@@ -170,14 +167,11 @@ data class TiltFeedback(
     }
 }
 
-
 enum class PressFeedbackType {
 
     None,
 
-
     Sink,
-
 
     Tilt,
 }

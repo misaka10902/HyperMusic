@@ -1,13 +1,9 @@
-
-
-
 package top.yukonga.miuix.kmp.blur
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import top.yukonga.miuix.kmp.blur.highlight.Highlight
 import androidx.compose.ui.graphics.BlendMode as ComposeBlendMode
-
 
 fun Modifier.textureBlur(
     backdrop: Backdrop,
@@ -28,7 +24,6 @@ fun Modifier.textureBlur(
     contentBlendMode = contentBlendMode,
     enabled = enabled,
 )
-
 
 fun Modifier.textureBlur(
     backdrop: Backdrop,
@@ -52,7 +47,6 @@ fun Modifier.textureBlur(
     enabled = enabled,
 )
 
-
 fun Modifier.textureEffect(
     backdrop: Backdrop,
     shape: Shape,
@@ -73,7 +67,6 @@ fun Modifier.textureEffect(
     contentBlendMode = contentBlendMode,
     enabled = enabled,
 )
-
 
 fun Modifier.textureEffect(
     backdrop: Backdrop,
@@ -105,7 +98,6 @@ fun Modifier.textureEffect(
     enabled = enabled,
 )
 
-
 fun Modifier.progressiveTextureBlur(
     backdrop: Backdrop,
     shape: Shape,
@@ -128,7 +120,6 @@ fun Modifier.progressiveTextureBlur(
     contentBlendMode = contentBlendMode,
     enabled = enabled,
 )
-
 
 fun Modifier.progressiveTextureBlur(
     backdrop: Backdrop,

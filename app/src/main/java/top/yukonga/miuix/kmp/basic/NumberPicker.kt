@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.animation.core.Animatable
@@ -47,7 +44,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.abs
 
-
 @Composable
 fun NumberPicker(
     value: Int,
@@ -76,7 +72,6 @@ fun NumberPicker(
     val halfVisibleCount = visibleItemCount / 2
     val hapticFeedback = LocalHapticFeedback.current
 
-
     var dragOffset by remember { mutableFloatStateOf(0f) }
 
     val flingAnimatable = remember { Animatable(0f) }
@@ -84,18 +79,15 @@ fun NumberPicker(
     var isUserScrolling by remember { mutableStateOf(false) }
     var itemHeightPx by remember { mutableIntStateOf(0) }
 
-
     val totalOffset by remember {
         derivedStateOf { dragOffset + flingAnimatable.value }
     }
-
 
     LaunchedEffect(coercedValue) {
         if (!isDragging && dragOffset == 0f) {
             flingAnimatable.snapTo(0f)
         }
     }
-
 
     val effectiveIndex by remember(currentIndex, itemCount, wrapAround) {
         derivedStateOf {
@@ -262,11 +254,9 @@ fun NumberPicker(
     }
 }
 
-
 object NumberPickerDefaults {
 
     val ItemHeight = 45.dp
-
 
     @Composable
     fun colors(
@@ -288,7 +278,6 @@ object NumberPickerDefaults {
         )
     }
 }
-
 
 @Immutable
 data class NumberPickerColors(

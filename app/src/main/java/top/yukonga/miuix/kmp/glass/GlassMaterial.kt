@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.runtime.Immutable
@@ -9,44 +6,32 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.sqrt
 
-
 enum class GlassColorBlendMode {
-
 
     SrcOver,
 
-
     PlusDarker,
-
 
     PlusLighter,
 
-
     SoftLight,
-
 
     HardLight,
 
-
     Overlay,
-
 
     Luminosity,
 
-
     ColorDodge,
-
 
     ColorBurn,
 }
-
 
 @Immutable
 data class GlassColorLayer(
     val color: Color,
     val mode: GlassColorBlendMode,
 )
-
 
 @Immutable
 data class GlassMaterial(
@@ -61,7 +46,6 @@ data class GlassMaterial(
         }
     }
 }
-
 
 internal fun GlassMaterial.withUnderlayBlur(underlay: GlassMaterial?): GlassMaterial = if (underlay == null) {
     this

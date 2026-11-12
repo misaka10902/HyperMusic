@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,7 +8,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-
 
 @Composable
 @NonRestartableComposable
@@ -28,7 +24,6 @@ fun SmallTitle(
         color = textColor,
     )
 }
-
 
 object SmallTitleDefaults {
 

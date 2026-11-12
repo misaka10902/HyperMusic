@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.layout
 
 import androidx.compose.animation.core.Animatable
@@ -64,13 +61,10 @@ import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.anim.DecelerateEasing
 import top.yukonga.miuix.kmp.anim.folmeSpring
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.LocalDismissState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.getRoundedCorner
-import top.yukonga.miuix.kmp.window.WindowDialog
-
 
 @Suppress("ktlint:compose:modifier-not-used-at-root")
 @Composable
@@ -108,7 +102,6 @@ internal fun DialogContentLayout(
     val isLargeScreen = largeScreen ?: DialogDefaults.isLargeScreen()
 
     LaunchedEffect(show) {
-
 
         val largeAtStart = isLargeScreen
         if (show) {
@@ -196,7 +189,6 @@ internal fun DialogContentLayout(
 
         LaunchedEffect(Unit) {
 
-
             snapshotFlow { navigationEventState.transitionState }
                 .collect { transitionState ->
                     if (
@@ -219,7 +211,6 @@ internal fun DialogContentLayout(
                     },
             )
         }
-
 
         val contentModifier = Modifier
             .graphicsLayer {
@@ -265,7 +256,6 @@ internal fun DialogContentLayout(
     }
 }
 
-
 @Suppress("ktlint:compose:modifier-not-used-at-root", "ktlint:compose:state-param-check")
 @Composable
 internal fun DialogContent(
@@ -300,7 +290,6 @@ internal fun DialogContent(
     val resolvedCornerRadius = cornerRadius ?: remember(roundedCorner, outsideMargin.width, isLargeScreen) {
         if (isLargeScreen) {
 
-
             DialogDefaults.CornerRadius
         } else {
             (roundedCorner - outsideMargin.width).coerceIn(32.dp, 48.dp)
@@ -322,8 +311,6 @@ internal fun DialogContent(
         maxOf(statusBars, captionBar, displayCutout)
     }
 
-
-
     val bottomPadding = if (isLargeScreen) {
         0.dp
     } else {
@@ -336,8 +323,6 @@ internal fun DialogContent(
 
     val contentModifier = Modifier
         .graphicsLayer {
-
-
 
             if (isLargeScreen) {
                 val scale = 1f - (backProgress.value * 0.2f)
@@ -428,27 +413,20 @@ object DialogDefaults {
         return windowHeight >= 480.dp && windowWidth >= 840.dp
     }
 
-
     @Composable
     fun titleColor() = MiuixTheme.colorScheme.onBackground
-
 
     @Composable
     fun summaryColor() = MiuixTheme.colorScheme.onSurfaceSecondary
 
-
     @Composable
     fun backgroundColor() = MiuixTheme.colorScheme.background
 
-
     val MaxWidth = 420.dp
-
 
     val CornerRadius = 32.dp
 
-
     val outsideMargin = DpSize(12.dp, 12.dp)
-
 
     val insideMargin = DpSize(24.dp, 24.dp)
 }

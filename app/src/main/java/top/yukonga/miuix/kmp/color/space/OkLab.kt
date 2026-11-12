@@ -1,11 +1,7 @@
-
-
-
 package top.yukonga.miuix.kmp.color.space
 
 import androidx.compose.ui.graphics.Color
 import top.yukonga.miuix.kmp.color.core.Transforms
-
 
 data class OkLab(val l: Float, val a: Float, val b: Float) {
     fun toColor(alpha: Float = 1f): Color {

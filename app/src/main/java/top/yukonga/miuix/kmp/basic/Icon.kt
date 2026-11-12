@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.foundation.layout.Box
@@ -29,7 +26,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 
-
 @Composable
 fun Icon(
     imageVector: ImageVector,
@@ -44,7 +40,6 @@ fun Icon(
         tint = tint,
     )
 }
-
 
 @Composable
 fun Icon(
@@ -61,7 +56,6 @@ fun Icon(
         tint = tint,
     )
 }
-
 
 @Composable
 fun Icon(
@@ -89,7 +83,6 @@ fun Icon(
             .then(semantics),
     )
 }
-
 
 @Composable
 fun Icon(
@@ -123,6 +116,5 @@ private fun Modifier.defaultSizeFor(painter: Painter) = this.then(
 )
 
 private fun Size.isInfinite() = width.isInfinite() && height.isInfinite()
-
 
 private val DefaultIconSizeModifier = Modifier.size(24.dp)

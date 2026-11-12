@@ -1,4 +1,3 @@
-
 package top.yukonga.miuix.kmp.basic
 
 import android.graphics.Typeface
@@ -58,17 +57,12 @@ fun NativeTextField(
                 setHintTextColor(hintColor.toArgb())
                 textSize = textStyle.fontSize.value
 
-
                 val weight = textStyle.fontWeight?.weight ?: FontWeight.Medium.weight
                 typeface = Typeface.create(typeface, weight, false)
 
-
                 inputType = InputType.TYPE_CLASS_TEXT
 
-
-
                 gravity = android.view.Gravity.CENTER_VERTICAL or android.view.Gravity.START
-
 
                 textAlignment = when (textAlign) {
                     TextAlign.Center -> EditText.TEXT_ALIGNMENT_CENTER
@@ -76,29 +70,22 @@ fun NativeTextField(
                     else -> EditText.TEXT_ALIGNMENT_VIEW_START
                 }
 
-
                 if (maxLength < Int.MAX_VALUE) {
                     filters = arrayOf(InputFilter.LengthFilter(maxLength))
                 }
 
-
                 imeOptions = EditorInfo.IME_ACTION_DONE
-
 
                 background = null
                 setPadding(0, 0, 0, 0)
 
-
                 textCursorDrawable?.setTint(themeColor.toArgb())
 
-
                 highlightColor = themeColor.copy(alpha = 0.2f).toArgb()
-
 
                 textSelectHandle?.setTint(themeColor.toArgb())
                 textSelectHandleLeft?.setTint(themeColor.toArgb())
                 textSelectHandleRight?.setTint(themeColor.toArgb())
-
 
                 addTextChangedListener(textWatcher)
             }

@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.utils
 
 import androidx.compose.animation.AnimatedVisibility
@@ -48,10 +45,7 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import top.yukonga.miuix.kmp.anim.DecelerateEasing
 import top.yukonga.miuix.kmp.anim.SinOutEasing
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-
 
 class MiuixPopupUtils {
 
@@ -142,7 +136,6 @@ class MiuixPopupUtils {
             fadeOut(animationSpec = tween(durationMillis = 150))
         }
 
-
         @Composable
         fun DialogLayout(
             visible: MutableState<Boolean>,
@@ -211,7 +204,6 @@ class MiuixPopupUtils {
                 }
             }
         }
-
 
         @Composable
         fun PopupLayout(
@@ -504,7 +496,6 @@ class MiuixPopupUtils {
                 )
             }
         }
-
 
         @Composable
         fun MiuixPopupHost() {

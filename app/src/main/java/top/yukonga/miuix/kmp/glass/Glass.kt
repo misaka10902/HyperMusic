@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.ui.Modifier
@@ -20,7 +17,6 @@ import top.yukonga.miuix.kmp.glass.internal.drawGlassRim
 import top.yukonga.miuix.kmp.glass.internal.drawGlassShadow
 import top.yukonga.miuix.kmp.glass.internal.drawGlassStroke
 import top.yukonga.miuix.kmp.glass.internal.glassEffect
-
 
 fun Modifier.glass(
     backdrop: Backdrop,
@@ -48,7 +44,6 @@ fun Modifier.glass(
     enabled = enabled,
     shading = shading,
 )
-
 
 internal fun Modifier.glassOnActionBar(
     backdrop: Backdrop,
@@ -110,7 +105,6 @@ private fun Modifier.glassImpl(
     contentBlendMode = contentBlendMode,
     enabled = enabled,
 )
-
 
 fun Modifier.glassShadow(
     shape: GlassShape,

@@ -105,8 +105,6 @@ fun HistoryScreen(
     val scheme = MiuixTheme.colorScheme
     val haptic = LocalHapticFeedback.current
 
-    // 清空历史时不能直接切到空态：先保留最后一帧列表整体淡出，再淡入空态，
-    // 否则条目会在同一帧集体消失，观感很硬。
     var displayItems by remember { mutableStateOf(history) }
     var showEmpty by remember { mutableStateOf(history.isEmpty()) }
     val listAlpha = remember { Animatable(1f) }
@@ -200,10 +198,8 @@ fun HistoryScreen(
             contentPadding = PaddingValues(top = topInset + 6.dp, bottom = ContentBottomReserve),
         ) {
 
-
             itemsIndexed(displayItems, key = { _, s -> s.id }) { index, song ->
                 TrackRow(
-
 
                     modifier = Modifier.animateItem(
                         fadeInSpec = tween(200),
@@ -460,7 +456,6 @@ private fun PlaylistCard(
         modifier = dragModifier
             .fillMaxWidth()
             .alpha(if (selectionMode && !selected) 0.68f else 1f)
-
 
             .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },

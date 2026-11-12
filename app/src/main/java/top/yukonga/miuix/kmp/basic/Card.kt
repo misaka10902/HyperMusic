@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.foundation.LocalIndication
@@ -33,7 +30,6 @@ import top.yukonga.miuix.kmp.utils.SinkFeedback
 import top.yukonga.miuix.kmp.utils.TiltFeedback
 import top.yukonga.miuix.kmp.utils.pressable
 
-
 @Composable
 @NonRestartableComposable
 fun Card(
@@ -54,7 +50,6 @@ fun Card(
         )
     }
 }
-
 
 @Composable
 fun Card(
@@ -124,7 +119,6 @@ fun Card(
     }
 }
 
-
 @Composable
 private fun BasicCard(
     modifier: Modifier = Modifier,
@@ -150,12 +144,9 @@ private fun BasicCard(
 
 object CardDefaults {
 
-
     val CornerRadius = 16.dp
 
-
     val InsideMargin = PaddingValues(0.dp)
-
 
     @Composable
     fun defaultColors(

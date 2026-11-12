@@ -150,7 +150,6 @@ internal fun DetailPage(
         fallbackTopBarHeight(showLargeTitle = !compactTitle)
     }
 
-    // 测量 header 实际高度：加载指示器要落在 header 之下、迷你播放条之上的可视区中心
     var headerHeightPx by remember { mutableIntStateOf(0) }
     val headerHeightDp = with(density) { headerHeightPx.toDp() }
 
@@ -209,7 +208,6 @@ internal fun DetailPage(
 
         WallpaperBackground()
 
-
         Box(Modifier.matchParentSize()) { background() }
         LazyColumn(
             state = listState,
@@ -232,8 +230,7 @@ internal fun DetailPage(
             }
             list()
         }
-        // 覆盖层：加载指示器等需要视觉居中的内容放这里，不随列表滚动。
-        // 上边避开顶栏与 header，下边避开迷你播放条，让指示器落在剩余可视区的正中。
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -560,7 +557,6 @@ fun PlaylistDetailScreen(
                     song = song,
                     modifier = Modifier
 
-
                         .animateItem(
                             fadeInSpec = tween(200),
                             placementSpec = spring(dampingRatio = 1f, stiffness = 320f),
@@ -751,7 +747,6 @@ fun FavoritesScreen(
                     song = song,
                     modifier = Modifier
 
-
                         .animateItem(
                             fadeInSpec = tween(200),
                             placementSpec = spring(dampingRatio = 1f, stiffness = 320f),
@@ -818,7 +813,7 @@ fun ArtistScreen(
     var loading by remember { mutableStateOf(true) }
     var tab by remember { mutableIntStateOf(0) }
     val slidePx = with(LocalDensity.current) { 12.dp.toPx() }
-    // 列表揭示进度：数据到位后从 0 淡入，条目按索引错峰上浮，避免“唰”地全部出现
+
     val reveal = remember { Animatable(0f) }
     LaunchedEffect(loading, tab) {
         if (!loading) {
@@ -919,7 +914,7 @@ fun ArtistScreen(
             }
         },
         overlay = {
-            // 加载指示器浮在整个可视区域中心，不再挤在 header 下方靠上
+
             AnimatedVisibility(
                 visible = loading,
                 enter = fadeIn(tween(180)),
@@ -1059,7 +1054,7 @@ fun AlbumScreen(
     var loading by remember { mutableStateOf(true) }
     val scheme = MiuixTheme.colorScheme
     val slidePx = with(LocalDensity.current) { 12.dp.toPx() }
-    // 与艺术家页一致：数据到位后列表整体淡入，条目错峰上浮
+
     val reveal = remember { Animatable(0f) }
     LaunchedEffect(loading) {
         if (!loading) {
@@ -1175,7 +1170,6 @@ fun AlbumScreen(
 private fun TabChip(text: String, selected: Boolean, onClick: () -> Unit) {
     val scheme = MiuixTheme.colorScheme
 
-
     val unselectedBg = scheme.surface.copy(alpha = cardGlassAlpha())
     val interactionSource = remember { MutableInteractionSource() }
     val bounce = rememberChipBounce(interactionSource)
@@ -1200,4 +1194,3 @@ private fun TabChip(text: String, selected: Boolean, onClick: () -> Unit) {
         )
     }
 }
-

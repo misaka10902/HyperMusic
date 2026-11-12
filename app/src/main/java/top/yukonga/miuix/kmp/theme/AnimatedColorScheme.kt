@@ -2,13 +2,6 @@ package top.yukonga.miuix.kmp.theme
 
 import androidx.compose.ui.graphics.lerp
 
-/**
- * 把 [this] 的全部颜色从 [from] 插值到 [to]，[fraction] 为进度（0f..1f）。
- *
- * 用途：深浅色切换时做整体渐变。主题色全部是 mutableStateOf 状态，每帧写入插值结果，
- * 所有读取主题色的控件（文字、卡片、按钮、底色）就会平滑过渡；壁纸是独立绘制的位图，
- * 不参与插值，因此不会出现「壁纸跟着渐变」的情况。
- */
 internal fun Colors.lerpColors(from: Colors, to: Colors, fraction: Float) {
     val f = fraction.coerceIn(0f, 1f)
     this.primary = lerp(from.primary, to.primary, f)

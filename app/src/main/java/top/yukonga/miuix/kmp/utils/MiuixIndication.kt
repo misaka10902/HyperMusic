@@ -1,11 +1,7 @@
-
-
-
 package top.yukonga.miuix.kmp.utils
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.SpringSpec
-import androidx.compose.foundation.Indication
 import androidx.compose.foundation.IndicationNodeFactory
 import androidx.compose.foundation.interaction.FocusInteraction
 import androidx.compose.foundation.interaction.HoverInteraction
@@ -31,7 +27,6 @@ private val PressEnterSpring: SpringSpec<Float> = folmeSpring(damping = 1.0f, re
 private val PressExitSpring: SpringSpec<Float> = folmeSpring(damping = 0.95f, response = 0.35f)
 private val HoverEnterSpring: SpringSpec<Float> = folmeSpring(damping = 1.0f, response = 0.6f)
 private val HoverExitSpring: SpringSpec<Float> = folmeSpring(damping = 0.96f, response = 0.2f)
-
 
 @Immutable
 class MiuixIndication(

@@ -89,7 +89,6 @@ fun AboutAppScreen(onBack: () -> Unit, backdrop: LayerBackdrop) {
         list = {
             item {
 
-
                 Box(Modifier.padding(horizontal = horizontalPadding)) {
                     AboutSection(title = "项目") {
                         ArrowPreference(
@@ -160,7 +159,6 @@ fun AboutAppScreen(onBack: () -> Unit, backdrop: LayerBackdrop) {
         },
     )
 }
-
 
 @Composable
 private fun AboutSection(

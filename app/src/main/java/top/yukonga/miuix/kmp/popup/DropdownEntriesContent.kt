@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.popup
 
 import androidx.compose.foundation.layout.padding
@@ -13,7 +10,6 @@ import top.yukonga.miuix.kmp.basic.DropdownColors
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownImpl
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
-
 
 @Composable
 internal fun DropdownEntriesPopupContent(
@@ -50,7 +46,6 @@ internal fun DropdownEntriesPopupContent(
         }
     }
 }
-
 
 internal fun LazyListScope.dropdownEntriesDialogItems(
     entries: List<DropdownEntry>,

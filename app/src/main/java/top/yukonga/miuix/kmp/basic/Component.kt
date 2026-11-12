@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.foundation.clickable
@@ -33,7 +30,6 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.interfaces.HoldDownObserver
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-
 
 @Composable
 fun BasicComponent(
@@ -83,7 +79,6 @@ fun BasicComponent(
         }
     }
 }
-
 
 @Composable
 fun BasicComponent(
@@ -238,9 +233,7 @@ fun BasicComponent(
 
 object BasicComponentDefaults {
 
-
     val InsideMargin = PaddingValues(16.dp)
-
 
     @Composable
     fun titleColor(
@@ -252,7 +245,6 @@ object BasicComponentDefaults {
             disabledColor = disabledColor,
         )
     }
-
 
     @Composable
     fun summaryColor(

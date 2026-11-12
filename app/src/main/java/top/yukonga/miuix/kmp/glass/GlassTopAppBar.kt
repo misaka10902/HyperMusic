@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.animation.core.animateFloat
@@ -49,33 +46,23 @@ import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.roundToInt
 
-
 object GlassTopAppBarDefaults {
-
 
     val HorizontalPadding: Dp = 12.dp
 
-
     val RampStart: Dp = 0.dp
-
 
     val RampDistance: Dp = 32.dp
 
-
     val LargeTitleBlurRadius: Dp = 12.dp
-
 
     val ButtonSize: Dp = 44.dp
 
-
     val ProgressiveBlurRadius: Dp = 80.dp
-
 
     val ProgressiveBlurRampDistance: Dp = 48.dp
 
-
     val PressedContentAlpha: Float = 0.6f
-
 
     @Composable
     fun collapseRamp(scrollBehavior: ScrollBehavior?): State<Float> {
@@ -93,18 +80,14 @@ object GlassTopAppBarDefaults {
         }
     }
 
-
     @Composable
     fun buttonFill(): Color = if (isDarkTheme()) Color(0xFF2C2C2C) else Color.White
-
 
     @Composable
     fun buttonMaterial(): GlassMaterial = GlassMaterials.puredThinGlass(isDarkTheme())
 
-
     @Composable
     internal fun actionBarUnderlayMaterial(): GlassMaterial = GlassMaterials.actionBarMask(isDarkTheme())
-
 
     @Composable
     fun buttonStroke(): GlassStroke = GlassStrokes.forTheme(
@@ -113,14 +96,12 @@ object GlassTopAppBarDefaults {
         dark = GlassStrokes.SmallDark,
     )
 
-
     @Composable
     fun buttonPressedOverlay(): Color = if (isDarkTheme()) {
         Color.White.copy(alpha = 0.14f)
     } else {
         Color.Black.copy(alpha = 0.10f)
     }
-
 
     @Stable
     fun bandBrush(color: Color): Brush = Brush.verticalGradient(
@@ -131,7 +112,6 @@ object GlassTopAppBarDefaults {
         0.86f to color.copy(alpha = 0.34f),
         1.00f to color.copy(alpha = 0f),
     )
-
 
     val BandOverhang: Dp = 28.dp
 
@@ -159,7 +139,6 @@ internal data class GlassTopAppBarContext(
 )
 
 internal val LocalGlassTopAppBarContext = staticCompositionLocalOf<GlassTopAppBarContext?> { null }
-
 
 @Composable
 fun GlassTopAppBar(
@@ -221,7 +200,6 @@ fun GlassTopAppBar(
         bottomContent = bottomContent,
     )
 }
-
 
 @Composable
 fun GlassTopAppBar(

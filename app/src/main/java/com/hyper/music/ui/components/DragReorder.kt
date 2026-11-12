@@ -25,7 +25,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
-
 data class ReorderGeom(
     val index: Int,
     val left: Float,
@@ -36,7 +35,6 @@ data class ReorderGeom(
     val centerX: Float get() = left + width / 2f
     val centerY: Float get() = top + height / 2f
 }
-
 
 class DragReorderState internal constructor(
     private val scope: CoroutineScope,
@@ -51,10 +49,8 @@ class DragReorderState internal constructor(
     var dragY by mutableFloatStateOf(0f)
         private set
 
-
     var settling by mutableStateOf(false)
         private set
-
 
     val settleX = Animatable(0f)
     val settleY = Animatable(0f)
@@ -86,8 +82,6 @@ class DragReorderState internal constructor(
         dragX += delta.x
         dragY += delta.y
 
-
-
         val adx = if (dragX < 0) -dragX else dragX
         val ady = if (dragY < 0) -dragY else dragY
         val useY = ady >= adx
@@ -106,7 +100,6 @@ class DragReorderState internal constructor(
         val last = geoms.maxOfOrNull { it.index } ?: draggingIndex
         targetIndex = (draggingIndex + passed).coerceIn(0, last)
     }
-
 
     fun end() {
         if (!isDragging || settling) return
@@ -140,7 +133,6 @@ class DragReorderState internal constructor(
         }
     }
 
-
     private fun commit() {
         val from = pendingFrom
         val to = pendingTo
@@ -155,7 +147,6 @@ class DragReorderState internal constructor(
         pendingTo = -1
         if (from >= 0 && to >= 0 && from != to) onCommit(from, to)
     }
-
 
     fun offsetFor(index: Int): Offset {
         if (!isDragging || index == draggingIndex) return Offset.Zero
@@ -180,12 +171,10 @@ fun rememberDragReorderState(onCommit: (Int, Int) -> Unit): DragReorderState {
     return remember { DragReorderState(scope) { from, to -> currentOnCommit(from, to) } }
 }
 
-
 private fun reorderSpring(): AnimationSpec<Float> = spring(
     dampingRatio = Spring.DampingRatioNoBouncy,
     stiffness = Spring.StiffnessMedium,
 )
-
 
 @Composable
 fun Modifier.dragReorderItem(
@@ -198,11 +187,6 @@ fun Modifier.dragReorderItem(
     val dragged = state.draggingIndex == index
     val dragging = state.isDragging
     val shift = state.offsetFor(index)
-
-
-
-
-
 
     val shiftAnimX by animateFloatAsState(
         targetValue = shift.x,
@@ -222,12 +206,8 @@ fun Modifier.dragReorderItem(
         label = "reorderLift",
     )
 
-
     val currentIndex = rememberUpdatedState(index)
     val currentSnapshot = rememberUpdatedState(snapshot)
-
-
-
 
     val gestureModifier = if (enabled) {
         Modifier.pointerInput(id) {
@@ -248,8 +228,6 @@ fun Modifier.dragReorderItem(
     return this
         .zIndex(if (dragged) 1f else 0f)
         .graphicsLayer {
-
-
 
             translationX = when {
                 dragged && state.settling -> state.settleX.value

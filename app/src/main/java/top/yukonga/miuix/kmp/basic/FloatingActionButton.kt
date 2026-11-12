@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.foundation.layout.Box
@@ -18,7 +15,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-
 
 @Composable
 @NonRestartableComposable
@@ -52,14 +48,11 @@ fun FloatingActionButton(
     }
 }
 
-
 object FloatingActionButtonDefaults {
 
     val MinWidth = 60.dp
 
-
     val MinHeight = 60.dp
-
 
     val ShadowElevation = 4.dp
 }

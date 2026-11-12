@@ -1,12 +1,3 @@
-
-
-
-
-
-
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.animation.EnterTransition
@@ -55,7 +46,6 @@ private fun resolveSelected(entries: List<DropdownEntry>): String? {
     }
     return null
 }
-
 
 @Composable
 fun GlassDropdownEntriesMenu(
@@ -137,8 +127,6 @@ fun GlassDropdownEntriesMenu(
             if (expanded) hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
         },
         role = Role.DropdownList,
-
-
 
         holdDownState = false,
         enabled = actualEnabled,

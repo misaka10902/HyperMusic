@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.animation.core.Animatable
@@ -81,7 +78,6 @@ import kotlin.math.min
 import kotlin.math.sign
 import kotlin.math.sin
 
-
 @Composable
 fun PullToRefresh(
     isRefreshing: Boolean,
@@ -104,9 +100,7 @@ fun PullToRefresh(
 
     val isRefreshingNow: () -> Boolean = remember { { currentIsRefreshing } }
 
-
     val currentOnPullProgress by rememberUpdatedState(onPullProgress)
-
 
     LaunchedEffect(pullToRefreshState) {
         snapshotFlow { pullToRefreshState.fullDragProgress }
@@ -115,11 +109,8 @@ fun PullToRefresh(
             }
     }
 
-
-
     LaunchedEffect(isRefreshing, pullToRefreshState.refreshState) {
         if (!isRefreshing && pullToRefreshState.refreshState == RefreshState.Refreshing) {
-
 
             coroutineScope.launch {
                 pullToRefreshState.finishRefreshing(isRefreshingNow)
@@ -132,7 +123,6 @@ fun PullToRefresh(
         }
     }
 
-
     val nestedScrollConnection =
         remember(pullToRefreshState, topAppBarScrollBehavior, overScrollState) {
 
@@ -143,9 +133,6 @@ fun PullToRefresh(
                 overScrollState,
             )
         }
-
-
-
 
     val pointerModifier = remember(pullToRefreshState) {
         pullToRefreshState.isGestureActive = false
@@ -200,19 +187,15 @@ fun PullToRefresh(
     }
 }
 
-
 @Composable
 fun rememberPullToRefreshState(
     refreshThreshold: Float = 0.25f,
 ): PullToRefreshState {
     val coroutineScope = rememberCoroutineScope()
 
-
-
     val state = remember {
         PullToRefreshState(coroutineScope)
     }
-
 
     val windowInfo = LocalWindowInfo.current
     state.maxDragDistancePx = windowInfo.containerSize.height.toFloat()
@@ -223,7 +206,6 @@ fun rememberPullToRefreshState(
     state.refreshThresholdOffset = windowInfo.containerSize.height.toFloat() * MAX_DRAWRATIO * THRESHOLD_RADIO
 
     SideEffect {
-
 
         val target = state.refreshThresholdOffset
         if (state.refreshState == RefreshState.Refreshing &&
@@ -238,7 +220,6 @@ fun rememberPullToRefreshState(
     return state
 }
 
-
 sealed interface RefreshState {
     data object Idle : RefreshState
     data object Pulling : RefreshState
@@ -246,7 +227,6 @@ sealed interface RefreshState {
     data object Refreshing : RefreshState
     data object RefreshComplete : RefreshState
 }
-
 
 class PullToRefreshState(
     internal var coroutineScope: CoroutineScope,
@@ -256,25 +236,19 @@ class PullToRefreshState(
     internal var refreshThresholdOffset: Float = 0f
     internal var triggerProgressOffset: Float = 0f
 
-
     internal val effectiveThresholdOffset: Float
         get() = max(refreshThresholdOffset, triggerProgressOffset)
-
 
     var refreshThreshold: Float = 0f
         internal set
 
-
     var dragOffset by mutableFloatStateOf(0f)
-
 
     var cachedNestedScrollConnection: NestedScrollConnection? = null
 
     private var internalRefreshState by mutableStateOf<RefreshState>(RefreshState.Idle)
 
-
     val refreshState: RefreshState get() = internalRefreshState
-
 
     val pullProgress: Float by derivedStateOf {
         if (effectiveThresholdOffset > 0f) {
@@ -284,7 +258,6 @@ class PullToRefreshState(
         }
     }
 
-
     val fullDragProgress: Float by derivedStateOf {
         if (fullDragRangePx > 0f) {
             (dragOffset / fullDragRangePx).coerceIn(0f, 1f)
@@ -293,12 +266,10 @@ class PullToRefreshState(
         }
     }
 
-
     val visualProgress: Float by derivedStateOf {
         val scaleEndOffset = min(refreshThresholdOffset, triggerProgressOffset)
         when {
             scaleEndOffset > 0f -> (dragOffset / scaleEndOffset).coerceIn(0f, 1f)
-
 
             dragOffset > 0f -> 1f
 
@@ -311,17 +282,14 @@ class PullToRefreshState(
     internal var isRefreshing by mutableStateOf(false)
     internal var isTouching by mutableStateOf(false)
 
-
     internal var isGestureActive = false
     internal var isRebounding by mutableStateOf(false)
     private var isProcessingRelease = false
     private val refreshCompleteAnimProgressState = mutableFloatStateOf(1f)
     internal val refreshCompleteAnimProgress: Float get() = refreshCompleteAnimProgressState.floatValue
 
-
     private val springEngine = SpringEngine()
     internal var animationJob: Job? = null
-
 
     internal suspend fun animateToSpring(targetValue: Float) {
         animationJob?.cancel()
@@ -351,10 +319,7 @@ class PullToRefreshState(
                     val finished = springEngine.step(dt)
                     val newOffset = springEngine.currentPos.toFloat()
 
-
                     dragOffset = newOffset
-
-
 
                     currentTouch = SpringMath.obtainTouchDistance(newOffset, maxDragDistancePx)
 
@@ -372,7 +337,6 @@ class PullToRefreshState(
         }
     }
 
-
     internal suspend fun startRefreshing(onRefresh: () -> Unit, isRefreshingNow: () -> Boolean) {
         if (!isRefreshing) {
             isRefreshing = true
@@ -381,7 +345,6 @@ class PullToRefreshState(
                 animateToSpring(refreshThresholdOffset)
             } finally {
                 if (!isTouching) {
-
 
                     internalRefreshState = RefreshState.Refreshing
 
@@ -393,7 +356,6 @@ class PullToRefreshState(
         }
     }
 
-
     internal suspend fun showRefreshing(isRefreshingNow: () -> Boolean) {
 
         if (isRefreshing || internalRefreshState != RefreshState.Idle || !isRefreshingNow()) return
@@ -402,19 +364,14 @@ class PullToRefreshState(
         internalRefreshState = RefreshState.Refreshing
         animateToSpring(refreshThresholdOffset)
 
-
-
-
         while (internalRefreshState == RefreshState.Refreshing && dragOffset != refreshThresholdOffset) {
             animateToSpring(refreshThresholdOffset)
         }
     }
 
-
     internal suspend fun finishRefreshing(isRefreshingNow: () -> Boolean) {
 
         if (isRefreshing && !isRefreshingNow()) {
-
 
             animationJob?.cancel()
 
@@ -424,10 +381,8 @@ class PullToRefreshState(
         }
     }
 
-
     internal suspend fun handlePointerRelease(onRefresh: () -> Unit, isRefreshingNow: () -> Boolean) {
         if (isProcessingRelease || isRefreshing || isRebounding) return
-
 
         isTouching = false
         isProcessingRelease = true
@@ -453,8 +408,6 @@ class PullToRefreshState(
 
     private suspend fun startManualRefreshCompleteAnimation() {
 
-
-
         val initialProgress = if (refreshThresholdOffset > 0f) {
             1f - (dragOffset / refreshThresholdOffset).coerceIn(0f, 1f)
         } else {
@@ -474,13 +427,11 @@ class PullToRefreshState(
         internalRefreshState = RefreshState.Idle
     }
 
-
     internal fun resetToIdle() {
         if (internalRefreshState != RefreshState.Refreshing && internalRefreshState != RefreshState.RefreshComplete) {
             internalRefreshState = RefreshState.Idle
         }
     }
-
 
     internal fun getOrCreateNestedScrollConnection(
         overScrollState: OverScrollState,
@@ -518,7 +469,6 @@ class PullToRefreshState(
                         return available
                     }
 
-
                     if (source == NestedScrollSource.UserInput && isGestureActive && available.y < 0 && (dragOffset > 0f || currentTouch > 0f)) {
                         isTouching = true
                         animationJob?.cancel()
@@ -534,7 +484,6 @@ class PullToRefreshState(
                         return available
                     }
 
-
                     if (source == NestedScrollSource.UserInput && isGestureActive && available.y > 0f) {
                         isTouching = true
                         animationJob?.cancel()
@@ -547,7 +496,6 @@ class PullToRefreshState(
             ).also { cachedNestedScrollConnection = it }
     }
 }
-
 
 private fun createPullToRefreshConnection(
     pullToRefreshState: PullToRefreshState,
@@ -677,7 +625,6 @@ private fun RefreshHeader(
 
                 RefreshState.ThresholdReached -> 1f
 
-
                 RefreshState.Refreshing -> ((pullToRefreshState.visualProgress - 0.5f) * 2f).coerceIn(0f, 1f)
 
                 RefreshState.RefreshComplete -> {
@@ -686,7 +633,6 @@ private fun RefreshHeader(
             }
         }
     }
-
 
     val stretchExtraDp by remember(pullToRefreshState, density) {
         derivedStateOf {
@@ -943,7 +889,6 @@ private const val MAX_DRAWRATIO = 1 / 6f
 private const val THRESHOLD_RADIO = 1 / 4f
 
 internal val LocalPullToRefreshState = staticCompositionLocalOf<PullToRefreshState?> { null }
-
 
 object PullToRefreshDefaults {
     val color: Color = Color.Gray

@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.json.JSONArray
 
-
 object SearchHistoryStore {
     private const val PREFS = "search_history_prefs"
     private const val KEY = "queries"
@@ -42,7 +41,6 @@ object SearchHistoryStore {
         _items.value = list
         persist()
     }
-
 
     fun remove(raw: String) {
         val q = raw.trim()

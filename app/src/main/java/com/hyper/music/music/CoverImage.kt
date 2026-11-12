@@ -41,8 +41,6 @@ object CoverLoader {
             value.width * value.height * 4
     }
 
-
-
     private val pinnedCache = ConcurrentHashMap<String, ImageBitmap>()
 
     private val resolved = ConcurrentHashMap<String, String>()
@@ -68,10 +66,8 @@ object CoverLoader {
         }
     }
 
-
     suspend fun pin(url: String, maxSize: Int = CoverSize.MEDIUM.decode): ImageBitmap? =
         load(url, maxSize, pinned = true)
-
 
     fun clearPinned() {
         pinnedCache.clear()
@@ -164,8 +160,6 @@ fun NetCover(
 ) {
     val settings by MusicLibrary.settings.collectAsState()
     val radius = corner ?: settings.coverCornerRadius.dp
-
-
 
     val cachedInitial = remember(url, maxSize, pinned) {
         url?.let { CoverLoader.cached(it, maxSize, pinned) }

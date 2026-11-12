@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.layout
 
 import androidx.compose.animation.core.Animatable
@@ -70,22 +67,17 @@ private const val PRIMARY_SHRUNK_SCALE = 0.95f
 internal const val ENTER_SCALE_FROM = 0.15f
 internal const val ENTER_SCALE_RANGE = 1f - ENTER_SCALE_FROM
 
-
 object CascadingPopupDefaults {
-
 
     val PrimaryShrunkScale: Float = PRIMARY_SHRUNK_SCALE
 
-
     fun arrowRotation(layoutDirection: LayoutDirection): Float = if (layoutDirection == LayoutDirection.Ltr) -90f else 90f
-
 
     fun <T> expandSpring(expanding: Boolean): SpringSpec<T> = if (expanding) {
         folmeSpring(EXPAND_SPRING_DAMPING, EXPAND_SPRING_RESPONSE)
     } else {
         folmeSpring(MAIN_SPRING_DAMPING, COLLAPSE_SPRING_RESPONSE)
     }
-
 
     fun <T> arrowSpring(expanding: Boolean): SpringSpec<T> = folmeSpring(
         damping = MAIN_SPRING_DAMPING,
@@ -107,7 +99,6 @@ private fun List<DropdownEntry>.positionOf(item: DropdownItem): CascadingItemPos
 }
 
 private fun List<DropdownEntry>.itemAt(position: CascadingItemPosition): DropdownItem? = getOrNull(position.entryIndex)?.items?.getOrNull(position.itemIndex)
-
 
 @Composable
 internal fun CascadingListPopupLayout(
@@ -134,10 +125,7 @@ internal fun CascadingListPopupLayout(
     val backEnterProgress = remember { Animatable(0f) }
     val backExpandProgress = remember { Animatable(0f) }
 
-
-
     var expandedItemPosition by remember { mutableStateOf<CascadingItemPosition?>(null) }
-
 
     var displayedItemPosition by remember { mutableStateOf<CascadingItemPosition?>(null) }
     val expandedItem = expandedItemPosition?.let(entries::itemAt)
@@ -199,7 +187,6 @@ internal fun CascadingListPopupLayout(
         val mainSpec = CascadingPopupDefaults.expandSpring<Float>(target == 1f)
         launch {
             expandFraction.animateTo(target, mainSpec)
-
 
             if (target == 0f) {
                 displayedItemPosition = null
@@ -346,7 +333,6 @@ internal fun CascadingListPopupLayout(
                         },
                         setAnchorBounds = { item, bounds ->
 
-
                             if (displayedItem == null) {
                                 entries.positionOf(item)?.let { position ->
                                     anchorBoundsByPosition[position] = bounds
@@ -384,7 +370,6 @@ internal fun CascadingListPopupLayout(
 private const val SLOT_PRIMARY = "primary"
 private const val SLOT_SECONDARY = "secondary"
 private const val SLOT_SECONDARY_PROBE = "secondary_probe"
-
 
 private val ProbeArrowRotation: () -> Float = { 0f }
 private val ProbeExpandFraction: () -> Float = { 1f }
@@ -436,8 +421,6 @@ private fun CascadingMorphSubLayout(
             maxHeight = resolvedMaxHeightPx.coerceAtMost(constraints.maxHeight),
         )
 
-
-
         val activeExpanded = displayedItem
         val anchorRect = activeExpanded?.let { getAnchorBounds(it) }
         val (anchorPaddingTopPx, _) = if (activeExpanded != null) {
@@ -445,8 +428,6 @@ private fun CascadingMorphSubLayout(
         } else {
             0 to 0
         }
-
-
 
         val isAnchorPopupLast = activeExpanded != null &&
             entries.lastOrNull { it.items.isNotEmpty() }?.items?.last() === activeExpanded
@@ -489,8 +470,6 @@ private fun CascadingMorphSubLayout(
                 alignment,
             )
         }
-
-
 
         val probeConstraints = primaryConstraints.copy(
             minWidth = primaryWidth.coerceAtMost(primaryConstraints.maxWidth),
@@ -642,7 +621,6 @@ internal fun computeSecondaryRect(
         bottom = top + secondarySize.height,
     )
 }
-
 
 private fun Density.computeAnchorPaddingPx(
     item: DropdownItem,

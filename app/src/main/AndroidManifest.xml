@@ -4,7 +4,6 @@
 
     <uses-sdk tools:overrideLibrary="top.yukonga.miuix.kmp.blur" />
 
-    <!-- 在线音乐：网络、前台播放、通知（媒体控件） -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -12,7 +11,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- 已下载的歌曲：列全下载文件夹里的音频文件（含非本应用下载的） -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
@@ -31,11 +29,10 @@
         android:theme="@style/Theme.课程表"
         tools:ignore="UnusedAttribute">
 
-        <!-- HyperOS 无极窗口 2.0：支持窗口在一定尺寸范围内任意缩放 -->
         <property
             android:name="miui.window.CVW_ENABLED"
             android:value="true" />
-        <!-- CVW_MODE: 1=全无极 2=竖无极 3=横无极 -->
+
         <property
             android:name="miui.window.CVW_MODE"
             android:value="1" />
@@ -54,19 +51,12 @@
             </intent-filter>
         </activity>
 
-        <!--
-          封面内容提供者：给系统媒体控件（通知大图 / 锁屏 / 澎湃 OS 控制中心 / 蓝牙设备）
-          提供「可直接解码」的专辑封面字节流。
-          exported = true 是刻意的：SystemUI 等外部进程需要通过 ContentResolver 打开这个 Uri，
-          走 grantUriPermission 反而会因为拿不到目标包名而失败；这里暴露的只是公开封面图，无隐私风险。
-        -->
         <provider
             android:name=".music.ArtworkProvider"
             android:authorities="com.hyper.music.artwork"
             android:exported="true"
             android:grantUriPermissions="true" />
 
-        <!-- 媒体会话服务：系统播放控件（通知栏 / 锁屏 / 蓝牙 / 耳机按键） -->
         <service
             android:name=".music.PlaybackService"
             android:exported="true"

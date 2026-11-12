@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.foundation.background
@@ -17,16 +14,13 @@ import top.yukonga.miuix.kmp.glass.internal.ScrimBackdrop
 import top.yukonga.miuix.kmp.layout.BottomSheetSurfaceScope
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 object GlassBottomSheetDefaults {
     val ScrimColor: Color = GlassDialogDefaults.ScrimColor
-
 
     @Composable
     fun material(): GlassMaterial = GlassMaterials.dialogGlass(
         isDark = MiuixTheme.colorScheme.background.luminance() < 0.5f,
     )
-
 
     @Composable
     fun stroke(): GlassStroke = GlassStrokes.forTheme(
@@ -35,11 +29,9 @@ object GlassBottomSheetDefaults {
         dark = GlassStrokes.MiddleDark,
     )
 
-
     @Composable
     fun containerColor(): Color = MiuixTheme.colorScheme.background
 }
-
 
 @Composable
 fun glassBottomSheetSurface(

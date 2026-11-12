@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.layout
 
 import androidx.compose.animation.core.Animatable
@@ -39,11 +36,8 @@ import top.yukonga.miuix.kmp.basic.ListPopupContent
 import top.yukonga.miuix.kmp.basic.ListPopupDefaults
 import top.yukonga.miuix.kmp.basic.PopupPositionProvider
 import top.yukonga.miuix.kmp.basic.rememberListPopupLayoutInfo
-import top.yukonga.miuix.kmp.overlay.OverlayListPopup
 import top.yukonga.miuix.kmp.theme.LocalDismissState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowListPopup
-
 
 @Composable
 internal fun ListPopupLayout(
@@ -143,7 +137,6 @@ internal fun ListPopupLayout(
         )
 
         LaunchedEffect(Unit) {
-
 
             snapshotFlow { navigationEventState.transitionState }
                 .collect { transitionState ->

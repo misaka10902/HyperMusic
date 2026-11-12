@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.foundation.text.BasicText
@@ -15,7 +12,6 @@ import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.AnnotatedString.Range
 import androidx.compose.ui.text.LinkAnnotation
-import androidx.compose.ui.text.Paragraph
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextLinkStyles
@@ -30,7 +26,6 @@ import androidx.compose.ui.unit.TextUnit
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.LocalTextStyles
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-
 
 @Composable
 fun Text(
@@ -79,7 +74,6 @@ fun Text(
     )
 }
 
-
 @Composable
 fun Text(
     text: String,
@@ -124,7 +118,6 @@ fun Text(
         autoSize = autoSize,
     )
 }
-
 
 @Composable
 fun Text(
@@ -177,7 +170,6 @@ fun Text(
         autoSize = autoSize,
     )
 }
-
 
 @Composable
 fun Text(

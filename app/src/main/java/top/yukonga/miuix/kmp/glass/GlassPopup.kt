@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.animation.animateColorAsState
@@ -45,69 +42,47 @@ import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.basic.ArrowRight
 import top.yukonga.miuix.kmp.icon.basic.Check
-import top.yukonga.miuix.kmp.layout.CascadingPopupDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-
 
 object GlassPopupDefaults {
 
-
     val MinWidth: Dp = 200.dp
-
 
     val MaxWidth: Dp = 288.dp
 
-
     val MaxHeight: Dp = 416.dp
-
 
     val SafeMargin: Dp = 12.dp
 
-
     val ContentPaddingVertical: Dp = 8.dp
-
 
     val CornerRadius: Dp = 24.dp
 
-
     val DropdownCornerRadius: Dp = 24.dp
-
 
     val ItemMinHeight: Dp = 44.dp
 
-
     val ItemPaddingHorizontal: Dp = 20.dp
-
 
     val ItemPaddingVertical: Dp = 10.dp
 
-
     val ItemIconSize: Dp = 24.dp
-
 
     val ItemIconGap: Dp = 8.dp
 
-
     val DividerPaddingHorizontal: Dp = 20.dp
-
 
     val DividerPaddingVertical: Dp = 7.75.dp
 
-
     val DividerThickness: Dp = 0.5.dp
-
 
     val ItemTickSize: Dp = 24.dp
 
-
     val ItemArrowSize: Dp = 16.dp
-
 
     val ItemPressInset: Dp = 7.dp
 
-
     val ItemPressRadius: Dp = 15.dp
-
 
     @Composable
     fun itemPressedColor(): Color = if (MiuixTheme.colorScheme.background.luminance() < 0.5f) {
@@ -116,14 +91,12 @@ object GlassPopupDefaults {
         Color.Black.copy(alpha = 0.1f)
     }
 
-
     @Composable
     fun maskColor(): Color = if (MiuixTheme.colorScheme.background.luminance() < 0.5f) {
         Color.Black.copy(alpha = 0.4f)
     } else {
         Color.White.copy(alpha = 0.4f)
     }
-
 
     @Composable
     fun visuals(
@@ -135,16 +108,13 @@ object GlassPopupDefaults {
         containerColor: Color = containerColor(),
     ): GlassPopupVisuals = GlassPopupVisuals(style, alpha, stroke, shadow, material, containerColor)
 
-
     @Composable
     fun shape(cornerRadius: Dp = CornerRadius): GlassShape = GlassShape(cornerRadius)
-
 
     @Composable
     fun material(): GlassMaterial = GlassMaterials.popupViewGlass(
         isDark = MiuixTheme.colorScheme.background.luminance() < 0.5f,
     )
-
 
     @Composable
     fun stroke(): GlassStroke = GlassStrokes.forTheme(
@@ -153,7 +123,6 @@ object GlassPopupDefaults {
         dark = GlassStrokes.SmallDark,
     )
 
-
     @Composable
     fun containerColor(): Color = if (MiuixTheme.colorScheme.background.luminance() < 0.5f) {
         Color(0xFF2C2C2C)
@@ -161,7 +130,6 @@ object GlassPopupDefaults {
         Color.White
     }
 }
-
 
 @Composable
 fun BoxScope.GlassPopup(
@@ -249,7 +217,6 @@ fun BoxScope.GlassPopup(
     )
 }
 
-
 private fun directionFrame(
     placement: GlassPopupPlacement,
     end: Size,
@@ -275,7 +242,6 @@ private fun directionFrame(
         cornerRadius = startRadius + (endRadius - startRadius) * t,
     )
 }
-
 
 @Composable
 fun GlassPopupItem(

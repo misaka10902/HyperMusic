@@ -89,6 +89,7 @@ fun HyperMiniPlayer(
     onExpand: () -> Unit,
     modifier: Modifier = Modifier,
     onOpenQueue: () -> Unit = {},
+    widthFraction: Float = MiniPlayerWidthFraction,
 ) {
     val track = state.track
     val scope = rememberCoroutineScope()
@@ -113,7 +114,7 @@ fun HyperMiniPlayer(
         (if (corridorWpx > 0f) corridorWpx else sizeWidth) + with(density) { 40.dp.toPx() }
 
     Box(
-        modifier = modifier.fillMaxWidth(MiniPlayerWidthFraction)
+        modifier = modifier.fillMaxWidth(widthFraction)
             .floatingBarShadow(),
         contentAlignment = Alignment.Center,
     ) {

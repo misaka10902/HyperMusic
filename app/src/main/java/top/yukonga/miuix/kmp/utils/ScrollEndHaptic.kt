@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.utils
 
 import androidx.compose.ui.Modifier
@@ -23,7 +20,6 @@ private const val PRE_SCROLL_RESET_THRESHOLD = 1.0f
 private const val POST_FLING_AVAILABLE_VELOCITY_THRESHOLD = 1.0f
 private const val POST_FLING_CONSUMED_VELOCITY_THRESHOLD = 25.0f
 
-
 private class ScrollEndHapticNode(
     private var hapticFeedbackType: HapticFeedbackType,
 ) : DelegatingNode(),
@@ -37,9 +33,7 @@ private class ScrollEndHapticNode(
 
         Idle,
 
-
         TopBoundaryHit,
-
 
         BottomBoundaryHit,
     }
@@ -109,7 +103,6 @@ private data class ScrollEndHapticElement(
         properties["hapticFeedbackType"] = hapticFeedbackType
     }
 }
-
 
 fun Modifier.scrollEndHaptic(
     hapticFeedbackType: HapticFeedbackType = HapticFeedbackType.TextHandleMove,

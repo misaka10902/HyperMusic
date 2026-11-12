@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.squircle
 
 import androidx.compose.foundation.border
@@ -13,7 +10,6 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.unit.Dp
-
 
 @Composable
 fun Modifier.squircleBorder(
@@ -52,7 +48,6 @@ fun Modifier.squircleBorder(
         }
     }
 }
-
 
 @Composable
 fun Modifier.squircleBorder(

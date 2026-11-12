@@ -68,7 +68,6 @@ private const val HELP_TEXT =
     "本列表会列出所有在下载文件夹中保存的歌曲文件，所以可能会出现其他来源的歌曲。" +
         "由于 GD API 限制，不建议短时间内下载大量歌曲，否则会触发风控临时拉黑，敬请谅解。"
 
-
 @Composable
 fun DownloadsScreen(
     onBack: () -> Unit,
@@ -90,8 +89,6 @@ fun DownloadsScreen(
     var loading by remember { mutableStateOf(true) }
     var refreshKey by remember { mutableIntStateOf(0) }
 
-
-
     val readPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         Manifest.permission.READ_MEDIA_AUDIO
     } else {
@@ -108,7 +105,6 @@ fun DownloadsScreen(
         }
     }
 
-
     LaunchedEffect(refreshKey, refreshSignal) {
         loading = true
         songs = LocalSongs.scan(context)
@@ -119,7 +115,6 @@ fun DownloadsScreen(
     val multiSelect = selectedIds.isNotEmpty()
     BackHandler(enabled = multiSelect) { selectedIds = emptySet() }
     var confirmDelete by remember { mutableStateOf(false) }
-
 
     LaunchedEffect(selectedIds, songs) {
         val picked = songs.filter { it.id in selectedIds }
@@ -232,9 +227,7 @@ fun DownloadsScreen(
     ) {
         if (songs.isEmpty()) {
 
-
             if (!loading) item {
-
 
                 Box(
                     modifier = Modifier

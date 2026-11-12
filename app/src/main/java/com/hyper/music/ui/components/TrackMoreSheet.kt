@@ -78,10 +78,7 @@ fun HyperSheet(
 
     val hyperBackdrop = LocalActiveBackdrop.current
 
-
     val advancedMaterial = LocalAdvancedMaterialEnabled.current
-
-
 
     GlassBottomSheet(
         show = visible,
@@ -92,7 +89,6 @@ fun HyperSheet(
         cornerRadius = 32.dp,
         insideMargin = DpSize(12.dp, 0.dp),
         outsideMargin = DpSize(0.dp, 0.dp),
-
 
         defaultWindowInsetsPadding = followIme,
         content = {
@@ -229,7 +225,6 @@ fun TrackMoreSheet(
                         text = if (isFavorite) "取消收藏" else "添加到收藏",
                     ) { onDismiss(); onAddToFavorite(target) }
                 }
-
 
                 if (!target.isLocal) {
                     MenuEntry(MiuixIcons.Album, "专辑：${target.albumText}") { onDismiss(); onOpenAlbum(target) }

@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.blur.highlight
 
 import androidx.annotation.FloatRange
@@ -25,20 +22,15 @@ import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
 import kotlin.math.floor
 import kotlin.math.sqrt
 
-
 private const val LIGHT_REF_X = 0.5f
 private const val LIGHT_REF_Y = 0.7f
-
 
 @Immutable
 interface HighlightStyle {
 
-
     val color: Color
 
-
     val blendMode: BlendMode
-
 
     fun DrawScope.createShader(
         shape: Shape,
@@ -49,12 +41,10 @@ interface HighlightStyle {
 
     companion object {
 
-
         @Stable
         val Default: BloomStroke = BloomStroke.GlassStrokeMiddleLight
     }
 }
-
 
 @Immutable
 data class LightPosition(
@@ -63,14 +53,12 @@ data class LightPosition(
     val z: Float,
 )
 
-
 @Immutable
 data class LightSource(
     val position: LightPosition,
     val color: Color = Color.White,
     @param:FloatRange(from = 0.0) val intensity: Float = 1f,
 )
-
 
 @Immutable
 data class BloomStroke(
@@ -118,7 +106,6 @@ data class BloomStroke(
 
     companion object {
 
-
         @Stable
         val GlassStrokeBigLight: BloomStroke = BloomStroke(
             color = Color.White.copy(alpha = 0.05f),
@@ -132,7 +119,6 @@ data class BloomStroke(
                 intensity = 0.2f,
             ),
         )
-
 
         @Stable
         val GlassStrokeMiddleLight: BloomStroke = BloomStroke(
@@ -148,7 +134,6 @@ data class BloomStroke(
             ),
         )
 
-
         @Stable
         val GlassStrokeSmallLight: BloomStroke = BloomStroke(
             color = Color.White.copy(alpha = 0.05f),
@@ -162,7 +147,6 @@ data class BloomStroke(
                 intensity = 0.35f,
             ),
         )
-
 
         @Stable
         val GlassStrokeBigDark: BloomStroke = BloomStroke(
@@ -178,7 +162,6 @@ data class BloomStroke(
             ),
         )
 
-
         @Stable
         val GlassStrokeMiddleDark: BloomStroke = BloomStroke(
             color = Color.White.copy(alpha = 0.06f),
@@ -192,7 +175,6 @@ data class BloomStroke(
                 intensity = 0.25f,
             ),
         )
-
 
         @Stable
         val GlassStrokeSmallDark: BloomStroke = BloomStroke(
@@ -236,7 +218,6 @@ internal fun applyLightUniforms(
         }
     }
 }
-
 
 internal fun DrawScope.setCornerRadiiUniform(shader: RuntimeShader, shape: Shape) {
     val sizePx = size

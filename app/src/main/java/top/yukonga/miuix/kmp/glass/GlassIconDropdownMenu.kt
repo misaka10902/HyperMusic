@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.animation.core.animateFloatAsState
@@ -31,8 +28,6 @@ import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.layout.CascadingPopupDefaults
-
-
 
 @Suppress("ktlint:compose:modifier-not-used-at-root")
 @Composable

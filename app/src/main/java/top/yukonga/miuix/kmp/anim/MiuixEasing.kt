@@ -1,12 +1,8 @@
-
-
-
 package top.yukonga.miuix.kmp.anim
 
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.spring
 import kotlin.math.PI
-
 
 fun <T> folmeSpring(
     damping: Float,

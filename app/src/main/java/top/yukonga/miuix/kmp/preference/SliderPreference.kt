@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.preference
 
 import androidx.annotation.IntRange
@@ -36,7 +33,6 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.basic.ArrowRight
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-
 
 @Composable
 @NonRestartableComposable
@@ -130,7 +126,6 @@ fun SliderPreference(
         enabled = enabled,
     )
 }
-
 
 @Composable
 @NonRestartableComposable

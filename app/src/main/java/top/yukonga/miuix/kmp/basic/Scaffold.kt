@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.foundation.layout.Box
@@ -9,14 +6,11 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.onConsumedWindowInsetsChanged
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -36,7 +30,6 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.LocalDialogStates
 import top.yukonga.miuix.kmp.utils.LocalPopupStates
@@ -44,7 +37,6 @@ import top.yukonga.miuix.kmp.utils.LocalRootDialogStates
 import top.yukonga.miuix.kmp.utils.LocalRootPopupStates
 import top.yukonga.miuix.kmp.utils.MiuixPopupUtils
 import top.yukonga.miuix.kmp.utils.MiuixPopupUtils.Companion.MiuixPopupHost
-
 
 @Composable
 fun Scaffold(
@@ -97,7 +89,6 @@ fun Scaffold(
     }
 }
 
-
 @Composable
 private fun ScaffoldLayout(
     topBar: @Composable () -> Unit,
@@ -111,9 +102,6 @@ private fun ScaffoldLayout(
     contentWindowInsets: WindowInsets,
     content: @Composable (PaddingValues) -> Unit,
 ) {
-
-
-
 
     val contentPadding = remember {
         object : PaddingValues {
@@ -147,24 +135,20 @@ private fun ScaffoldLayout(
         val rightInset = contentWindowInsets.getRight(this@SubcomposeLayout, layoutDirection)
         val bottomInset = contentWindowInsets.getBottom(this@SubcomposeLayout)
 
-
         val popupPlaceables =
             subcompose(ScaffoldLayoutContent.Popup, popupContent)
                 .first()
                 .measure(looseConstraints)
-
 
         val topBarPlaceable =
             subcompose(ScaffoldLayoutContent.TopBar, topBarContent)
                 .first()
                 .measure(looseConstraints)
 
-
         val snackbarPlaceable =
             subcompose(ScaffoldLayoutContent.Snackbar, snackbarContent)
                 .first()
                 .measure(looseConstraints.offset(-leftInset - rightInset, -bottomInset))
-
 
         val fabPlaceable =
             subcompose(ScaffoldLayoutContent.Fab, floatingActionButtonContent)
@@ -203,7 +187,6 @@ private fun ScaffoldLayout(
             null
         }
 
-
         val bottomBarPlaceable =
             subcompose(ScaffoldLayoutContent.BottomBar, bottomBarContent)
                 .first()
@@ -214,13 +197,11 @@ private fun ScaffoldLayout(
                 it.height + FabSpacing.roundToPx() + contentWindowInsets.getBottom(this@SubcomposeLayout)
             } else {
 
-
                 bottomBarPlaceable.height + it.height + FabSpacing.roundToPx()
             }
         }
 
         val snackbarHeight = snackbarPlaceable.height
-
 
         val floatingToolbarPlaceable =
             subcompose(ScaffoldLayoutContent.FloatingToolbar, floatingToolbarContent)
@@ -228,9 +209,6 @@ private fun ScaffoldLayout(
                 .measure(looseConstraints.offset(-leftInset - rightInset, -bottomInset))
 
         val isFloatingToolbarEmpty = floatingToolbarPlaceable.width == 0 && floatingToolbarPlaceable.height == 0
-
-
-
 
         val floatingToolbarOffset = if (!isFloatingToolbarEmpty) {
             val alignment = floatingToolbarPosition.toAlignment()
@@ -276,7 +254,6 @@ private fun ScaffoldLayout(
                 0
             }
 
-
         val insets = contentWindowInsets.asPaddingValues(this)
         contentPadding.paddingHolder =
             PaddingValues(
@@ -295,7 +272,6 @@ private fun ScaffoldLayout(
                 start = insets.calculateStartPadding(layoutDirection),
                 end = insets.calculateEndPadding(layoutDirection),
             )
-
 
         val bodyContentPlaceable =
             subcompose(ScaffoldLayoutContent.MainContent, bodyContent)
@@ -342,7 +318,6 @@ private enum class ScaffoldLayoutContent {
     MainContent,
 }
 
-
 internal class MutableWindowInsets(initialInsets: WindowInsets = WindowInsets(0, 0, 0, 0)) : WindowInsets {
 
     var insets by mutableStateOf(initialInsets)
@@ -362,12 +337,9 @@ value class FabPosition internal constructor(@Suppress("unused") private val val
 
         val Start = FabPosition(0)
 
-
         val Center = FabPosition(1)
 
-
         val End = FabPosition(2)
-
 
         val EndOverlay = FabPosition(3)
     }
@@ -380,16 +352,12 @@ value class FabPosition internal constructor(@Suppress("unused") private val val
     }
 }
 
-
 @Immutable
 internal class FabPlacement(val left: Int, val width: Int, val height: Int)
 
-
 private val FabSpacing = 12.dp
 
-
 private val FloatingToolbarSpacing = 4.dp
-
 
 internal val Alignment.vertical: Alignment.Vertical
     get() = when (this) {
@@ -399,7 +367,6 @@ internal val Alignment.vertical: Alignment.Vertical
         else -> Alignment.CenterVertically
     }
 
-
 internal val Alignment.horizontal: Alignment.Horizontal
     get() = when (this) {
         Alignment.TopStart, Alignment.CenterStart, Alignment.BottomStart -> Alignment.Start
@@ -407,7 +374,6 @@ internal val Alignment.horizontal: Alignment.Horizontal
         Alignment.TopEnd, Alignment.CenterEnd, Alignment.BottomEnd -> Alignment.End
         else -> Alignment.CenterHorizontally
     }
-
 
 internal fun ToolbarPosition.toAlignment(): Alignment = when (this) {
     ToolbarPosition.TopStart -> Alignment.TopStart
@@ -424,12 +390,10 @@ internal fun ToolbarPosition.toAlignment(): Alignment = when (this) {
 
     ToolbarPosition.TopCenter -> Alignment.TopCenter
 
-
     ToolbarPosition.BottomCenter -> Alignment.BottomCenter
 
     else -> Alignment.BottomCenter
 }
-
 
 @kotlin.jvm.JvmInline
 value class ToolbarPosition internal constructor(@Suppress("unused") private val value: Int) {
@@ -437,25 +401,17 @@ value class ToolbarPosition internal constructor(@Suppress("unused") private val
 
         val TopStart = ToolbarPosition(0)
 
-
         val CenterStart = ToolbarPosition(1)
-
 
         val BottomStart = ToolbarPosition(2)
 
-
         val TopEnd = ToolbarPosition(3)
-
 
         val CenterEnd = ToolbarPosition(4)
 
-
         val BottomEnd = ToolbarPosition(5)
 
-
-
         val TopCenter = ToolbarPosition(6)
-
 
         val BottomCenter = ToolbarPosition(7)
     }

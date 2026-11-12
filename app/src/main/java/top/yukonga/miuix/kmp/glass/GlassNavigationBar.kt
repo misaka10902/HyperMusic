@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.animation.animateColorAsState
@@ -85,7 +82,6 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
 
-
 @Immutable
 data class GlassNavigationItem(
     val icon: ImageVector,
@@ -93,60 +89,44 @@ data class GlassNavigationItem(
     val contentDescription: String? = null,
 )
 
-
 object GlassNavigationBarDefaults {
-
 
     val Height: Dp = 54.dp
 
-
     val ActionSpacing: Dp = 12.dp
-
 
     val IconSize: Dp = 28.dp
 
-
     val LabelSize: Dp = 11.dp
-
 
     val LargeLabelSize: Dp = 16.dp
 
-
     val ContentPaddingVertical: Dp = 6.dp
-
 
     val LabelSpacing: Dp = 0.dp
 
-
     val IndicatorPaddingVertical: Dp = 3.dp
-
 
     val ContentPaddingHorizontal: Dp = 8.dp
 
-
     val IndicatorOverhang: Dp = 5.dp
 
-
     val PressedAlpha: Float = 0.6f
-
 
     @Composable
     fun stroke(): GlassStroke = GlassStrokes.forTheme(
         isDark = MiuixTheme.colorScheme.background.luminance() < 0.5f,
     )
 
-
     @Composable
     fun material(): GlassMaterial = GlassMaterials.puredThinGlass(
         isDark = MiuixTheme.colorScheme.background.luminance() < 0.5f,
     )
 
-
     @Composable
     fun indicatorColor(): Color = indicatorTint().copy(
         alpha = if (MiuixTheme.colorScheme.background.luminance() < 0.5f) 0.12f else 0.06f,
     )
-
 
     @Composable
     fun indicatorPressedColor(): Color = indicatorTint().copy(
@@ -160,7 +140,6 @@ object GlassNavigationBarDefaults {
         else -> Color.Black
     }
 }
-
 
 @Composable
 fun GlassNavigationBar(
@@ -220,8 +199,6 @@ fun GlassNavigationBar(
         leftSpring: SpringSpec<Float> = GlassMotion.edgeSpring(newLeft <= left.value),
         rightSpring: SpringSpec<Float> = GlassMotion.edgeSpring(newLeft > left.value),
     ) {
-
-
 
         scope.launch { left.animateTo(newLeft, leftSpring) }
         scope.launch { right.animateTo(newRight, rightSpring) }
@@ -337,7 +314,6 @@ fun GlassNavigationBar(
                                 val selectionWidth = size.width.toFloat()
                                 if (selectionWidth <= contentInset * 2f) return@awaitEachGesture
 
-
                                 fun logicalX(x: Float) = if (layoutDirection == LayoutDirection.Rtl) size.width - x else x
                                 fun indexAt(x: Float): Int {
                                     val span = (selectionWidth - contentInset * 2f) / items.size
@@ -361,12 +337,10 @@ fun GlassNavigationBar(
                                         val change = event.changes.firstOrNull { it.id == down.id } ?: break
                                         if (!change.pressed || change.isConsumed) break
 
-
                                         val width = size.width.toFloat()
                                         val chipW = (width - contentInset * 2f) / items.size + overhang * 2f
                                         val maxLeft = (width - chipW).coerceAtLeast(0f)
                                         val x = logicalX(change.position.x)
-
 
                                         val pointerDelta = change.position.x - change.previousPosition.x
                                         val delta = if (layoutDirection == LayoutDirection.Rtl) -pointerDelta else pointerDelta
@@ -395,7 +369,6 @@ fun GlassNavigationBar(
                                     pressedIndex = -1
                                     dragging.value = false
 
-
                                 }
                             }
                         }
@@ -410,7 +383,6 @@ fun GlassNavigationBar(
                     .matchParentSize()
                     .padding(vertical = GlassNavigationBarDefaults.IndicatorPaddingVertical)
                     .layout { measurable, constraints ->
-
 
                         val bounds = navigationIndicatorBounds(
                             left.value,

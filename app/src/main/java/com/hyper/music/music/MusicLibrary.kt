@@ -105,7 +105,6 @@ object MusicLibrary {
         prefs.edit().putFloat(KEY_COVER_RADIUS, r).apply()
     }
 
-
     fun setCoverCircular(circular: Boolean) {
         _settings.value = _settings.value.copy(coverCircular = circular)
         prefs.edit().putBoolean(KEY_COVER_CIRCLE, circular).apply()
@@ -152,7 +151,6 @@ object MusicLibrary {
         _settings.value = _settings.value.copy(lyricCentered = centered)
         prefs.edit().putBoolean(KEY_LYRIC_CENTERED, centered).apply()
     }
-
 
     fun setLyricFontWeight(weight: Int) {
         val v = weight.coerceIn(300, 900)
@@ -213,7 +211,6 @@ object MusicLibrary {
         _history.value = emptyList()
         prefs.edit().remove(KEY_HISTORY).apply()
     }
-
 
     fun removeByLocalUri(uris: Set<String>) {
         if (uris.isEmpty()) return
@@ -290,7 +287,6 @@ object MusicLibrary {
 
     fun isFavorite(songId: String): Boolean = _favorites.value.any { it.id == songId }
 
-
     fun toggleFavorite(song: Song): Boolean {
         val current = _favorites.value
         val added = current.none { it.id == song.id }
@@ -307,7 +303,6 @@ object MusicLibrary {
         prefs.edit().putString(KEY_FAVORITES, encodeSongs(list)).apply()
     }
 
-
     fun reorderFavorites(from: Int, to: Int) {
         val list = _favorites.value.toMutableList()
         if (from == to || from !in list.indices || to !in list.indices) return
@@ -315,7 +310,6 @@ object MusicLibrary {
         _favorites.value = list
         prefs.edit().putString(KEY_FAVORITES, encodeSongs(list)).apply()
     }
-
 
     fun toggleFavoriteWithToast(context: Context, song: Song) {
         val added = toggleFavorite(song)
@@ -372,7 +366,6 @@ object MusicLibrary {
         persistPlaylists(list)
     }
 
-
     fun reorderPlaylists(from: Int, to: Int) {
         val list = _playlists.value.toMutableList()
         if (from == to || from !in list.indices || to !in list.indices) return
@@ -380,7 +373,6 @@ object MusicLibrary {
         _playlists.value = list
         persistPlaylists(list)
     }
-
 
     fun reorderPlaylistSongs(playlistId: String, from: Int, to: Int) {
         if (from == to) return

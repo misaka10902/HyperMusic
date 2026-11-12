@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.foundation.clickable
@@ -19,7 +16,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.interfaces.HoldDownObserver
 import top.yukonga.miuix.kmp.squircle.squircleSurface
-
 
 @Composable
 fun IconButton(
@@ -63,12 +59,9 @@ fun IconButton(
 
 object IconButtonDefaults {
 
-
     val MinWidth = 40.dp
 
-
     val MinHeight = 40.dp
-
 
     val CornerRadius = 40.dp
 }

@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.layout
 
 import androidx.compose.animation.core.Animatable
@@ -80,14 +77,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.anim.folmeSpring
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.LocalDismissState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.abs
-
 
 @Suppress("ktlint:compose:modifier-not-used-at-root")
 @Composable
@@ -209,7 +203,6 @@ internal fun BottomSheetContentLayout(
 
         LaunchedEffect(allowDismiss) {
 
-
             snapshotFlow { navigationEventState.transitionState }
                 .collect { transitionState ->
                     if (
@@ -238,7 +231,6 @@ internal fun BottomSheetContentLayout(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-
 
                 .pointerInput(allowDismiss) {
                     detectTapGestures(
@@ -387,7 +379,6 @@ internal fun BottomSheetContent(
         }
     }
 
-
     val performSettle: (Float) -> Unit = remember(allowDismiss, density) {
         { velocity ->
             settlingJob.value?.cancel()
@@ -395,9 +386,6 @@ internal fun BottomSheetContent(
             settlingJob.value = coroutineScope.launch {
                 val currentOffset = dragOffsetY.value
                 val dismissThresholdPx = with(density) { 150.dp.toPx() }
-
-
-
 
                 val velocityThresholdPx = with(density) { 800.dp.toPx() }
                 val windowHeightPx = with(density) { currentWindowHeight.toPx() }
@@ -451,12 +439,10 @@ internal fun BottomSheetContent(
         canDragSheetFromNestedScroll.value = false
     }
 
-
     val nestedScrollConnection = remember(enableNestedScroll, allowDismiss, density) {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 if (!enableNestedScroll || source != NestedScrollSource.UserInput) return Offset.Zero
-
 
                 if (isSettling.value) {
                     settlingJob.value?.cancel()
@@ -498,7 +484,6 @@ internal fun BottomSheetContent(
                     dragSnapChannel.trySend(newOffset)
                     updateDimAlpha(newOffset)
 
-
                     val windowHeightPx = with(density) { currentWindowHeight.toPx() }
                     if (newOffset > windowHeightPx) {
                         performSettle(0f)
@@ -513,7 +498,6 @@ internal fun BottomSheetContent(
             override suspend fun onPreFling(available: Velocity): Velocity {
                 try {
                     if (!enableNestedScroll || isSettling.value) return Velocity.Zero
-
 
                     if (dragOffsetY.value > 0) {
                         performSettle(available.y)
@@ -624,8 +608,6 @@ private fun BottomSheetColumn(
                 .heightIn(max = windowHeight - topInset)
                 .onGloballyPositioned { coordinates ->
 
-
-
                     if (imeInsets.getBottom(density) == 0) {
                         sheetHeightPx.intValue = coordinates.size.height
                     }
@@ -665,7 +647,6 @@ private fun BottomSheetColumn(
     }
 }
 
-
 @Composable
 private fun BoxScope.OverscrollBackground(
     dragOffsetY: Animatable<Float, *>,
@@ -704,7 +685,6 @@ private fun CoroutineScope.animateHandlePressRelease(
     launch { pressScale.animateTo(targetValue = 1f, animationSpec = tween(durationMillis = 150)) }
     launch { pressWidth.animateTo(targetValue = 45f, animationSpec = tween(durationMillis = 150)) }
 }
-
 
 @Composable
 private fun DragHandleArea(
@@ -802,7 +782,6 @@ private fun TitleAndActionsRow(
             startAction?.invoke()
         }
 
-
         title?.let {
             Text(
                 text = it,
@@ -814,13 +793,11 @@ private fun TitleAndActionsRow(
             )
         }
 
-
         Box(modifier = Modifier.align(Alignment.CenterEnd)) {
             endAction?.invoke()
         }
     }
 }
-
 
 private suspend fun CoroutineScope.animateDismissOffScreen(
     dragOffsetY: Animatable<Float, *>,
@@ -849,23 +826,17 @@ private suspend fun CoroutineScope.animateDismissOffScreen(
 
 object BottomSheetDefaults {
 
-
     @Composable
     fun backgroundColor() = MiuixTheme.colorScheme.background
-
 
     @Composable
     fun dragHandleColor() = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.2f)
 
-
     val cornerRadius = 28.dp
-
 
     val maxWidth = 640.dp
 
-
     val outsideMargin = DpSize(0.dp, 0.dp)
-
 
     val insideMargin = DpSize(24.dp, 0.dp)
 }

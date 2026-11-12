@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -20,7 +17,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.squircle.squircleBackground
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-
 
 @Composable
 @NonRestartableComposable
@@ -72,13 +68,10 @@ fun FloatingToolbar(
 
 object FloatingToolbarDefaults {
 
-
     val CornerRadius = 50.dp
-
 
     @Composable
     fun defaultColor() = MiuixTheme.colorScheme.surfaceContainer
-
 
     val OutSidePadding = PaddingValues(12.dp, 8.dp)
 }

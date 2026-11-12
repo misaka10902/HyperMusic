@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.foundation.IndicationNodeFactory
@@ -37,13 +34,11 @@ import top.yukonga.miuix.kmp.basic.ButtonColors
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 enum class GlassDialogButtonRole {
     Normal,
     Primary,
     Destructive,
 }
-
 
 @Composable
 fun GlassDialogButton(
@@ -91,7 +86,6 @@ object GlassDialogButtonDefaults {
     val MinHeight = 50.dp
     val InsideMargin = PaddingValues(horizontal = 24.dp)
 
-
     @Composable
     fun buttonColors(role: GlassDialogButtonRole = GlassDialogButtonRole.Normal): ButtonColors {
         val scheme = MiuixTheme.colorScheme
@@ -113,7 +107,6 @@ object GlassDialogButtonDefaults {
             ButtonColors(color, disabledColor, contentColor, disabledContentColor)
         }
     }
-
 
     @Composable
     fun pressedColor(): Color {

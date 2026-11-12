@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.layout
 
 import androidx.compose.foundation.Image
@@ -35,7 +32,6 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.basic.ArrowRight
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 internal fun MorphHeaderRow(
     triggerItem: DropdownItem,
@@ -46,7 +42,6 @@ internal fun MorphHeaderRow(
     dropdownColors: DropdownColors,
     onClick: () -> Unit,
 ) {
-
 
     val backgroundColor = dropdownColors.containerColor
     val backgroundColorState = rememberUpdatedState(backgroundColor)
@@ -112,7 +107,6 @@ internal fun MorphHeaderRow(
                 )
             }
         },
-
 
         modifier = Modifier
             .fillMaxWidth()

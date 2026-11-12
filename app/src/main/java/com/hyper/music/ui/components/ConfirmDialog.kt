@@ -30,8 +30,6 @@ fun ConfirmDialog(
     val scheme = MiuixTheme.colorScheme
     val haptic = LocalHapticFeedback.current
 
-
-
     GlassDialog(
         show = show,
         onDismissRequest = onDismiss,

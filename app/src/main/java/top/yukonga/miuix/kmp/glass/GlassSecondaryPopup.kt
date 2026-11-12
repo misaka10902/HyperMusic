@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.animation.core.MutableTransitionState
@@ -27,7 +24,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.util.lerp
 import kotlinx.coroutines.flow.first
 import top.yukonga.miuix.kmp.blur.Backdrop
-
 
 @Composable
 fun BoxScope.GlassSecondaryPopup(
@@ -112,7 +108,6 @@ fun BoxScope.GlassSecondaryPopup(
     )
 }
 
-
 internal fun placeGlassSecondaryPopup(anchor: Rect, size: Size, margin: Float, page: Size, direction: LayoutDirection): Rect {
     val width = size.width.coerceAtMost((page.width - margin * 2f).coerceAtLeast(0f))
     val height = size.height.coerceAtMost((page.height - margin * 2f).coerceAtLeast(0f))
@@ -121,7 +116,6 @@ internal fun placeGlassSecondaryPopup(anchor: Rect, size: Size, margin: Float, p
     val top = anchor.top.coerceIn(margin, (page.height - margin - height).coerceAtLeast(margin))
     return Rect(left, top, left + width, top + height)
 }
-
 
 internal fun secondaryPopupRect(anchor: Rect, end: Rect, topPadding: Float, bottomPadding: Float, fraction: Float): Rect {
     val t = fraction.coerceIn(0f, 1f)

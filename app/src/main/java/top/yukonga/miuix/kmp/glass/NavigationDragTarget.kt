@@ -1,12 +1,8 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.ui.geometry.Offset
 import kotlin.math.abs
-
 
 internal data class NavigationDragTarget(
     val left: Float,
@@ -20,7 +16,6 @@ internal data class NavigationDragTarget(
     val rightSpring: SpringSpec<Float>
         get() = if (following) GlassMotion.navDragFollow() else GlassMotion.edgeSpring(movingRight)
 }
-
 
 internal fun navigationDragTarget(
     left: Float,
@@ -39,7 +34,6 @@ internal fun navigationDragTarget(
         movingRight = delta > 0f,
     )
 }
-
 
 internal fun navigationIndicatorBounds(left: Float, right: Float, containerWidth: Float, inset: Float): Offset {
     val min = inset.coerceIn(0f, containerWidth.coerceAtLeast(0f) / 2f)

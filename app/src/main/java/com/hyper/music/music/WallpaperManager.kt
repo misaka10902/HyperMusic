@@ -41,7 +41,6 @@ data class WallpaperState(
     val version: Int = 0,
 )
 
-
 object WallpaperManager {
     private const val PREFS = "wallpaper_prefs"
     private const val KEY_BLUR = "blur"
@@ -57,7 +56,6 @@ object WallpaperManager {
 
     private lateinit var appContext: Context
     private lateinit var prefs: SharedPreferences
-
 
     @Volatile
     private var cachedBitmap: ImageBitmap? = null
@@ -90,13 +88,11 @@ object WallpaperManager {
         _state.value = _state.value.copy(dim = v)
     }
 
-
     fun setCardOpacity(value: Float) {
         val v = value.coerceIn(0f, 1f)
         if (::prefs.isInitialized) prefs.edit().putFloat(KEY_CARD_OPACITY, v).apply()
         _state.value = _state.value.copy(cardOpacity = v)
     }
-
 
     suspend fun setImage(context: Context, uri: Uri): Boolean = withContext(Dispatchers.IO) {
         try {
@@ -149,7 +145,6 @@ object WallpaperManager {
     }
 }
 
-
 @Composable
 @Suppress("UNUSED_PARAMETER")
 fun WallpaperBackground(
@@ -160,8 +155,6 @@ fun WallpaperBackground(
     val image by produceState<ImageBitmap?>(initialValue = null, key1 = state.version) {
         value = withContext(Dispatchers.IO) { WallpaperManager.loadBitmap() }
     }
-
-
 
     val blurModifier = if (state.blur > 0.01f) Modifier.blur(state.blur.dp) else Modifier
     val baseScale = 1f + state.blur / 200f
@@ -195,7 +188,6 @@ fun WallpaperBackground(
         }
     }
 }
-
 
 @Composable
 fun WallpaperPageBox(

@@ -1,9 +1,5 @@
-
-
-
 package top.yukonga.miuix.kmp.blur
 
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.colorspace.ColorSpaces
@@ -22,17 +18,13 @@ import top.yukonga.miuix.kmp.blur.internal.createProgressiveBlurEffect
 import top.yukonga.miuix.kmp.blur.internal.downScaleExpFor
 import top.yukonga.miuix.kmp.blur.internal.runtimeShaderEffect as createRuntimeShaderEffect
 
-
 internal const val MAX_BLEND_LAYERS = 8
-
 
 fun BackdropEffectScope.blur(radiusX: Float, radiusY: Float = radiusX) {
     if (!isRuntimeShaderSupported()) return
     val scope = impl
     val sigmaX = radiusX * BLUR_RADIUS_TO_SIGMA
     val sigmaY = radiusY * BLUR_RADIUS_TO_SIGMA
-
-
 
     val exp = if (scope.forcedDownscaleExp >= 0) {
         scope.forcedDownscaleExp
@@ -45,8 +37,6 @@ fun BackdropEffectScope.blur(radiusX: Float, radiusY: Float = radiusX) {
     }
     val sf = 1 shl exp
 
-
-
     val kernelPadding = (BLUR_KERNEL_REACH * sf).toFloat()
     if (kernelPadding > padding) {
         padding = kernelPadding
@@ -54,7 +44,6 @@ fun BackdropEffectScope.blur(radiusX: Float, radiusY: Float = radiusX) {
 
     val paddedW = size.width + padding * 2f
     val paddedH = size.height + padding * 2f
-
 
     scope.blurBuiltPaddedW = paddedW
     scope.blurBuiltPaddedH = paddedH
@@ -90,7 +79,6 @@ fun BackdropEffectScope.blur(radiusX: Float, radiusY: Float = radiusX) {
     renderEffect = renderEffect?.chain(effect) ?: effect
 }
 
-
 fun BackdropEffectScope.progressiveBlur(
     radiusX: Float,
     radiusY: Float = radiusX,
@@ -100,14 +88,8 @@ fun BackdropEffectScope.progressiveBlur(
     val scope = impl
     if (scope.progressiveCompositeActive) {
 
-
-
-
         val rX = radiusX.coerceAtLeast(0f)
         val rY = radiusY.coerceAtLeast(0f)
-
-
-
 
         val sigma1 = maxOf(rX, rY) * BLUR_RADIUS_TO_SIGMA * PROGRESSIVE_LEVEL_FRACTION_1
         val exp = downScaleExpFor(sigma1 * sigma1)
@@ -137,8 +119,6 @@ fun BackdropEffectScope.progressiveBlur(
     val sigmaX = radiusX * BLUR_RADIUS_TO_SIGMA
     val sigmaY = radiusY * BLUR_RADIUS_TO_SIGMA
 
-
-
     val exp = downScaleExpFor(maxOf(sigmaX * sigmaX, sigmaY * sigmaY))
     val sf = 1 shl exp
 
@@ -151,7 +131,6 @@ fun BackdropEffectScope.progressiveBlur(
     val compH = size.height
     val paddedW = compW + padding * 2f
     val paddedH = compH + padding * 2f
-
 
     scope.blurBuiltPaddedW = paddedW
     scope.blurBuiltPaddedH = paddedH
@@ -202,19 +181,15 @@ fun BackdropEffectScope.progressiveBlur(
     renderEffect = renderEffect?.chain(effect) ?: effect
 }
 
-
 fun BackdropEffectScope.noiseDither(coefficient: Float) {
     if (coefficient <= 0f) return
     noiseCoefficient = coefficient
 }
 
-
 fun BackdropEffectScope.blendColors(colors: BlurColors) {
     if (colors.blendColors.isEmpty()) return
     if (!isRuntimeShaderSupported()) return
     val scope = impl
-
-
 
     if (scope.progressiveCompositeActive && !scope.cachedProgRadiusX.isNaN() &&
         renderEffect == null && scope.progressivePostBlend == null
@@ -225,7 +200,6 @@ fun BackdropEffectScope.blendColors(colors: BlurColors) {
 
     renderEffect = renderEffect.chain(obtainBlendColorsEffect(scope, colors))
 }
-
 
 internal fun obtainBlendColorsEffect(scope: BackdropEffectScopeImpl, colors: BlurColors): RenderEffect {
     val cached = scope.cachedBlendResult
@@ -242,7 +216,6 @@ internal fun obtainBlendColorsEffect(scope: BackdropEffectScopeImpl, colors: Blu
         scope.cachedBlendResult = it
     }
 }
-
 
 internal fun buildRampBlendColorsEffect(
     scope: BackdropEffectScopeImpl,
@@ -278,8 +251,6 @@ private fun RuntimeShader.setBlendLayerUniforms(scope: BackdropEffectScopeImpl, 
 
     setFloatUniform("layerCount", layerCount.toFloat())
 
-
-
     for (i in 0 until layerCount) {
         val entry = layerList[i]
         modes[i] = entry.mode.value.toFloat()
@@ -308,7 +279,6 @@ private fun RuntimeShader.setBlendLayerUniforms(scope: BackdropEffectScopeImpl, 
     }
 }
 
-
 fun BackdropEffectScope.textureBlurEffect(
     blurRadiusX: Float,
     blurRadiusY: Float = blurRadiusX,
@@ -322,7 +292,6 @@ fun BackdropEffectScope.textureBlurEffect(
     blur(clampedX * density, clampedY * density)
     blendColors(colors)
 }
-
 
 fun BackdropEffectScope.progressiveTextureBlurEffect(
     blurRadiusX: Float,

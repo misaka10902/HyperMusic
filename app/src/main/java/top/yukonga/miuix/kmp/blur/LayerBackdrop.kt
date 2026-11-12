@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.blur
 
 import androidx.compose.runtime.Composable
@@ -25,7 +22,6 @@ import top.yukonga.miuix.kmp.blur.internal.InverseLayerScope
 
 private val DefaultOnDraw: ContentDrawScope.() -> Unit = { drawContent() }
 
-
 @Composable
 fun rememberLayerBackdrop(
     graphicsLayer: GraphicsLayer = rememberGraphicsLayer(),
@@ -36,7 +32,6 @@ fun rememberLayerBackdrop(
         LayerBackdrop(graphicsLayer) { currentOnDraw() }
     }
 }
-
 
 @Stable
 class LayerBackdrop internal constructor(
@@ -80,7 +75,6 @@ class LayerBackdrop internal constructor(
                 val inv = 1f / downscaleFactor
                 val scaledX = offset.x * inv
                 val scaledY = offset.y * inv
-
 
                 offsetResidualX = 0f
                 offsetResidualY = 0f

@@ -56,8 +56,6 @@ private fun hyperOsDarkColors(): Colors = darkColorScheme(
     sliderKeyPointForeground = Color(0xFF5DAAFF),
 )
 
-
-
 private fun mikuLightColors(): Colors = lightColorScheme(
     primary = Color(0xFF39C5BB),
     primaryVariant = Color(0xFF39C5BB),
@@ -130,17 +128,11 @@ fun CourseHyperTheme(
             darkColors = darkColors,
         )
     }
-    // 目标配色：由主题控制器按「跟随系统 / 浅色 / 深色」解析得到
+
     val targetColors = controller.currentColors()
 
-    // 实际下发给界面的配色。所有控件读取的都是它，因此只要逐帧改它的色值，
-    // 文字、卡片、按钮、分隔线、底色都会一起平滑过渡。
     val animatedColors = remember { targetColors.copy() }
 
-    // 深浅色切换 / 换主题色时做一次颜色插值动画。
-    // 壁纸是独立绘制的位图（WallpaperBackground 内部用 Crossfade 管理图片本身），
-    // 不读取主题色，所以不会被这个动画影响 —— 有壁纸时只有控件渐变，壁纸保持不动；
-    // 没有壁纸时背景由 surface 这类主题色绘制，会和控件一起渐变。
     LaunchedEffect(targetColors) {
         val from = animatedColors.copy()
         val progress = Animatable(0f)

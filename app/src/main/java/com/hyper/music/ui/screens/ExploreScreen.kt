@@ -122,13 +122,11 @@ private val SearchFieldHeight = 46.dp
 
 private val SearchFieldTopGap = 10.dp
 
-
 private val SectionGap = 12.dp
 
 private val TabChipHeight = 36.dp
 
 private val PlayBarTopReserve = 133.dp
-
 
 private fun Modifier.fadeVerticalEdges(): Modifier = this
     .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
@@ -185,10 +183,9 @@ fun ExploreScreen(
     val searchHistory by SearchHistoryStore.items.collectAsState()
     LaunchedEffect(Unit) { SearchHistoryStore.init(context) }
 
-
     var showClearHistoryDialog by remember { mutableStateOf(false) }
     var pendingClearHistory by remember { mutableStateOf(false) }
-    // 确认清空后先让所有词条各自淡出/收窄，动画结束再真正清库，避免一帧全没
+
     var clearingHistory by remember { mutableStateOf(false) }
     LaunchedEffect(pendingClearHistory) {
         if (!pendingClearHistory) return@LaunchedEffect
@@ -251,7 +248,6 @@ fun ExploreScreen(
         if (hideKeyboard) {
             keyboard?.hide()
 
-
             inputRef?.clearFocus()
         }
     }
@@ -278,12 +274,8 @@ fun ExploreScreen(
         keyboard?.hide()
     }
 
-
     val searchEngaged = searchMode || query.isNotBlank() || searchedKeyword.isNotBlank()
 
-
-    // 输入法是否真的在弹出：有键盘时返回键先收键盘（与系统一致），
-    // 没有键盘时返回键必须和右上角 X 的行为完全一致 —— 直接退出搜索回到首页。
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
 
     fun closeKeyboard() {
@@ -295,8 +287,6 @@ fun ExploreScreen(
         keyboard?.hide()
     }
 
-    // 注意：页面内的 BackHandler 会被 MainActivity 外层的 NavigationEventDispatcher 关掉
-    // （那里的 dispatcher 被显式禁用），所以返回键改由 Activity 统一转发一个信号过来。
     LaunchedEffect(exitSearchSignal) {
         if (exitSearchSignal <= 0) return@LaunchedEffect
         if (imeVisible) closeKeyboard() else exitSearch()
@@ -335,7 +325,6 @@ fun ExploreScreen(
         delay(500)
         if (query.trim() != kw) return@LaunchedEffect
 
-
         if (kw == searchedKeyword) return@LaunchedEffect
         searchJob?.cancel()
         searchJob = scope.launch { runThreeWaySearch(kw, forced = false) }
@@ -361,12 +350,10 @@ fun ExploreScreen(
 
     val tabsVisible = searchMode && searched
 
-
     val searchFieldZone = SearchFieldTopGap + SearchFieldHeight + SectionGap
     val tabZone = if (tabsVisible) TabChipHeight else 0.dp
     val headerHeight = searchFieldZone + tabZone
     val contentTop = headerHeight
-
 
     val screenAlpha = remember(screenKey) { Animatable(0f) }
     val screenSlidePx = with(LocalDensity.current) { 16.dp.toPx() }
@@ -380,7 +367,6 @@ fun ExploreScreen(
             .padding(top = topInset),
     ) {
 
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -390,7 +376,7 @@ fun ExploreScreen(
                 },
         ) {
             when {
-                // 提交搜索后到结果返回之间（此时 searchedKeyword 还是空的）
+
                 loading && searchedKeyword.isBlank() -> SearchLoadingIndicator()
 
                 !searchMode -> RecommendSection(
@@ -431,7 +417,6 @@ fun ExploreScreen(
             }
         }
 
-
         if (!wallpaperActive) {
             Box(
                 modifier = Modifier
@@ -440,7 +425,6 @@ fun ExploreScreen(
                     .background(scheme.surface),
             )
         }
-
 
         Column(modifier = Modifier.fillMaxWidth()) {
             SearchField(
@@ -470,7 +454,6 @@ fun ExploreScreen(
                 }
             }
         }
-
 
         val showExit = searchMode || query.isNotBlank()
         Box(
@@ -514,7 +497,6 @@ fun ExploreScreen(
             }
         }
 
-
         ConfirmDialog(
             show = showClearHistoryDialog,
             title = "清除搜索历史",
@@ -522,7 +504,7 @@ fun ExploreScreen(
             confirmText = "清空",
             onConfirm = {
                 showClearHistoryDialog = false
-                // 真正清库交给 SearchHistorySection：等词条退出动画播完再清
+
                 clearingHistory = true
             },
             onDismiss = { showClearHistoryDialog = false },
@@ -572,7 +554,6 @@ private fun SearchResults(
     onLoadMoreSongs: () -> Unit,
     loadingMoreSongs: Boolean,
 ) {
-
 
     Box(
         modifier = Modifier
@@ -646,7 +627,6 @@ private fun SearchResults(
 @Composable
 private fun SegmentTab(text: String, selected: Boolean, onClick: () -> Unit) {
     val scheme = MiuixTheme.colorScheme
-
 
     val unselectedBg = scheme.surfaceContainer.copy(alpha = cardGlassAlpha())
     val interactionSource = remember { MutableInteractionSource() }
@@ -816,9 +796,7 @@ private fun SearchField(
     val fieldShape = RoundedCornerShape(height / 2)
     val density = LocalDensity.current
 
-
     val searchActive = searchMode || query.isNotBlank()
-
 
     val transition = updateTransition(searchActive, label = "glassSearch")
     val progress = transition.animateFloat(
@@ -876,7 +854,6 @@ private fun SearchField(
                 )
             }
         }
-
 
     }
 }
@@ -967,7 +944,6 @@ private fun NativeSearchInput(
         modifier = modifier,
     )
 }
-
 
 private object RecommendCache {
     var songs: List<Song>? = null
@@ -1100,9 +1076,7 @@ private fun SearchHistorySection(
 ) {
     val scheme = MiuixTheme.colorScheme
 
-
     val chipBg = scheme.surfaceContainer.copy(alpha = cardGlassAlpha())
-
 
     var removingKeywords by remember { mutableStateOf(setOf<String>()) }
     val clearScope = rememberCoroutineScope()
@@ -1111,8 +1085,7 @@ private fun SearchHistorySection(
             removingKeywords = removingKeywords.intersect(history.toSet())
         }
     }
-    // 「清空全部」：整块内容一起淡出（和历史页清空一致），播完再回调上层清库，
-    // 不是每个词条各自播放退出动画。
+
     val clearAlpha = remember { Animatable(1f) }
     LaunchedEffect(clearing) {
         if (!clearing) {
@@ -1143,7 +1116,6 @@ private fun SearchHistorySection(
                 modifier = Modifier.padding(start = 28.dp),
             )
         } else {
-
 
             Box(modifier = Modifier.graphicsLayer { alpha = clearAlpha.value }) {
             Column {
@@ -1187,7 +1159,6 @@ private fun SearchHistorySection(
                             indication = null,
                             onClick = {
 
-
                                 clearScope.launch {
                                     delay(120)
                                     onClear()
@@ -1210,7 +1181,6 @@ private fun SearchHistorySection(
         }
     }
 }
-
 
 @Composable
 private fun HistoryChip(
@@ -1242,7 +1212,6 @@ private fun HistoryChip(
                 val w = (placeable.width * (1f - p)).roundToInt()
                 layout(w, placeable.height) {
 
-
                     placeable.placeRelative(0, 0)
                 }
             },
@@ -1253,7 +1222,6 @@ private fun HistoryChip(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
-
 
                 modifier = Modifier
                     .height(40.dp)
@@ -1287,7 +1255,6 @@ private fun HistoryChip(
     }
 }
 
-/** 搜索提交到结果返回之间，加载提示距内容区顶部的距离（按设计稿写死，不做任何推算）。 */
 private val SearchLoadingTop = 320.dp
 
 @Composable

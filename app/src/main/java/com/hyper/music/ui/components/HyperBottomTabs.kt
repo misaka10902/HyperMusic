@@ -324,9 +324,6 @@ fun HyperBottomTabs(
             )
         }
 
-
-
-
         Box(
             Modifier
                 .fillMaxWidth()

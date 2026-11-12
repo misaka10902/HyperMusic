@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.blur.internal
 
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -9,8 +6,6 @@ import androidx.compose.ui.node.DelegatableNode
 import androidx.compose.ui.node.requireDensity
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.toIntSize
-
-
 
 context(node: DelegatableNode)
 internal inline fun DrawScope.recordLayer(

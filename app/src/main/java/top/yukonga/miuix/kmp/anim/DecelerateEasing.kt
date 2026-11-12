@@ -1,12 +1,8 @@
-
-
-
 package top.yukonga.miuix.kmp.anim
 
 import androidx.compose.animation.core.Easing
 import androidx.compose.runtime.Immutable
 import kotlin.math.pow
-
 
 @Immutable
 class DecelerateEasing(

@@ -7,7 +7,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.window.PopupPositionProvider
 import kotlin.math.roundToInt
 
-
 class RightAlignedTooltipPositionProvider(
     private val spacing: Int,
 ) : PopupPositionProvider {

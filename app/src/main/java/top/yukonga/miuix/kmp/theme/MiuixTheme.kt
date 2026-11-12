@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.theme
 
 import androidx.compose.foundation.LocalIndication
@@ -11,7 +8,6 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import top.yukonga.miuix.kmp.utils.MiuixIndication
 import top.yukonga.miuix.kmp.utils.MiuixOverscrollFactory
-
 
 @Composable
 fun MiuixTheme(
@@ -35,7 +31,6 @@ fun MiuixTheme(
         content()
     }
 }
-
 
 @Composable
 fun MiuixTheme(

@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.foundation.BorderStroke
@@ -30,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 @NonRestartableComposable
 fun Surface(
@@ -59,7 +55,6 @@ fun Surface(
         }
     }
 }
-
 
 @Composable
 fun Surface(
@@ -124,7 +119,6 @@ private fun Modifier.surface(
 object SurfaceDefaults {
 
     val Shape: Shape = RectangleShape
-
 
     val ShadowElevation: Dp = 0.dp
 }

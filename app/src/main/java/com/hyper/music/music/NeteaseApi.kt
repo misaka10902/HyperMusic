@@ -267,7 +267,6 @@ object NeteaseApi {
         }.getOrDefault(emptyList())
     }
 
-
     internal suspend fun playlistTracks(id: String): Pair<String, List<Song>> = withContext(Dispatchers.IO) {
         val pid = id.trim()
         if (pid.isBlank()) return@withContext "" to emptyList()
@@ -315,7 +314,6 @@ object NeteaseApi {
             cover = al?.optString("picUrl").orEmpty(),
         )
     }
-
 
     private fun getJson(url: String, timeoutMs: Int = 15_000): String? {
         var conn: HttpURLConnection? = null

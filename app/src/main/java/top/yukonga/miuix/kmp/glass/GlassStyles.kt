@@ -1,14 +1,9 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
 
-
 object GlassStyles {
-
 
     @Stable
     val CommonSmallThin: GlassStyle = GlassStyle(
@@ -58,7 +53,6 @@ object GlassStyles {
         blur = GlassBlur(small = 30.0f, big = 500.0f),
     )
 
-
     @Stable
     val CommonSmallNormal: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -106,7 +100,6 @@ object GlassStyles {
         ),
         blur = GlassBlur(small = 150.0f, big = 500.0f),
     )
-
 
     @Stable
     val CommonSmallRegular: GlassStyle = GlassStyle(
@@ -156,7 +149,6 @@ object GlassStyles {
         blur = GlassBlur(small = 8.0f, big = 500.0f),
     )
 
-
     @Stable
     val CommonSmallSemibold: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -204,7 +196,6 @@ object GlassStyles {
         ),
         blur = GlassBlur(small = 36.0f, big = 500.0f),
     )
-
 
     @Stable
     val CommonSmallBold: GlassStyle = GlassStyle(
@@ -254,7 +245,6 @@ object GlassStyles {
         blur = GlassBlur(small = 120.0f, big = 120.0f),
     )
 
-
     @Stable
     val CommonMediumThinLow: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -302,7 +292,6 @@ object GlassStyles {
         ),
         blur = GlassBlur(small = 36.0f, big = 500.0f),
     )
-
 
     @Stable
     val CommonMediumThinHigh: GlassStyle = GlassStyle(
@@ -352,7 +341,6 @@ object GlassStyles {
         blur = GlassBlur(small = 36.0f, big = 500.0f),
     )
 
-
     @Stable
     val CommonMediumRegularLowLight: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -400,7 +388,6 @@ object GlassStyles {
         ),
         blur = GlassBlur(small = 36.0f, big = 500.0f),
     )
-
 
     @Stable
     val CommonMediumRegularHighLight: GlassStyle = GlassStyle(
@@ -450,7 +437,6 @@ object GlassStyles {
         blur = GlassBlur(small = 36.0f, big = 500.0f),
     )
 
-
     @Stable
     val CommonMediumRegularDark: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -498,7 +484,6 @@ object GlassStyles {
         ),
         blur = GlassBlur(small = 36.0f, big = 500.0f),
     )
-
 
     @Stable
     val CommonMediumBoldLight: GlassStyle = GlassStyle(
@@ -548,7 +533,6 @@ object GlassStyles {
         blur = GlassBlur(small = 40.0f, big = 500.0f),
     )
 
-
     @Stable
     val CommonMediumBoldDark: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -596,7 +580,6 @@ object GlassStyles {
         ),
         blur = GlassBlur(small = 40.0f, big = 500.0f),
     )
-
 
     @Stable
     val CommonMediumBoldLow: GlassStyle = GlassStyle(
@@ -646,7 +629,6 @@ object GlassStyles {
         blur = GlassBlur(small = 40.0f, big = 500.0f),
     )
 
-
     @Stable
     val CommonLargeRegular: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -694,7 +676,6 @@ object GlassStyles {
         ),
         blur = GlassBlur(small = 80.0f, big = 500.0f),
     )
-
 
     @Stable
     val CommonLargeDemibold: GlassStyle = GlassStyle(
@@ -744,7 +725,6 @@ object GlassStyles {
         blur = GlassBlur(small = 50.0f, big = 500.0f),
     )
 
-
     @Stable
     val BionicMediumThin: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -792,7 +772,6 @@ object GlassStyles {
         ),
         blur = GlassBlur(small = 40.0f, big = 500.0f),
     )
-
 
     @Stable
     val BionicMediumNormal: GlassStyle = GlassStyle(
@@ -842,7 +821,6 @@ object GlassStyles {
         blur = GlassBlur(small = 120.0f, big = 120.0f),
     )
 
-
     @Stable
     val BionicMediumNormalMotion: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -890,7 +868,6 @@ object GlassStyles {
         ),
         blur = GlassBlur(small = 120.0f, big = 120.0f),
     )
-
 
     @Stable
     val BionicMediumRegular: GlassStyle = GlassStyle(
@@ -940,7 +917,6 @@ object GlassStyles {
         blur = GlassBlur(small = 36.0f, big = 500.0f),
     )
 
-
     @Stable
     val BionicMediumDemiboldMotion: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -988,7 +964,6 @@ object GlassStyles {
         ),
         blur = GlassBlur(small = 120.0f, big = 120.0f),
     )
-
 
     @Stable
     val BionicMediumSemiboldMotion: GlassStyle = GlassStyle(
@@ -1038,7 +1013,6 @@ object GlassStyles {
         blur = GlassBlur(small = 120.0f, big = 120.0f),
     )
 
-
     @Stable
     val TintPurple: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -1086,7 +1060,6 @@ object GlassStyles {
         ),
         blur = GlassBlur(small = 36.0f, big = 500.0f),
     )
-
 
     @Stable
     val TintOrange: GlassStyle = GlassStyle(
@@ -1136,7 +1109,6 @@ object GlassStyles {
         blur = GlassBlur(small = 36.0f, big = 500.0f),
     )
 
-
     @Stable
     val TintBlue: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -1184,7 +1156,6 @@ object GlassStyles {
         ),
         blur = GlassBlur(small = 36.0f, big = 500.0f),
     )
-
 
     @Stable
     val TintYellow: GlassStyle = GlassStyle(
@@ -1234,7 +1205,6 @@ object GlassStyles {
         blur = GlassBlur(small = 36.0f, big = 500.0f),
     )
 
-
     @Stable
     val TintBrown: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -1282,7 +1252,6 @@ object GlassStyles {
         ),
         blur = GlassBlur(small = 36.0f, big = 500.0f),
     )
-
 
     @Stable
     val TintBlackThin: GlassStyle = GlassStyle(
@@ -1332,7 +1301,6 @@ object GlassStyles {
         blur = GlassBlur(small = 50.0f, big = 500.0f),
     )
 
-
     @Stable
     val TintBlackNormal: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -1380,7 +1348,6 @@ object GlassStyles {
         ),
         blur = GlassBlur(small = 40.0f, big = 500.0f),
     )
-
 
     @Stable
     val TintBlackRegular: GlassStyle = GlassStyle(
@@ -1430,7 +1397,6 @@ object GlassStyles {
         blur = GlassBlur(small = 120.0f, big = 120.0f),
     )
 
-
     @Stable
     val TintBlackDemibold: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -1478,7 +1444,6 @@ object GlassStyles {
         ),
         blur = GlassBlur(small = 40.0f, big = 500.0f),
     )
-
 
     @Stable
     val TintBlackHeavy: GlassStyle = GlassStyle(
@@ -1528,7 +1493,6 @@ object GlassStyles {
         blur = GlassBlur(small = 40.0f, big = 500.0f),
     )
 
-
     @Stable
     val TintRedMotion: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -1576,7 +1540,6 @@ object GlassStyles {
         ),
         blur = GlassBlur(small = 120.0f, big = 120.0f),
     )
-
 
     @Stable
     val TintGreenMotion: GlassStyle = GlassStyle(
@@ -1626,7 +1589,6 @@ object GlassStyles {
         blur = GlassBlur(small = 120.0f, big = 120.0f),
     )
 
-
     @Stable
     val TintBlueMotion: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -1675,7 +1637,6 @@ object GlassStyles {
         blur = GlassBlur(small = 120.0f, big = 120.0f),
     )
 
-
     @Stable
     val TintBlueNormal: GlassStyle = GlassStyle(
         blend = GlassBlend(
@@ -1723,7 +1684,6 @@ object GlassStyles {
         ),
         blur = GlassBlur(small = 30.0f, big = 500.0f),
     )
-
 
     @Stable
     fun forTheme(isDark: Boolean, light: GlassStyle, dark: GlassStyle): GlassStyle = if (isDark) dark else light

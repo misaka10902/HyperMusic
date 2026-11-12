@@ -49,7 +49,6 @@ class ArtworkProvider : ContentProvider() {
         private fun fileDir(context: android.content.Context): File =
             File(context.cacheDir, DIR).apply { if (!exists()) mkdirs() }
 
-        // 封面缓存预算：只写不删会无限膨胀。限制文件数与总大小，写入前淘汰最旧文件。
         private const val MAX_FILES = 400
         private const val MAX_BYTES = 120L * 1024 * 1024
 
@@ -60,7 +59,7 @@ class ArtworkProvider : ContentProvider() {
             var count = files.size
             var total = files.sumOf { it.length() }
             if (count <= MAX_FILES && total <= MAX_BYTES) return
-            // 最旧在前，依次删除直到文件数与总大小都回到预算内（达标即停，保留较新文件）。
+
             for (f in files) {
                 if (count - 1 >= MAX_FILES || total - f.length() >= MAX_BYTES) {
                     total -= f.length()

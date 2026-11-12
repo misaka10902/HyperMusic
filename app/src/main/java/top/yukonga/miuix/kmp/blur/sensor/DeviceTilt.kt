@@ -1,13 +1,7 @@
-
-
-
 package top.yukonga.miuix.kmp.blur.sensor
 
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.State
-
 
 @Immutable
 data class DeviceTilt(
@@ -23,5 +17,3 @@ data class DeviceTilt(
         val Zero: DeviceTilt = DeviceTilt(0f, 0f, 0f, 0f)
     }
 }
-
-

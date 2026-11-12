@@ -24,7 +24,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.state.ToggleableState
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -112,7 +111,6 @@ fun TrackRow(
                     overflow = TextOverflow.Ellipsis,
                 )
 
-
                 if (showLocalBadge && song.isLocal) {
                     Spacer(Modifier.width(6.dp))
                     androidx.compose.foundation.Image(
@@ -153,7 +151,6 @@ fun TrackRow(
                         onClick = onMore,
                     ),
 
-
                 contentAlignment = if (moreAlignEnd) Alignment.CenterEnd else Alignment.Center,
             ) {
                 androidx.compose.foundation.Image(
@@ -164,24 +161,6 @@ fun TrackRow(
                 )
             }
         }
-    }
-}
-
-@Composable
-fun SectionHeader(text: String, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start,
-    ) {
-        Text(
-            text = text,
-            color = MiuixTheme.colorScheme.onSurfaceSecondary,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Medium,
-        )
     }
 }
 
@@ -209,7 +188,6 @@ fun EmptyHint(
     }
 }
 
-
 @Composable
 private fun EmptyHintContent(text: String, icon: ImageVector?) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -236,4 +214,3 @@ private fun EmptyHintText(text: String) {
         fontSize = 13.sp,
     )
 }
-

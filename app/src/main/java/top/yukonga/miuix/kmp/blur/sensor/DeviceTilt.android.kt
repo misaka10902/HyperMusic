@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.blur.sensor
 
 import android.content.Context
@@ -45,7 +42,6 @@ fun rememberDeviceTilt(smoothing: Float = 0.15f): State<DeviceTilt> {
             override fun onSensorChanged(event: SensorEvent) {
                 SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
                 SensorManager.getOrientation(rotationMatrix, orientation)
-
 
                 val gravityX = -rotationMatrix[6]
                 val gravityY = -rotationMatrix[7]

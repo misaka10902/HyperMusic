@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.blur.internal
 
 import androidx.compose.ui.geometry.Rect
@@ -18,17 +15,13 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-
 internal const val BLUR_RADIUS_TO_SIGMA = 0.45f
-
 
 internal const val BLUR_KERNEL_REACH = 13
 
 private const val WEIGHT_THRESHOLD = 0.002
 
-
 private const val MAX_DOWNSCALE_EXP = 4
-
 
 private val BLUR_H_KEYS: Array<Array<String>> = Array(MAX_BLUR_TAPS + 1) { n ->
     Array(MAX_DOWNSCALE_EXP + 1) { exp -> "LMGauss${n}_H_d${1 shl exp}" }
@@ -36,7 +29,6 @@ private val BLUR_H_KEYS: Array<Array<String>> = Array(MAX_BLUR_TAPS + 1) { n ->
 private val BLUR_V_KEYS: Array<Array<String>> = Array(MAX_BLUR_TAPS + 1) { n ->
     Array(MAX_DOWNSCALE_EXP + 1) { exp -> "LMGauss${n}_V_d${1 shl exp}" }
 }
-
 
 internal fun createBlurEffect(
     radiusX: Float,
@@ -49,8 +41,6 @@ internal fun createBlurEffect(
 ): RenderEffect? {
     if (radiusX <= 0f && radiusY <= 0f) return null
 
-
-
     val texW = (size.width.toInt() / downScale).coerceAtLeast(1).toFloat()
     val texH = (size.height.toInt() / downScale).coerceAtLeast(1).toFloat()
 
@@ -58,12 +48,9 @@ internal fun createBlurEffect(
     val paramOffsets = scope.blurParamOffsets
     val paramWeights = scope.blurParamWeights
 
-
     val exp = downScale.countTrailingZeroBits()
 
     var effect: RenderEffect? = null
-
-
 
     if (radiusX > 0f) {
         val n = computeBlurParamsInto(adjustedVarianceX, rawScratch, paramOffsets, paramWeights)
@@ -113,7 +100,6 @@ internal fun createBlurEffect(
     return effect
 }
 
-
 internal fun createProgressiveBlurEffect(
     radiusX: Float,
     radiusY: Float,
@@ -135,7 +121,6 @@ internal fun createProgressiveBlurEffect(
     val texW = (size.width.toInt() / downScale).coerceAtLeast(1).toFloat()
     val texH = (size.height.toInt() / downScale).coerceAtLeast(1).toFloat()
 
-
     val rad = angleDeg * (PI / 180.0)
     val ax = cos(rad).toFloat()
     val ay = sin(rad).toFloat()
@@ -149,7 +134,6 @@ internal fun createProgressiveBlurEffect(
     var projZero = (projZeroComp + padProj) / downScale
 
     if (abs(projZero - projFull) < 1e-3f) projZero = projFull + 1e-3f
-
 
     val maxCap = PROGRESSIVE_BLUR_MAX_TAP.toFloat()
     val maxRadiusX = (2f * sqrt(adjustedVarianceX) - 1f).coerceIn(0f, maxCap)
@@ -195,7 +179,6 @@ internal fun createProgressiveBlurEffect(
     return effect
 }
 
-
 internal fun createProgressiveStackEffect(
     radiusX: Float,
     radiusY: Float,
@@ -226,8 +209,6 @@ internal fun createProgressiveStackEffect(
     val projFull = (projMin + startFraction * span + padProj) / downScale
     var projZero = (projMin + endFraction * span + padProj) / downScale
     if (abs(projZero - projFull) < 1e-3f) projZero = projFull + 1e-3f
-
-
 
     fun levelSigma(sigma: Float, fraction: Float): Float {
         val target = sigma * fraction
@@ -261,20 +242,17 @@ internal fun createProgressiveStackEffect(
     }
 }
 
-
 internal fun progressiveSharpLoopRadius(radius: Float, exp: Int): Float {
     val sigma = radius.coerceAtLeast(0f) * BLUR_RADIUS_TO_SIGMA * PROGRESSIVE_LEVEL_FRACTION_2
     val effSigma = sqrt(maxOf(sigma * sigma, IMPLIED_BOX_VARIANCE[exp]))
     return (2f * effSigma - 1f).coerceIn(0f, PROGRESSIVE_BLUR_MAX_TAP.toFloat())
 }
 
-
 private fun progressiveSharpRawThreshold(curve: Float): Float {
     val ssThr = (2.0 / 3.0).pow(1.0 / curve.coerceIn(0.05f, 20f))
 
     return (0.5 - sin(asin(1.0 - 2.0 * ssThr) / 3.0)).toFloat()
 }
-
 
 internal fun createProgressiveSharpOverlayEffect(
     radiusX: Float,
@@ -303,8 +281,6 @@ internal fun createProgressiveSharpOverlayEffect(
     if (abs(projZero - projFull) < 1e-3f) projZero = projFull + 1e-3f
     val originProj = originX * ax + originY * ay
     val clampedCurve = curve.coerceIn(0.05f, 20f)
-
-
 
     val pThr = projFull + progressiveSharpRawThreshold(curve) * (projZero - projFull)
     val loopFull = pThr - originProj
@@ -337,8 +313,6 @@ internal fun createProgressiveSharpOverlayEffect(
         return runtimeShaderEffect(shader, "child")
     }
 
-
-
     return when {
         hasH && hasV -> loopPass(0, maxRadiusX, 1f, 0f, masked = false)
             .chain(loopPass(1, maxRadiusY, 0f, 1f, masked = true))
@@ -360,7 +334,6 @@ internal fun createProgressiveSharpOverlayEffect(
     }
 }
 
-
 internal fun progressiveSharpBandBounds(
     compW: Float,
     compH: Float,
@@ -379,8 +352,6 @@ internal fun progressiveSharpBandBounds(
     val projFull = projMin + startFraction * span
     var projZero = projMin + endFraction * span
     if (abs(projZero - projFull) < 1e-3f) projZero = projFull + 1e-3f
-
-
 
     val pThr = projFull + progressiveSharpRawThreshold(curve) * (projZero - projFull)
     val sign = if (projZero >= projFull) 1f else -1f
@@ -418,9 +389,7 @@ internal fun progressiveSharpBandBounds(
     )
 }
 
-
 private val IMPLIED_BOX_VARIANCE = floatArrayOf(0f, 3.0265f, 7.5625f, 9.0f, 202.696f)
-
 
 internal fun downScaleExpFor(sigmaSquared: Float): Int = when {
     sigmaSquared >= 1945f -> 4
@@ -430,21 +399,16 @@ internal fun downScaleExpFor(sigmaSquared: Float): Int = when {
     else -> 0
 }
 
-
 internal fun adjustedVarianceForExp(sigmaSquared: Float, exp: Int): Float {
     val ds = (1 shl exp).toFloat()
     return ((sigmaSquared - IMPLIED_BOX_VARIANCE[exp]) / (ds * ds)).coerceAtLeast(0.1f)
 }
 
-
 internal data class DownScaleBlend(val expLo: Int, val expHi: Int, val blend: Float)
-
 
 private val BOUNDARY_SIGMA = floatArrayOf(3.5496478f, 9.5f, 20f, 44.10215f)
 
-
 private const val BLEND_BAND_FRACTION = 0.12f
-
 
 internal fun computeDownScaleBlend(sigma: Float): DownScaleBlend {
     for (b in BOUNDARY_SIGMA.indices) {
@@ -459,7 +423,6 @@ internal fun computeDownScaleBlend(sigma: Float): DownScaleBlend {
     return DownScaleBlend(expLo = exp, expHi = exp, blend = 0f)
 }
 
-
 internal fun computeBlurParamsInto(
     variance: Float,
     rawScratch: DoubleArray,
@@ -470,11 +433,9 @@ internal fun computeBlurParamsInto(
 
     val v = variance.toDouble()
 
-
     for (i in 0..13) {
         rawScratch[i] = exp(-0.5 * i.toDouble() * i.toDouble() / v)
     }
-
 
     var total = rawScratch[0]
     for (i in 1..13) total += rawScratch[i] * 2.0
@@ -482,17 +443,12 @@ internal fun computeBlurParamsInto(
 
     var tapCount = 0
 
-
-
-
-
     val halfCenter = rawScratch[0] * 0.5
     val w1 = rawScratch[1]
     if (halfCenter + w1 > 1e-6) {
         outOffsets[0] = (w1 / (halfCenter + w1)).toFloat()
         tapCount = 1
     }
-
 
     var i = 2
     while (i < 14 && tapCount < MAX_BLUR_TAPS) {
@@ -506,12 +462,9 @@ internal fun computeBlurParamsInto(
         i += 2
     }
 
-
-
     var pairWeightSum = 0f
     for (j in 1 until tapCount) pairWeightSum += outWeights[j]
     outWeights[0] = (0.5f - pairWeightSum).coerceAtLeast(0f)
-
 
     for (j in 0 until tapCount) {
         if (outWeights[j] <= 0f || outWeights[j] >= 1f) {

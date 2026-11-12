@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.utils
 
 import androidx.compose.runtime.Stable
@@ -44,7 +41,6 @@ import kotlin.math.min
 import kotlin.math.round
 import kotlin.math.sign
 
-
 @Stable
 fun Modifier.overScrollVertical(
     nestedScrollToParent: Boolean = true,
@@ -55,7 +51,6 @@ fun Modifier.overScrollVertical(
     isEnabled = isEnabled,
 )
 
-
 @Stable
 fun Modifier.overScrollHorizontal(
     nestedScrollToParent: Boolean = true,
@@ -65,7 +60,6 @@ fun Modifier.overScrollHorizontal(
     nestedScrollToParent = nestedScrollToParent,
     isEnabled = isEnabled,
 )
-
 
 @Stable
 fun Modifier.overScrollOutOfBound(
@@ -132,8 +126,6 @@ private class OverscrollNode(
     private val springEngine = SpringEngine()
     private var animationJob: Job? = null
     private val offsetThreshold = 1f
-
-
 
     private var gestureActive = false
 
@@ -263,11 +255,9 @@ private class OverscrollNode(
         offset = sign(rawTouchAccumulation) * dampedDist
     }
 
-
     private fun syncRawAccumulationFromOffset() {
         rawTouchAccumulation = sign(offset) * SpringMath.obtainTouchDistance(offset, scrollRange)
     }
-
 
     private fun unwindStaleOffset(consumedDelta: Float) {
         if (abs(offset) <= offsetThreshold || consumedDelta == 0f) return
@@ -315,7 +305,6 @@ private class OverscrollNode(
         val realAvailable = available - parentConsumed
         val delta = if (isVertical) realAvailable.y else realAvailable.x
         if (delta == 0f) return parentConsumed
-
 
         if (animationJob?.isActive == true) syncRawAccumulationFromOffset()
         animationJob?.cancel()
@@ -452,11 +441,9 @@ private class OverscrollNode(
     }
 }
 
-
 class OverScrollState {
     var isOverScrollActive by mutableStateOf(false)
         internal set
 }
-
 
 val LocalOverScrollState = compositionLocalOf { OverScrollState() }

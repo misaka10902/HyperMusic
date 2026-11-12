@@ -34,7 +34,6 @@ import top.yukonga.miuix.kmp.glass.GlassMotion
 import top.yukonga.miuix.kmp.glass.GlassTopAppBarDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 fun ProgressiveBlurTopBar(
     backdrop: Backdrop,
@@ -54,9 +53,6 @@ fun ProgressiveBlurTopBar(
     } else {
         if (statusBarHeight > 0.dp) 80.dp + statusBarHeight else 120.dp + (topInset - 64.dp)
     }
-
-
-
 
     val isContentScrolled by remember(scrollBehavior) {
         derivedStateOf {

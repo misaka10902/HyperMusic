@@ -1,6 +1,4 @@
-
 package com.hyper.music.music
-
 
 data class LyricLine(
     val timeMs: Long,
@@ -8,14 +6,12 @@ data class LyricLine(
     val translation: String = "",
 )
 
-
 data class LyricResult(
     val lyric: String,
     val translation: String,
 )
 
 private val TIME_TAG = Regex("""\[(\d{1,3}):(\d{1,2})(?:[.:](\d{1,3}))?]""")
-
 
 private fun parseTime(text: String): Long? {
     val m = TIME_TAG.matchAt(text, 0) ?: return null
@@ -30,10 +26,8 @@ private fun parseTime(text: String): Long? {
     return minute * 60_000L + second * 1_000L + fraction
 }
 
-
 private fun stripTags(line: String): String =
     TIME_TAG.replace(line, "").trim()
-
 
 private fun parseLrc(raw: String?): Map<Long, String> {
     if (raw.isNullOrBlank()) return emptyMap()
@@ -60,7 +54,6 @@ private fun parseLrc(raw: String?): Map<Long, String> {
     return result
 }
 
-
 fun buildLyrics(raw: String?, translationRaw: String?): List<LyricLine> {
     val main = parseLrc(raw)
     if (main.isEmpty()) return emptyList()
@@ -69,10 +62,8 @@ fun buildLyrics(raw: String?, translationRaw: String?): List<LyricLine> {
         .sortedBy { it.key }
         .map { (time, text) -> LyricLine(time, text, trans[time].orEmpty()) }
 
-
         .filter { it.text.isNotBlank() || it.translation.isNotBlank() }
 }
-
 
 fun currentLineIndex(lines: List<LyricLine>, positionMs: Long): Int {
     if (lines.isEmpty()) return -1

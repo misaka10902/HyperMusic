@@ -9,7 +9,6 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 
-
 fun Modifier.bottomContentFade(
     startFromBottom: Dp,
     bottomAlpha: Float = 0.12f,

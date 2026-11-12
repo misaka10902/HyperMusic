@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.utils
 
 import androidx.compose.foundation.OverscrollEffect
@@ -33,7 +30,6 @@ import kotlin.math.min
 import kotlin.math.round
 import kotlin.math.sign
 
-
 object MiuixOverscrollFactory : OverscrollFactory {
     override fun createOverscrollEffect(): OverscrollEffect = MiuixOverscrollEffect()
 
@@ -42,10 +38,8 @@ object MiuixOverscrollFactory : OverscrollFactory {
     override fun hashCode(): Int = 1
 }
 
-
 class MiuixOverscrollEffect : OverscrollEffect {
     private val offsetThreshold = 1f
-
 
     private var lastPlacedOffsetX = 0f
     internal var offsetX = 0f
@@ -73,7 +67,6 @@ class MiuixOverscrollEffect : OverscrollEffect {
             }
         }
 
-
     internal var invalidateNodePlacement: (() -> Unit)? = null
 
     private var rawTouchAccumulationX = 0f
@@ -86,7 +79,6 @@ class MiuixOverscrollEffect : OverscrollEffect {
     private val springEngineY = SpringEngine()
     private var animationJobX: Job? = null
     private var animationJobY: Job? = null
-
 
     internal var launchAnimation: ((suspend CoroutineScope.() -> Unit) -> Job)? = null
     internal var getPullToRefreshState: (() -> PullToRefreshState?)? = null
@@ -138,7 +130,6 @@ class MiuixOverscrollEffect : OverscrollEffect {
         offsetY = sign(rawTouchAccumulationY) * SpringMath.obtainDampingDistance(normalized, scrollRangeV)
     }
 
-
     private fun syncRawAccumulationFromOffsetX() {
         rawTouchAccumulationX = sign(offsetX) * SpringMath.obtainTouchDistance(offsetX, scrollRangeH)
     }
@@ -146,7 +137,6 @@ class MiuixOverscrollEffect : OverscrollEffect {
     private fun syncRawAccumulationFromOffsetY() {
         rawTouchAccumulationY = sign(offsetY) * SpringMath.obtainTouchDistance(offsetY, scrollRangeV)
     }
-
 
     private fun unwindStaleOffsetX(consumedDelta: Float) {
         if (abs(offsetX) <= offsetThreshold || consumedDelta == 0f) return
@@ -234,7 +224,6 @@ class MiuixOverscrollEffect : OverscrollEffect {
 
         val bypassY = shouldBypassForPullToRefreshY()
 
-
         if (!bypassY && delta.y != 0f) {
             if (animationJobY?.isActive == true) syncRawAccumulationFromOffsetY()
             animationJobY?.cancel()
@@ -243,7 +232,6 @@ class MiuixOverscrollEffect : OverscrollEffect {
             if (animationJobX?.isActive == true) syncRawAccumulationFromOffsetX()
             animationJobX?.cancel()
         }
-
 
         var performScrollDeltaY = delta.y
         var extraConsumedY = 0f
@@ -264,7 +252,6 @@ class MiuixOverscrollEffect : OverscrollEffect {
             }
         }
 
-
         var performScrollDeltaX = delta.x
         var extraConsumedX = 0f
         if (abs(offsetX) > offsetThreshold && delta.x != 0f && sign(delta.x) != sign(rawTouchAccumulationX)) {
@@ -283,7 +270,6 @@ class MiuixOverscrollEffect : OverscrollEffect {
                 extraConsumedX = delta.x
             }
         }
-
 
         val adjustedDelta = Offset(performScrollDeltaX, performScrollDeltaY)
         val scrollConsumed = performScroll(adjustedDelta)
@@ -316,7 +302,6 @@ class MiuixOverscrollEffect : OverscrollEffect {
 
         var performVelocity = velocity
 
-
         if (!bypassY && isActiveY && velocity.y != 0f) {
             if (sign(velocity.y) == sign(offsetY)) {
                 startSpringAnimationY(velocity.y)
@@ -339,7 +324,6 @@ class MiuixOverscrollEffect : OverscrollEffect {
 
         val consumed = performFling(performVelocity)
         val remaining = performVelocity - consumed
-
 
         if (!bypassY) {
             startSpringAnimationY(remaining.y / 1.53333f)

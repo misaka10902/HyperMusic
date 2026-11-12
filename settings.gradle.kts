@@ -1,4 +1,3 @@
-// Hyper音乐 - Gradle 模块配置
 pluginManagement {
     repositories {
         google {
@@ -25,5 +24,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Hyper音乐"
 include(":app")
- 
-

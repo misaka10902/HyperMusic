@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.blur
 
 import androidx.compose.runtime.getValue
@@ -61,16 +58,9 @@ import kotlin.math.floor
 
 private val DefaultOnDrawBackdrop: DrawScope.(DrawScope.() -> Unit) -> Unit = { it() }
 
-
-
 private const val STACK_DITHER_MAX = 0.009f
 
-
-
-
-
 private const val NOISE_GRAIN_THRESHOLD = 0.005f
-
 
 fun Modifier.drawBackdrop(
     backdrop: Backdrop,
@@ -240,9 +230,7 @@ private class DrawBackdropNode(
         override val shape: Shape get() = shapeProvider.innerShape
     }
 
-
     private val graphicsContext get() = requireGraphicsContext()
-
 
     private inner class LevelTarget {
         var mainLayer: GraphicsLayer? = null
@@ -251,12 +239,7 @@ private class DrawBackdropNode(
         var downscaleFactor: Int = 1
         var padding: Float by mutableFloatStateOf(0f)
 
-
         var cascadeFirstStepScale: Int = 1
-
-
-
-
 
         val dsKeys = arrayOf("", "")
         val dsW = intArrayOf(-1, -1)
@@ -275,7 +258,6 @@ private class DrawBackdropNode(
             return cascadeLayers[index]
         }
 
-
         inline fun downsampleEffect(slot: Int, key: String, w: Int, h: Int, build: () -> RenderEffect): RenderEffect {
             val cached = dsEffects[slot]
             if (cached != null && dsKeys[slot] == key && dsW[slot] == w && dsH[slot] == h) return cached
@@ -286,7 +268,6 @@ private class DrawBackdropNode(
                 dsH[slot] = h
             }
         }
-
 
         inline fun noiseRenderEffect(coeff: Float, build: () -> RenderEffect): RenderEffect {
             val cached = noiseEffect
@@ -318,9 +299,7 @@ private class DrawBackdropNode(
     private val secondary = LevelTarget()
     private var crossfadeResultLayer: GraphicsLayer? = null
 
-
     private var blending: Boolean by mutableStateOf(false)
-
 
     private var blendFactor: Float by mutableFloatStateOf(0f)
 
@@ -355,7 +334,6 @@ private class DrawBackdropNode(
             }
         }
     }
-
 
     private fun DrawScope.renderBlurInto(target: LevelTarget) {
         val layer = target.mainLayer ?: return
@@ -392,13 +370,9 @@ private class DrawBackdropNode(
             )
         } else {
 
-
-
-
             target.cascadeFirstStepScale = 2
             val firstW = (fullWidth / 2).coerceAtLeast(1)
             val firstH = (fullHeight / 2).coerceAtLeast(1)
-
 
             val firstCascade = target.obtainCascade(0)
             recordLayer(firstCascade, size = IntSize(firstW, firstH)) { recordBackdrop(target) }
@@ -505,23 +479,12 @@ private class DrawBackdropNode(
     private val contentPaint = Paint()
     private val highlightPaint = Paint()
 
-
-
     private var contentBoundsRect: Rect? = null
-
-
-
-
-
-
 
     private var sharpLayer: GraphicsLayer? = null
     private var compositeAttempted = false
     private var compositeSupported = false
     private var sharpOverlayActive = false
-
-
-
 
     private var cachedStackEffect: RenderEffect? = null
     private var cachedStackRadiusX = Float.NaN
@@ -534,19 +497,8 @@ private class DrawBackdropNode(
     private var cachedStackPostBlend: BlurColors? = null
     private var cachedStackDither = Float.NaN
 
-
-
-
-
-
-
     private var stackDitherEffect: RenderEffect? = null
     private var stackDitherCoeff = Float.NaN
-
-
-
-
-
 
     private var stackDitherChained = false
 
@@ -561,10 +513,6 @@ private class DrawBackdropNode(
         }
     }
 
-
-
-
-
     private var sharpOverlayEffect: RenderEffect? = null
     private var sharpOverlayGradient: ProgressiveBlur? = null
     private var sharpOverlayW = Float.NaN
@@ -574,7 +522,6 @@ private class DrawBackdropNode(
     private var sharpExp = -1
     private var sharpBandOffset = IntOffset.Zero
     private var sharpBandSize = IntSize.Zero
-
 
     private fun DrawScope.drawBlurredBackdrop() {
         renderBlurInto(primary)
@@ -592,7 +539,6 @@ private class DrawBackdropNode(
             drawLayer(result)
         }
     }
-
 
     private fun DrawScope.drawSharpOverlay() {
         val bandSize = sharpBandSize
@@ -652,7 +598,6 @@ private class DrawBackdropNode(
                 highlight = resolved,
                 shape = effectScope.shape,
 
-
                 runtimeShaderCache = effectScope.runtimeShaderCache,
                 paint = highlightPaint,
             )
@@ -689,18 +634,12 @@ private class DrawBackdropNode(
         if (!enabled) return
         primary.ensureMain()
 
-
-
-
         effectScope.progressiveCompositeActive =
             progressiveGradient != null && !(compositeAttempted && !compositeSupported)
-
-
 
         effectScope.forcedDownscaleExp = -1
         effectScope.apply(effects)
         if (effectScope.progressiveCompositeActive) {
-
 
             finalizeProgressiveComposite()
         } else {
@@ -721,7 +660,6 @@ private class DrawBackdropNode(
             return
         }
 
-
         secondary.ensureMain()
         effectScope.forcedDownscaleExp = expHi
         effectScope.apply(effects)
@@ -734,7 +672,6 @@ private class DrawBackdropNode(
         blendFactor = factor
         blending = true
     }
-
 
     private fun finalizeProgressiveComposite() {
         val scope = effectScope
@@ -755,12 +692,9 @@ private class DrawBackdropNode(
         var postBlend = scope.progressivePostBlend
         if (postBlend != null && post != null) {
 
-
             post = obtainBlendColorsEffect(scope, postBlend).chain(post)
             postBlend = null
         }
-
-
 
         val noiseCoeff = scope.noiseCoefficient
         val ditherCoeff = when {
@@ -815,7 +749,6 @@ private class DrawBackdropNode(
         compositeSupported = stack != null
         if (stack == null) {
 
-
             scope.progressiveCompositeActive = false
             scope.apply(effects)
             chainFullResNoiseIfNeeded()
@@ -837,9 +770,6 @@ private class DrawBackdropNode(
         if (sharpOverlayGradient != gradient || sharpOverlayW != sw || sharpOverlayH != sh ||
             sharpRadiusX != rX || sharpRadiusY != rY || sharpExp != exp
         ) {
-
-
-
 
             val loopReach =
                 (progressiveLoopTapBound(maxOf(progressiveSharpLoopRadius(rX, exp), progressiveSharpLoopRadius(rY, exp))) + 1).toFloat()
@@ -891,7 +821,6 @@ private class DrawBackdropNode(
         sharpOverlayActive = sharpOverlayEffect != null
     }
 
-
     private fun chainFullResNoiseIfNeeded() {
         val noiseCoeff = effectScope.noiseCoefficient
         if (noiseCoeff > 0f && effectScope.downscaleFactor <= 1) {
@@ -924,7 +853,6 @@ private class DrawBackdropNode(
         }
     }
 
-
     private fun DrawScope.applyDownsampleStep(
         target: LevelTarget,
         slot: Int,
@@ -950,9 +878,7 @@ private class DrawBackdropNode(
             scale(scale, scale, Offset.Zero) { drawLayer(source) }
         }
 
-
     }
-
 
     private fun DrawScope.drawUpscaledLayer(
         target: LevelTarget,
@@ -998,7 +924,6 @@ private class DrawBackdropNode(
             }
         }
     }
-
 
     fun releaseCompositeResources() {
         sharpLayer?.let { graphicsContext.releaseGraphicsLayer(it) }

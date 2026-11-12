@@ -9,7 +9,6 @@ import top.yukonga.miuix.kmp.blur.Backdrop
 
 val LocalAdvancedMaterialEnabled = staticCompositionLocalOf { true }
 
-
 val LocalActiveBackdrop = staticCompositionLocalOf<Backdrop?> { null }
 
 @Composable

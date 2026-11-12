@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.utils
 
 import android.os.Build
@@ -12,7 +9,6 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastFold
-
 
 internal fun CompositionLocalConsumerModifierNode.pagerScrollConfig(): PagerScrollConfig = AndroidPagerScrollConfig(android.view.ViewConfiguration.get(requireView().context))
 

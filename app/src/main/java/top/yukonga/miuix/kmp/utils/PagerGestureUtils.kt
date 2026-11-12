@@ -1,6 +1,3 @@
-
-
-
 @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 
 package top.yukonga.miuix.kmp.utils
@@ -16,7 +13,6 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.ScrollScope
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,7 +47,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastAll
-import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastFirstOrNull
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -64,25 +59,20 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.roundToInt
 
-
 enum class PagerInterceptionMode(val title: String) {
 
     Native("Default"),
 
-
     CrossAxis("Cross-Axis"),
-
 
     TapToHalt("iOS-like"),
 }
-
 
 val PagerNavigationSpringSpec: SpringSpec<Float> = spring(
     stiffness = 322.2f,
     dampingRatio = 32.31f / (2f * kotlin.math.sqrt(322.2f)),
     visibilityThreshold = 0.5f,
 )
-
 
 suspend fun PagerState.springAnimateToPage(target: Int) {
     if (target !in 0 until pageCount) return
@@ -116,11 +106,9 @@ private suspend fun PagerState.animateToPage(
     if (pageCount > 0) updateCurrentPage(destination.coerceAtMost(pageCount - 1))
 }
 
-
 object PagerGestureNestedScrollConnection : NestedScrollConnection {
     override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity = Velocity(available.x, 0f)
 }
-
 
 fun Modifier.pagerGestureOverride(
     pagerState: PagerState,
@@ -151,7 +139,6 @@ fun Modifier.pagerGestureOverride(
     PagerInterceptionMode.Native -> this
 }
 
-
 fun Modifier.pagerGestureOverride(
     pagerState: PagerState,
     flingBehavior: FlingBehavior,
@@ -167,7 +154,6 @@ fun Modifier.pagerGestureOverride(
     flingTracker = flingTracker,
     onTriggered = onTriggered,
 )
-
 
 @Composable
 fun Modifier.pagerGestureOverride(
@@ -204,7 +190,6 @@ private data class PagerPageGestureElement(
     }
 }
 
-
 private class PagerPageGestureNode(
     private var pagerState: PagerState,
     private var onIntercepted: (() -> Unit)?,
@@ -218,11 +203,8 @@ private class PagerPageGestureNode(
     init {
         motion.childMotion = childMotion
 
-
         delegate(nestedScrollModifierNode(childMotion, null))
     }
-
-
 
     override fun onAttach() {
         motion.nodeScope = coroutineScope
@@ -255,8 +237,6 @@ private class PagerPageGestureNode(
             return
         }
 
-
-
         val takeoverWasTrackingPointer = takeoverNode.isTrackingPointer
         if (takeoverNode.willTrackPointer(pointerEvent, pass)) {
             dragNode.onCancelPointerInput()
@@ -280,7 +260,6 @@ private class PagerPageGestureNode(
         refreshEnvironment()
     }
 }
-
 
 private class PagerPageTakeoverNode(
     private val motion: PagerPageMotion,
@@ -395,14 +374,11 @@ private class PagerPageDragNode(
     }
 }
 
-
 private class PagerChildMotionConnection : NestedScrollConnection {
     var isInMotion: Boolean = false
         private set
 
-
     private var flingHadVelocity = false
-
 
     private var suppressMotionUntilUserScroll = false
 
@@ -432,7 +408,6 @@ private class PagerChildMotionConnection : NestedScrollConnection {
     override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
         if (suppressMotionUntilUserScroll) return Velocity.Zero
 
-
         if (flingHadVelocity) {
             isInMotion = false
             flingHadVelocity = false
@@ -440,7 +415,6 @@ private class PagerChildMotionConnection : NestedScrollConnection {
         return Velocity.Zero
     }
 }
-
 
 private class PagerPageMotion(
     private var pagerState: PagerState,
@@ -472,7 +446,6 @@ private class PagerPageMotion(
         childMotion?.stop()
     }
 
-
     fun startTakeoverDrag() {
         cancelTakeoverDrag()
         val channel = Channel<Float>(Channel.UNLIMITED)
@@ -490,11 +463,9 @@ private class PagerPageMotion(
         }
     }
 
-
     fun dragBy(deltaX: Float) {
         takeoverChannel?.trySend(deltaX)
     }
-
 
     fun finishTakeoverDrag(velocity: Velocity) {
         val channel = takeoverChannel
@@ -513,7 +484,6 @@ private class PagerPageMotion(
             settle(velocity)
         }
     }
-
 
     fun cancelTakeoverDrag() {
         takeoverChannel?.cancel()
@@ -553,7 +523,6 @@ private class PagerPageMotion(
     }
 }
 
-
 class PagerFlingTrackerConnection : NestedScrollConnection {
     var isChildFlinging by mutableStateOf(false)
         internal set
@@ -589,7 +558,6 @@ class PagerFlingTrackerConnection : NestedScrollConnection {
         return haltedVelocity
     }
 }
-
 
 fun Modifier.iosStyleMomentumHalt(
     flingTracker: PagerFlingTrackerConnection,

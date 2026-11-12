@@ -111,7 +111,6 @@ class PlaybackService : MediaSessionService() {
         PlaybackController.attach(exo)
     }
 
-
     @Suppress("DEPRECATION")
     private fun buildCustomLayout(): List<CommandButton> {
         val state = PlaybackController.state.value

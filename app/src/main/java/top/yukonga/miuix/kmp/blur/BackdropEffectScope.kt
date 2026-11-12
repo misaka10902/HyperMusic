@@ -1,20 +1,15 @@
-
-
-
 package top.yukonga.miuix.kmp.blur
 
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import top.yukonga.miuix.kmp.blur.internal.COLOR_CONTROLS_SHADER
 import top.yukonga.miuix.kmp.blur.internal.MAX_BLUR_TAPS
 import top.yukonga.miuix.kmp.blur.internal.chain
 import top.yukonga.miuix.kmp.blur.internal.runtimeShaderEffect as createRuntimeShaderEffect
-
 
 sealed interface BackdropEffectScope :
     Density,
@@ -24,19 +19,14 @@ sealed interface BackdropEffectScope :
     val layoutDirection: LayoutDirection
     val shape: Shape
 
-
     var padding: Float
-
 
     var renderEffect: RenderEffect?
 
-
     var downscaleFactor: Int
-
 
     var noiseCoefficient: Float
 }
-
 
 fun BackdropEffectScope.colorControls(
     brightness: Float = 0f,
@@ -46,7 +36,6 @@ fun BackdropEffectScope.colorControls(
     if (brightness == 0f && contrast == 1f && saturation == 1f) return
     if (!isRuntimeShaderSupported()) return
     val scope = impl
-
 
     val cached = scope.cachedColorResult
     val effect = if (cached != null &&
@@ -72,11 +61,9 @@ fun BackdropEffectScope.colorControls(
     renderEffect = renderEffect.chain(effect)
 }
 
-
 fun BackdropEffectScope.effect(effect: RenderEffect) {
     renderEffect = renderEffect.chain(effect)
 }
-
 
 fun BackdropEffectScope.runtimeShaderEffect(
     key: String,
@@ -107,11 +94,9 @@ internal abstract class BackdropEffectScopeImpl :
 
     var runtimeShaderCache: RuntimeShaderCache = RuntimeShaderCacheImpl()
 
-
     internal val blurRawWeights: DoubleArray = DoubleArray(14)
     internal val blurParamOffsets: FloatArray = FloatArray(MAX_BLUR_TAPS)
     internal val blurParamWeights: FloatArray = FloatArray(MAX_BLUR_TAPS)
-
 
     private val shaderOffsetsByTaps: Array<FloatArray?> = arrayOfNulls(MAX_BLUR_TAPS + 1)
     private val shaderWeightsByTaps: Array<FloatArray?> = arrayOfNulls(MAX_BLUR_TAPS + 1)
@@ -125,10 +110,8 @@ internal abstract class BackdropEffectScopeImpl :
     internal val blendModesBuffer: FloatArray = FloatArray(MAX_BLEND_LAYERS)
     internal val blendColorsBuffer: FloatArray = FloatArray(MAX_BLEND_LAYERS * 4)
 
-
     internal var blurBuiltPaddedW: Float = Float.NaN
     internal var blurBuiltPaddedH: Float = Float.NaN
-
 
     internal var cachedBlurRadiusX: Float = Float.NaN
     internal var cachedBlurRadiusY: Float = Float.NaN
@@ -137,18 +120,12 @@ internal abstract class BackdropEffectScopeImpl :
     internal var cachedBlurExp: Int = -1
     internal var cachedBlurResult: RenderEffect? = null
 
-
-
-
-
     internal var cachedBlendColors: BlurColors? = null
     internal var cachedBlendResult: RenderEffect? = null
     internal var cachedColorBrightness: Float = Float.NaN
     internal var cachedColorContrast: Float = Float.NaN
     internal var cachedColorSaturation: Float = Float.NaN
     internal var cachedColorResult: RenderEffect? = null
-
-
 
     internal var cachedProgRadiusX: Float = Float.NaN
     internal var cachedProgRadiusY: Float = Float.NaN
@@ -161,27 +138,19 @@ internal abstract class BackdropEffectScopeImpl :
     internal var cachedProgCurve: Float = Float.NaN
     internal var cachedProgResult: RenderEffect? = null
 
-
     internal var progressiveCompositeActive: Boolean = false
-
 
     internal var progressivePreEffect: RenderEffect? = null
 
-
     internal var progressivePostBlend: BlurColors? = null
 
-
     internal var progressiveMaskScratch: Any? = null
-
-
 
     internal var cachedNoiseChainInput: RenderEffect? = null
     internal var cachedNoiseChainCoeff: Float = Float.NaN
     internal var cachedNoiseChainResult: RenderEffect? = null
 
-
     internal var forcedDownscaleExp: Int = -1
-
 
     internal var blurBlendExpLo: Int = 0
     internal var blurBlendExpHi: Int = 0
@@ -218,7 +187,6 @@ internal abstract class BackdropEffectScopeImpl :
         blurBuiltPaddedW = Float.NaN
         blurBuiltPaddedH = Float.NaN
 
-
         blurBlendExpLo = 0
         blurBlendExpHi = 0
         blurBlendFactor = 0f
@@ -226,15 +194,11 @@ internal abstract class BackdropEffectScopeImpl :
         progressivePreEffect = null
         progressivePostBlend = null
 
-
         if (progressiveCompositeActive) {
             cachedProgRadiusX = Float.NaN
             cachedProgRadiusY = Float.NaN
         }
         effects()
-
-
-
 
         if (!blurBuiltPaddedW.isNaN() &&
             (blurBuiltPaddedW != size.width + padding * 2f || blurBuiltPaddedH != size.height + padding * 2f)
@@ -306,7 +270,6 @@ internal abstract class BackdropEffectScopeImpl :
         blurBlendFactor = 0f
     }
 }
-
 
 internal val BackdropEffectScope.impl: BackdropEffectScopeImpl
     get() = this as BackdropEffectScopeImpl

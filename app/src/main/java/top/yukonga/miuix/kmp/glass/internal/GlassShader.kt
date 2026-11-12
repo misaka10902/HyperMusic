@@ -1,14 +1,8 @@
-
-
-
 package top.yukonga.miuix.kmp.glass.internal
-
 
 internal const val GLASS_SHADER_KEY = "MiuixGlass"
 
-
 internal const val GLASS_MASK_SHADER_KEY = "MiuixGlassMask"
-
 
 private val GLASS_SDF_SOURCE: String = """
 uniform float2 in_size;         // component size
@@ -52,7 +46,6 @@ float silhouetteSdf(float2 local) {
     return sdfShape(abs(local - b), b, pickRadius(local, b));
 }
 """
-
 
 private val GLASS_RIM_SOURCE: String = """
 const float3 kLumaWeights = float3(0.2126, 0.7152, 0.0722);
@@ -158,7 +151,6 @@ float rimLighten(float3 normal, float4 lightDir, float2 amounts, float3 color) {
 const float kMaxBevelSlope = 1.7;
 """
 
-
 internal val GLASS_RIM_SHADER: String = """
 $GLASS_SDF_SOURCE
 $GLASS_RIM_SOURCE
@@ -193,7 +185,6 @@ half4 main(float2 coord) {
 }
 """
 
-
 internal val GLASS_MASK_SHADER: String = """
 $GLASS_SDF_SOURCE
 half4 main(float2 coord) {
@@ -201,7 +192,6 @@ half4 main(float2 coord) {
     return half4(half(clamp(0.5 - silhouetteSdf(coord), 0.0, 1.0)));
 }
 """
-
 
 internal val GLASS_SHADER: String = """
 uniform shader child;
@@ -366,7 +356,6 @@ float4 shadeMaterial(float2 local, float d, float2 gradient, float edge) {
     float bottom = smoothstep(1.0, 0.0, 1.0 - local.y / max(in_size.y, 1.0));
     material.rgb += bottom * bottom * in_darker.w;
 
-
     material = pow(max(material, float4(0.0)), float4(in_iorRefl.w));
     material.rgb = mix(clamp(material.rgb, 0.0, 1.0), in_tint.rgb, in_satBri.w);
     return material;
@@ -408,9 +397,7 @@ half4 main(float2 coord) {
 }
 """
 
-
 internal const val GLASS_STROKE_SHADER_KEY = "MiuixGlassStroke"
-
 
 internal val GLASS_STROKE_SHADER: String = """
 $GLASS_SDF_SOURCE
@@ -484,9 +471,7 @@ half4 main(float2 coord) {
 }
 """
 
-
 internal const val GLASS_SHADOW_SHADER_KEY = "MiuixGlassShadow"
-
 
 internal val GLASS_SHADOW_SHADER: String = """
 $GLASS_SDF_SOURCE
@@ -506,7 +491,6 @@ half4 main(float2 coord) {
 """
 
 internal const val GLASS_COLOR_BLEND_SHADER_KEY = "MiuixGlassColorBlend"
-
 
 internal val GLASS_COLOR_BLEND_SHADER: String = """
 uniform shader child;

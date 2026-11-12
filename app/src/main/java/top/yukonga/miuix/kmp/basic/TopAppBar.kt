@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.animation.animateColorAsState
@@ -55,7 +52,6 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
@@ -77,7 +73,6 @@ import top.yukonga.miuix.kmp.anim.folmeSpring
 import top.yukonga.miuix.kmp.basic.TopAppBarState.Companion.Saver
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.abs
-
 
 @Composable
 fun TopAppBar(
@@ -128,7 +123,6 @@ fun TopAppBar(
     )
 }
 
-
 @Composable
 fun BlurTopAppBar(
     title: String,
@@ -160,10 +154,6 @@ fun BlurTopAppBar(
             )
         }
 
-
-
-
-
     TopAppBarLayout(
         title = title,
         titleAlpha = titleAlpha,
@@ -186,7 +176,6 @@ fun BlurTopAppBar(
     )
 }
 
-
 @Composable
 fun SmallTopAppBar(
     title: String,
@@ -206,14 +195,12 @@ fun SmallTopAppBar(
 ) {
     SideEffect {
 
-
         scrollBehavior?.state?.let { state ->
             if (!state.pinnedBySmallTopAppBar) state.pinnedBySmallTopAppBar = true
             if (state.heightOffsetLimit != 0f) state.heightOffsetLimit = 0f
             if (state.heightOffset != 0f) state.heightOffset = 0f
         }
     }
-
 
     val actionsRow =
         @Composable {
@@ -223,10 +210,6 @@ fun SmallTopAppBar(
                 content = actions,
             )
         }
-
-
-
-
 
     SmallTopAppBarLayout(
         title = title,
@@ -245,7 +228,6 @@ fun SmallTopAppBar(
     )
 }
 
-
 @Suppress("ComposableNaming")
 @Composable
 fun MiuixScrollBehavior(
@@ -262,7 +244,6 @@ fun MiuixScrollBehavior(
     )
 }
 
-
 @Composable
 fun rememberTopAppBarState(
     initialHeightOffsetLimit: Float = -Float.MAX_VALUE,
@@ -272,7 +253,6 @@ fun rememberTopAppBarState(
     TopAppBarState(initialHeightOffsetLimit, initialHeightOffset, initialContentOffset)
 }
 
-
 @Stable
 class TopAppBarState(
     initialHeightOffsetLimit: Float,
@@ -280,9 +260,7 @@ class TopAppBarState(
     initialContentOffset: Float,
 ) {
 
-
     var heightOffsetLimit = initialHeightOffsetLimit
-
 
     var heightOffset: Float
         get() = _heightOffset.floatValue
@@ -291,11 +269,9 @@ class TopAppBarState(
                 newOffset.coerceIn(minimumValue = heightOffsetLimit, maximumValue = 0f)
         }
 
-
     var contentOffset by mutableFloatStateOf(initialContentOffset)
 
     internal var pinnedBySmallTopAppBar by mutableStateOf(false)
-
 
     val collapsedFraction: Float
         get() =
@@ -304,7 +280,6 @@ class TopAppBarState(
             } else {
                 0f
             }
-
 
     val overlappedFraction: Float
         get() =
@@ -347,26 +322,19 @@ class TopAppBarState(
     private var _heightOffset = mutableFloatStateOf(initialHeightOffset)
 }
 
-
 object TopAppBarDefaults {
 
     val TitlePadding = 26.dp
 
-
     val NavigationIconPadding = 16.dp
-
 
     val ActionIconPadding = 16.dp
 
-
     val CollapsedHeight = 52.dp
-
 
     val SmallTopAppBarCenterHeight = 50.dp
 
-
     val LargeTitleBottomPadding = 4.dp
-
 
     val SubtitleBottomPadding = 8.dp
 }
@@ -374,22 +342,16 @@ object TopAppBarDefaults {
 @Stable
 interface ScrollBehavior {
 
-
     val state: TopAppBarState
-
 
     val isPinned: Boolean
 
-
     val snapAnimationSpec: AnimationSpec<Float>?
-
 
     val flingAnimationSpec: DecayAnimationSpec<Float>?
 
-
     val nestedScrollConnection: NestedScrollConnection
 }
-
 
 private class ExitUntilCollapsedScrollBehavior(
     override val state: TopAppBarState,
@@ -406,7 +368,6 @@ private class ExitUntilCollapsedScrollBehavior(
                 val prevHeightOffset = state.heightOffset
                 state.heightOffset += available.y
                 return if (prevHeightOffset != state.heightOffset) {
-
 
                     available.copy(x = 0f)
                 } else {
@@ -431,7 +392,6 @@ private class ExitUntilCollapsedScrollBehavior(
 
                 if (available.y > 0f) {
 
-
                     val oldHeightOffset = state.heightOffset
                     state.heightOffset += available.y
                     return Offset(0f, state.heightOffset - oldHeightOffset)
@@ -442,7 +402,6 @@ private class ExitUntilCollapsedScrollBehavior(
             override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
                 if (available.y > 0) {
 
-
                     state.contentOffset = 0f
                 }
                 val superConsumed = super.onPostFling(consumed, available)
@@ -452,7 +411,6 @@ private class ExitUntilCollapsedScrollBehavior(
         }
 }
 
-
 private suspend fun settleAppBar(
     state: TopAppBarState,
     velocity: Float,
@@ -460,14 +418,10 @@ private suspend fun settleAppBar(
     snapAnimationSpec: AnimationSpec<Float>?,
 ): Velocity {
 
-
-
-
     if (state.collapsedFraction < 0.01f || state.collapsedFraction == 1f) {
         return Velocity.Zero
     }
     var remainingVelocity = velocity
-
 
     if (flingAnimationSpec != null && abs(velocity) > 1f) {
         var lastValue = 0f
@@ -502,7 +456,6 @@ private suspend fun settleAppBar(
     return Velocity(0f, velocity - remainingVelocity)
 }
 
-
 @Composable
 private fun TopAppBarLayout(
     title: String,
@@ -529,8 +482,6 @@ private fun TopAppBarLayout(
     val scrolledOffset = remember(scrollBehavior) {
         { scrollBehavior?.state?.heightOffset ?: 0f }
     }
-
-
 
     val largeTitleFade = remember(scrollBehavior) {
         {
@@ -560,7 +511,6 @@ private fun TopAppBarLayout(
             Unit
         }
     }
-
 
     val smallTitleVisible by remember(scrollBehavior) {
         derivedStateOf {
@@ -644,8 +594,6 @@ private fun TopAppBarLayout(
                     .padding(horizontal = titlePadding)
                     .graphicsLayer {
                         alpha = largeTitleAlpha() * titleAlpha()
-
-
 
                         val radius = if (largeTitleBlurRadius > 0.dp) {
                             largeTitleBlurRadius.toPx() * largeTitleFade()
@@ -809,7 +757,6 @@ private fun TopAppBarLayout(
                 y = verticalCenter - navigationIconPlaceable.height / 2,
             )
 
-
             var baseX = (constraints.maxWidth - titlePlaceable.width) / 2
             if (baseX < navigationIconPlaceable.width) {
                 baseX += (navigationIconPlaceable.width - baseX)
@@ -823,7 +770,6 @@ private fun TopAppBarLayout(
             )
             titlePlaceable.placeRelative(x = baseX, y = titleY)
 
-
             smallSubtitlePlaceable?.let { subtitle ->
                 val subtitleX = (constraints.maxWidth - subtitle.width) / 2
                 val subtitleY = verticalCenter + titlePlaceable.height / 2
@@ -834,12 +780,10 @@ private fun TopAppBarLayout(
                 subtitle.placeRelative(x = subtitleX, y = subtitleY)
             }
 
-
             actionIconsPlaceable.placeRelative(
                 x = constraints.maxWidth - actionIconsPlaceable.width,
                 y = verticalCenter - actionIconsPlaceable.height / 2,
             )
-
 
             titleClip.largeTitleOrigin = IntOffset(
                 if (layoutDirection == LayoutDirection.Ltr) 0 else constraints.maxWidth - largeTitlePlaceable.width,
@@ -847,12 +791,10 @@ private fun TopAppBarLayout(
             )
             largeTitlePlaceable.placeRelative(x = 0, y = 0)
 
-
             bottomContentPlaceable.placeRelative(x = 0, y = contentTop)
         }
     }
 }
-
 
 private class TopAppBarTitleClip {
     var viewportSize: IntSize by mutableStateOf(IntSize.Zero)
@@ -861,7 +803,6 @@ private class TopAppBarTitleClip {
     var largeTitleOrigin: IntOffset by mutableStateOf(IntOffset.Zero)
     var subtitleOrigin: IntOffset by mutableStateOf(IntOffset.Zero)
 }
-
 
 private fun Modifier.clipTopAppBarTitle(
     clip: TopAppBarTitleClip,
@@ -878,7 +819,6 @@ private fun Modifier.clipTopAppBarTitle(
         this@drawWithContent.drawContent()
     }
 }
-
 
 @Composable
 private fun SmallTopAppBarLayout(
@@ -1020,7 +960,6 @@ private fun SmallTopAppBarLayout(
                 y = verticalCenter - navigationIconPlaceable.height / 2,
             )
 
-
             var baseX = (constraints.maxWidth - titlePlaceable.width) / 2
             if (baseX < navigationIconPlaceable.width) {
                 baseX += (navigationIconPlaceable.width - baseX)
@@ -1032,23 +971,19 @@ private fun SmallTopAppBarLayout(
                 y = verticalCenter - titlePlaceable.height / 2,
             )
 
-
             actionIconsPlaceable.placeRelative(
                 x = constraints.maxWidth - actionIconsPlaceable.width,
                 y = verticalCenter - actionIconsPlaceable.height / 2,
             )
-
 
             subtitlePlaceable?.placeRelative(
                 x = (constraints.maxWidth - subtitlePlaceable.width) / 2,
                 y = subtitleY,
             )
 
-
             bottomContentPlaceable.placeRelative(x = 0, y = contentTop)
         }
     }
 }
-
 
 private const val TITLE_WIDTH_FRACTION = 0.9

@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.overlay
 
 import androidx.compose.animation.EnterTransition
@@ -17,7 +14,6 @@ import top.yukonga.miuix.kmp.layout.DialogDefaults
 import top.yukonga.miuix.kmp.layout.DialogSurfaceScope
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.MiuixPopupUtils.Companion.DialogLayout
-
 
 @Composable
 fun OverlayDialog(

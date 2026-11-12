@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.blur
 
 import androidx.compose.runtime.Composable
@@ -8,7 +5,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import kotlin.jvm.JvmInline
-
 
 @Immutable
 data class BlurColors(
@@ -18,19 +14,16 @@ data class BlurColors(
     val saturation: Float = 1f,
 )
 
-
 @Immutable
 data class BlendColorEntry(
     val color: Color,
     val mode: BlurBlendMode = BlurBlendMode.SrcOver,
 )
 
-
 @JvmInline
 value class BlurBlendMode(val value: Int) {
 
     companion object {
-
 
         val Clear = BlurBlendMode(0)
         val Src = BlurBlendMode(1)
@@ -62,74 +55,48 @@ value class BlurBlendMode(val value: Int) {
         val Color = BlurBlendMode(27)
         val Luminosity = BlurBlendMode(28)
 
-
-
-
-
-
         val LinearLight = BlurBlendMode(100)
-
 
         val LinearLightWithGreyscale = BlurBlendMode(101)
 
-
         val MiDifference = BlurBlendMode(102)
-
 
         val LabLightenWithGreyscale = BlurBlendMode(103)
 
-
         val LabDarkenWithGreyscale = BlurBlendMode(105)
-
 
         val Lab = BlurBlendMode(106)
 
-
         val LinearLightLab = BlurBlendMode(107)
-
 
         val MiColorDodge = BlurBlendMode(118)
 
-
         val MiColorBurn = BlurBlendMode(119)
-
 
         val PlusDarker = BlurBlendMode(120)
 
-
         val PlusLighter = BlurBlendMode(121)
-
 
         val AlphaBlend = BlurBlendMode(200)
 
-
         val MiSaturation = BlurBlendMode(201)
-
 
         val MiBrightness = BlurBlendMode(202)
 
-
         val MiLuminance = BlurBlendMode(203)
-
 
     }
 }
 
-
 object BlurDefaults {
-
 
     val BlurRadius: Float = 20f
 
-
     val NoiseCoefficient: Float = 0.0045f
-
 
     val ProgressiveNoiseCoefficient: Float = 0f
 
-
     val MaxBlurRadius: Float = 150f
-
 
     @Composable
     fun blurColors(

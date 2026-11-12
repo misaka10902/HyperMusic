@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.animation.core.MutableTransitionState
@@ -28,16 +25,12 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.blur.Backdrop
 
-
 object GlassDropdownDefaults {
-
 
     val CornerRadius: Dp = 24.dp
 
-
     val StartCornerRadius: Dp = 4.dp
 }
-
 
 @Composable
 fun BoxScope.GlassDropdownPopup(
@@ -67,7 +60,6 @@ fun BoxScope.GlassDropdownPopup(
         content = content,
     )
 }
-
 
 @Composable
 internal fun BoxScope.GlassDropdownPopupContent(
@@ -185,7 +177,6 @@ internal fun BoxScope.GlassDropdownPopupContent(
         content = content,
     )
 }
-
 
 private fun arcFrame(
     anchor: Rect,

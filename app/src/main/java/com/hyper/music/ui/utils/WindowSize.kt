@@ -25,6 +25,9 @@ fun rememberWindowSizeDp(): WindowSizeDp {
 fun isCompactWindow(size: WindowSizeDp): Boolean =
     size.width > size.height || size.height < 600.dp
 
+fun isLargeScreen(size: WindowSizeDp): Boolean =
+    size.width >= 600.dp && size.height >= 600.dp
+
 @Composable
 fun horizontalContentPadding(): Dp = with(rememberWindowSizeDp().width) {
     val w = value.toInt()

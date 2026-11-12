@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.utils
 
 import android.annotation.SuppressLint
@@ -26,7 +23,6 @@ val hasFocusReassignBug: Boolean = Build.VERSION.SDK_INT <= Build.VERSION_CODES.
 @Composable
 fun getRoundedCorner(): Dp = getSystemCornerRadius()
 
-
 @SuppressLint("NewApi")
 @Composable
 private fun getSystemCornerRadius(): Dp {
@@ -45,7 +41,6 @@ private fun getSystemCornerRadius(): Dp {
     }
     return (roundedCornerRadius / density).dp
 }
-
 
 @SuppressLint("DiscouragedApi")
 fun getCornerRadiusBottom(context: Context): Int {

@@ -1,8 +1,4 @@
-
-
-
 package top.yukonga.miuix.kmp.blur.internal
-
 
 internal fun buildBlurShader(tapCount: Int): String {
     require(tapCount in 1..MAX_BLUR_TAPS)
@@ -28,19 +24,15 @@ internal fun buildBlurShader(tapCount: Int): String {
 """
 }
 
-
 internal const val MAX_BLUR_TAPS = 7
-
 
 internal val BLUR_SHADER_BY_TAP: Array<String> = Array(MAX_BLUR_TAPS + 1) { i ->
     if (i == 0) "" else buildBlurShader(i)
 }
 
-
 internal const val PROGRESSIVE_BLUR_MAX_TAP = 24
 
 private const val PROGRESSIVE_MAX_DOWNSCALE_EXP = 4
-
 
 internal fun buildProgressiveBlurShader(maxTap: Int, masked: Boolean = false): String {
     require(maxTap % 2 == 0) { "maxTap must be even for pair merging" }
@@ -113,16 +105,13 @@ $maskWeight
 """
 }
 
-
 private val PROGRESSIVE_BLUR_SHADER_BY_TAP = arrayOfNulls<String>(PROGRESSIVE_BLUR_MAX_TAP + 1)
 private val PROGRESSIVE_BLUR_SHADER_MASKED_BY_TAP = arrayOfNulls<String>(PROGRESSIVE_BLUR_MAX_TAP + 1)
-
 
 internal fun progressiveBlurShaderForTap(tapBound: Int, masked: Boolean = false): String {
     val cache = if (masked) PROGRESSIVE_BLUR_SHADER_MASKED_BY_TAP else PROGRESSIVE_BLUR_SHADER_BY_TAP
     return cache[tapBound] ?: buildProgressiveBlurShader(tapBound, masked).also { cache[tapBound] = it }
 }
-
 
 internal fun progressiveLoopTapBound(maxRadius: Float): Int {
     val needed = kotlin.math.ceil(maxRadius).toInt()
@@ -157,11 +146,9 @@ private val PROGRESSIVE_SHARP_KEYS: Array<Array<Array<String>>> = Array(2) { axi
 
 internal fun progressiveSharpShaderKey(axis: Int, tap: Int, masked: Boolean): String = PROGRESSIVE_SHARP_KEYS[axis][if (masked) 1 else 0][tap]
 
-
 internal const val PROGRESSIVE_LEVEL_FRACTION_0 = 1.0f
 internal const val PROGRESSIVE_LEVEL_FRACTION_1 = 0.4f
 internal const val PROGRESSIVE_LEVEL_FRACTION_2 = 0.13f
-
 
 internal const val PROGRESSIVE_COMPOSITE_SHADER = """
     uniform shader clearChild;
@@ -202,7 +189,6 @@ internal const val PROGRESSIVE_COMPOSITE_SHADER = """
     }
 """
 
-
 internal const val UNPREMUL_SHADER = """
     uniform shader child;
 
@@ -214,7 +200,6 @@ internal const val UNPREMUL_SHADER = """
         return c;
     }
 """
-
 
 internal const val PROGRESSIVE_LEVEL_MASK_SHADER = """
     uniform shader child;
@@ -237,7 +222,6 @@ internal const val PROGRESSIVE_LEVEL_MASK_SHADER = """
         return c * half(w);
     }
 """
-
 
 internal const val COLOR_CONTROLS_SHADER = """
     uniform shader child;
@@ -276,7 +260,6 @@ internal const val COLOR_CONTROLS_SHADER = """
     }
 """
 
-
 internal const val NOISE_DITHER_SHADER = """
     uniform shader child;
     uniform float noise_coeff;
@@ -296,7 +279,6 @@ internal const val NOISE_DITHER_SHADER = """
     }
 """
 
-
 internal const val DOWNSAMPLE_2X_SHADER = """
     uniform shader child;
     uniform float2 maxCoord;
@@ -310,7 +292,6 @@ internal const val DOWNSAMPLE_2X_SHADER = """
         return color * 0.25;
     }
 """
-
 
 internal const val DOWNSAMPLE_4X_SHADER = """
     uniform shader child;
@@ -326,7 +307,6 @@ internal const val DOWNSAMPLE_4X_SHADER = """
         return color * 0.0625;
     }
 """
-
 
 internal fun buildBloomStrokeShader(dualPeak: Boolean): String {
     val axisUniforms = if (dualPeak) {
@@ -439,7 +419,6 @@ $lightBlock
 internal val BLOOM_STROKE_SHADER_SINGLE: String = buildBloomStrokeShader(dualPeak = false)
 internal val BLOOM_STROKE_SHADER_DUAL: String = buildBloomStrokeShader(dualPeak = true)
 
-
 internal fun buildBlendModeShader(includeExtended: Boolean, rampMix: Boolean = false): String = buildString {
     append(BLEND_MODE_SHADER_HEADER)
     if (includeExtended) append(BLEND_MODE_SHADER_EXTENDED_HELPERS)
@@ -458,7 +437,6 @@ internal val BLEND_MODE_SHADER_STANDARD: String = buildBlendModeShader(includeEx
 internal val BLEND_MODE_SHADER_EXTENDED: String = buildBlendModeShader(includeExtended = true)
 internal val BLEND_MODE_SHADER_STANDARD_RAMP: String = buildBlendModeShader(includeExtended = false, rampMix = true)
 internal val BLEND_MODE_SHADER_EXTENDED_RAMP: String = buildBlendModeShader(includeExtended = true, rampMix = true)
-
 
 private const val BLEND_MODE_SHADER_HEADER = """
     uniform shader child;
@@ -677,7 +655,6 @@ private const val BLEND_MODE_SHADER_HEADER = """
     }
 
 """
-
 
 private const val BLEND_MODE_SHADER_EXTENDED_HELPERS = """
     uniform float uSaturation;
@@ -913,7 +890,6 @@ private const val BLEND_MODE_SHADER_EXTENDED_HELPERS = """
     }
 """
 
-
 private const val BLEND_MODE_SHADER_RAMP_UNIFORMS = """
     uniform float2 in_gradAxis;
     uniform float2 in_gradBand;
@@ -928,7 +904,6 @@ private const val BLEND_MODE_SHADER_RAMP_UNIFORMS = """
     }
 
 """
-
 
 private const val BLEND_MODE_SHADER_MAIN_STANDARD = """
     half4 main(float2 fragCoord) {
@@ -945,7 +920,6 @@ private const val BLEND_MODE_SHADER_MAIN_STANDARD = """
     }
 """
 
-
 private const val BLEND_MODE_SHADER_MAIN_STANDARD_RAMP = """
     half4 main(float2 fragCoord) {
         half4 src = child.eval(fragCoord);
@@ -961,7 +935,6 @@ private const val BLEND_MODE_SHADER_MAIN_STANDARD_RAMP = """
         return mix(src, currentColor, half(rampWeight(fragCoord)));
     }
 """
-
 
 private const val BLEND_MODE_SHADER_MAIN_EXTENDED_RAMP = """
     half4 main(float2 fragCoord) {
@@ -997,7 +970,6 @@ private const val BLEND_MODE_SHADER_MAIN_EXTENDED_RAMP = """
         return mix(src, half4(currentColor), half(rampWeight(fragCoord)));
     }
 """
-
 
 private const val BLEND_MODE_SHADER_MAIN_EXTENDED = """
     half4 main(float2 fragCoord) {

@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass.internal
 
 import androidx.compose.ui.geometry.Offset
@@ -27,7 +24,6 @@ import kotlin.math.sqrt
 private const val LIGHT_REF_X = 0.5f
 private const val LIGHT_REF_Y = 0.7f
 
-
 private val maskShader: RuntimeShader? by lazy {
     if (isRuntimeShaderSupported()) RuntimeShader(GLASS_MASK_SHADER) else null
 }
@@ -40,7 +36,6 @@ private val rimShader: RuntimeShader? by lazy {
     if (isRuntimeShaderSupported()) RuntimeShader(GLASS_RIM_SHADER) else null
 }
 
-
 internal fun DrawScope.drawGlassRim(
     shape: GlassShape,
     layoutDirection: LayoutDirection,
@@ -51,7 +46,6 @@ internal fun DrawScope.drawGlassRim(
     val shader = rimShader ?: return
     if (alpha <= 0f || size.width <= 0f || size.height <= 0f) return
     if (style.background.unShade >= 0.999f) return
-
 
     val edge = (style.edge.width * density / GlassDefaults.SourceDensity)
         .coerceAtLeast(1f)
@@ -72,7 +66,6 @@ internal fun DrawScope.drawGlassRim(
     drawRect(brush = shader.asBrush(), blendMode = BlendMode.Plus)
 }
 
-
 internal fun DrawScope.drawGlassStroke(
     shape: GlassShape,
     layoutDirection: LayoutDirection,
@@ -81,7 +74,6 @@ internal fun DrawScope.drawGlassStroke(
 ) {
     val shader = strokeShader ?: return
     if (alpha <= 0f || size.width <= 0f || size.height <= 0f) return
-
 
     val width = (stroke.width * density + 0.5f)
         .coerceAtLeast(0.5f)
@@ -100,14 +92,12 @@ internal fun DrawScope.drawGlassStroke(
     drawRect(brush = shader.asBrush(), blendMode = BlendMode.Plus)
 }
 
-
 internal fun DrawScope.drawGlassMask(shape: GlassShape, layoutDirection: LayoutDirection) {
     val shader = maskShader ?: return
     if (size.width <= 0f || size.height <= 0f) return
     shader.setSilhouetteUniforms(shape, layoutDirection, size, this)
     drawRect(brush = shader.asBrush(), blendMode = BlendMode.DstIn)
 }
-
 
 private fun RuntimeShader.setSilhouetteUniforms(
     shape: GlassShape,
@@ -133,7 +123,6 @@ private fun RuntimeShader.setSilhouetteUniforms(
     setFloatUniform("in_smoothing", shape.smoothing.coerceIn(0f, 1f))
 }
 
-
 private fun RuntimeShader.setLightUniforms(
     directionName: String,
     colorName: String,
@@ -151,7 +140,6 @@ private val shadowShader: RuntimeShader? by lazy {
     if (isRuntimeShaderSupported()) RuntimeShader(GLASS_SHADOW_SHADER) else null
 }
 
-
 internal fun DrawScope.drawGlassShadow(
     shape: GlassShape,
     layoutDirection: LayoutDirection,
@@ -167,10 +155,6 @@ internal fun DrawScope.drawGlassShadow(
     val reach = (shadow.radius * sourceScale).coerceAtLeast(1f)
     val offsetX = shadow.offsetX * sourceScale
     val offsetY = shadow.offsetY * sourceScale
-
-
-
-
 
     val originX = ((size.width - surface.width) * 0.5f).coerceAtLeast(0f)
     val originY = ((size.height - surface.height) * 0.5f).coerceAtLeast(0f)

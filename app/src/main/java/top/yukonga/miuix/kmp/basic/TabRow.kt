@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.animation.core.Animatable
@@ -64,7 +61,6 @@ import top.yukonga.miuix.kmp.squircle.squircleBorder
 import top.yukonga.miuix.kmp.squircle.squircleClip
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollHorizontal
-
 
 @Composable
 fun TabRow(
@@ -163,7 +159,6 @@ fun TabRow(
                 modifier = Modifier
                     .fillMaxSize()
 
-
                     .semantics { collectionInfo = CollectionInfo(rowCount = 1, columnCount = tabs.size) },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(itemSpacing),
@@ -188,7 +183,6 @@ fun TabRow(
         }
     }
 }
-
 
 @Composable
 fun TabRowWithContour(
@@ -300,7 +294,6 @@ fun TabRowWithContour(
                 state = config.listState,
                 modifier = Modifier
                     .fillMaxSize()
-
 
                     .semantics { collectionInfo = CollectionInfo(rowCount = 1, columnCount = tabs.size) },
                 verticalAlignment = Alignment.CenterVertically,
@@ -453,13 +446,11 @@ private fun TabItemWithContour(
     }
 }
 
-
 private data class TabRowConfig(
     val tabWidth: Dp,
     val cornerRadius: Dp,
     val listState: LazyListState,
 )
-
 
 @Composable
 private fun rememberTabRowConfig(
@@ -513,30 +504,21 @@ private fun calculateTabWidth(
 
 object TabRowDefaults {
 
-
     val TabRowHeight = 42.dp
-
 
     val TabRowWithContourHeight = 45.dp
 
-
     val TabRowCornerRadius = 12.dp
-
 
     val TabRowWithContourCornerRadius = 8.dp
 
-
     val TabRowMinWidth = 76.dp
-
 
     val TabRowWithContourMinWidth = 62.dp
 
-
     val TabRowMaxWidth = 98.dp
 
-
     val TabRowWithContourMaxWidth = 84.dp
-
 
     @Composable
     fun tabRowColors(

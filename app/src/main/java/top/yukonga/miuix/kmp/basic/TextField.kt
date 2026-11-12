@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.animation.animateColorAsState
@@ -51,7 +48,6 @@ import top.yukonga.miuix.kmp.squircle.squircleBackground
 import top.yukonga.miuix.kmp.squircle.squircleBorder
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-
 
 @Composable
 fun TextField(
@@ -130,7 +126,6 @@ fun TextField(
     )
 }
 
-
 @Composable
 fun TextField(
     value: TextFieldValue,
@@ -208,7 +203,6 @@ fun TextField(
         },
     )
 }
-
 
 @Composable
 fun TextField(
@@ -290,23 +284,17 @@ fun TextField(
 
 private enum class LabelAnimState { Hidden, Placeholder, Normal, Floating }
 
-
 object TextFieldDefaults {
 
     val CornerRadius = 16.dp
 
-
     val InsideMargin = DpSize(16.dp, 16.dp)
-
 
     internal val BorderWidth = 2.dp
 
-
     internal val LabelFontSizeFloating = 10.dp
 
-
     internal val LabelFontSizeNormal = 17.dp
-
 
     @Composable
     fun textFieldColors(
@@ -322,14 +310,12 @@ object TextFieldDefaults {
     }
 }
 
-
 @Immutable
 data class TextFieldColors(
     val backgroundColor: Color,
     val labelColor: Color,
     val borderColor: Color,
 )
-
 
 @Composable
 private fun TextFieldChrome(

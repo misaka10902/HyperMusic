@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.shader
 
 import android.annotation.SuppressLint
@@ -17,7 +14,6 @@ import org.intellij.lang.annotations.Language
 @ChecksSdkIntAtLeast(Build.VERSION_CODES.TIRAMISU)
 fun isRuntimeShaderSupported(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
 
-
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 fun RuntimeShader(@Language("AGSL") shaderString: String): RuntimeShader = AndroidRuntimeShader(android.graphics.RuntimeShader(shaderString))
 
@@ -25,7 +21,6 @@ fun RuntimeShader.asComposeShader(): Shader = asAndroidRuntimeShader()
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 fun RuntimeShader.asBrush(): ShaderBrush = (this as AndroidRuntimeShader).brush
-
 
 fun RuntimeShader.asAndroidRuntimeShader(): android.graphics.RuntimeShader = (this as AndroidRuntimeShader).shader
 

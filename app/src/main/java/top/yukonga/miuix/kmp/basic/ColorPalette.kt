@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -46,7 +43,6 @@ import top.yukonga.miuix.kmp.squircle.squircleClip
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.roundToInt
-
 
 @Composable
 fun ColorPalette(

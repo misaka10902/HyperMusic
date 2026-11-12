@@ -22,20 +22,6 @@ data class EdgeLight(
         val Default: EdgeLight = EdgeLight()
 
         @Stable
-        val Subtle: EdgeLight = EdgeLight(
-            width = 0.5f.dp,
-            blurRadius = 1.dp,
-            intensity = 0.6f
-        )
-
-        @Stable
-        val Prominent: EdgeLight = EdgeLight(
-            width = 2.dp,
-            blurRadius = 4.dp,
-            intensity = 1f
-        )
-
-        @Stable
         fun Uniform(
             color: Color = Color.White.copy(alpha = 0.5f),
             width: Dp = 0.28.dp,
@@ -77,31 +63,6 @@ data class EdgeLight(
             style = EdgeLightStyle.Glow(color = color, glowSize = glowSize)
         )
 
-        @Stable
-        fun CourseCard(
-            color: Color = Color.White.copy(alpha = 0.5f),
-            width: Dp = 0.36.dp,
-            blurRadius: Dp = 1.26.dp,
-            intensity: Float = 0.52f,
-        ): EdgeLight = Uniform(
-            color = color,
-            width = width,
-            blurRadius = blurRadius,
-            intensity = intensity
-        )
-
-        @Stable
-        fun Card(
-            color: Color = Color.White.copy(alpha = 0.5f),
-            width: Dp = 0.35.dp,
-            blurRadius: Dp = 1.24.dp,
-            intensity: Float = 0.5f
-        ): EdgeLight = Uniform(
-            color = color,
-            width = width,
-            blurRadius = blurRadius,
-            intensity = intensity
-        )
     }
 }
 
@@ -112,38 +73,3 @@ fun rememberDefaultEdgeLight(): EdgeLight {
                 else Color.White.copy(alpha = 0.4f)
     return remember(isLightTheme) { EdgeLight.Uniform(color = color) }
 }
-
-@Composable
-fun rememberCourseCardEdgeLight(): EdgeLight {
-    val isLightTheme = !isAppDarkTheme()
-    val color = if (isLightTheme) Color.White.copy(alpha = 0.12f)
-                else Color.White.copy(alpha = 0.12f)
-    return remember(isLightTheme) { EdgeLight.CourseCard(color = color) }
-}
-
-@Composable
-fun rememberCardEdgeLight(): EdgeLight {
-    val isLightTheme = !isAppDarkTheme()
-    val color = if (isLightTheme) Color.White.copy(alpha = 0.2f)
-    else Color.White.copy(alpha = 0.2f)
-    return remember(isLightTheme) { EdgeLight.Card(color = color) }
-}
-
-@Composable
-fun rememberLiquidTopBarButtonEdgeLight(): EdgeLight {
-    val isLightTheme = !isAppDarkTheme()
-    val color = if (isLightTheme) Color.White.copy(alpha = 0.8f)
-                else Color.White.copy(alpha = 0.32f)
-    return remember(isLightTheme) {
-        EdgeLight.Uniform(
-            color = color,
-            width = 0.15f.dp,
-            blurRadius = 0.5f.dp,
-            intensity = 1f
-        )
-    }
-}
-
-
-@Composable
-fun rememberHyperTopBarButtonEdgeLight(): EdgeLight = rememberLiquidTopBarButtonEdgeLight()

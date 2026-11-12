@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.interfaces
 
 import androidx.compose.foundation.interaction.Interaction
@@ -15,17 +12,14 @@ import androidx.compose.runtime.remember
 import top.yukonga.miuix.kmp.interfaces.HoldDownInteraction.HoldDown
 import top.yukonga.miuix.kmp.interfaces.HoldDownInteraction.Release
 
-
 interface HoldDownInteraction : Interaction {
 
     class HoldDown : HoldDownInteraction
-
 
     class Release(
         val holdDown: HoldDown,
     ) : HoldDownInteraction
 }
-
 
 @Composable
 fun InteractionSource.collectIsHeldDownAsState(): State<Boolean> {
@@ -42,7 +36,6 @@ fun InteractionSource.collectIsHeldDownAsState(): State<Boolean> {
     }
     return isHeldDown
 }
-
 
 @Composable
 internal fun HoldDownObserver(

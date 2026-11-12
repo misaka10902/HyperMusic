@@ -1,11 +1,7 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
-
 
 @Immutable
 data class GlassStyle(
@@ -18,7 +14,6 @@ data class GlassStyle(
     val background: GlassBackground,
     val blur: GlassBlur,
 )
-
 
 @Immutable
 data class GlassBlend(
@@ -34,7 +29,6 @@ data class GlassBlend(
     val darkerEnd: Float,
 )
 
-
 @Immutable
 data class GlassInner(
     val bottom: Float,
@@ -46,7 +40,6 @@ data class GlassInner(
     val alpha: Float,
 )
 
-
 @Immutable
 data class GlassEdge(
     val width: Float,
@@ -55,13 +48,11 @@ data class GlassEdge(
     val reflectOffset: Float,
 )
 
-
 @Immutable
 data class GlassReflect(
     val lighten: Float,
     val strength: Float,
 )
-
 
 @Immutable
 data class GlassLight(
@@ -73,12 +64,10 @@ data class GlassLight(
     val angleRange: Float,
 )
 
-
 @Immutable
 data class GlassRefract(
     val ior: Float,
 )
-
 
 @Immutable
 data class GlassBackground(
@@ -87,7 +76,6 @@ data class GlassBackground(
     val burn: Float,
     val unShade: Float,
 )
-
 
 @Immutable
 data class GlassBlur(

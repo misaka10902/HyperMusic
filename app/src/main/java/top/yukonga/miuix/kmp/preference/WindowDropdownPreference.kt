@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.preference
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -30,8 +27,6 @@ import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.popup.WindowDropdownPopup
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowListPopup
-
 
 @Composable
 fun WindowDropdownPreference(

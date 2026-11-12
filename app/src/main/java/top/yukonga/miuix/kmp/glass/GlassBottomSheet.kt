@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.runtime.Composable
@@ -11,7 +8,6 @@ import androidx.compose.ui.unit.DpSize
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.layout.BottomSheetDefaults
 import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
-
 
 @Composable
 fun GlassBottomSheet(

@@ -1,6 +1,3 @@
-
-
-
 @file:Suppress("ktlint:compose:multiple-emitters-check")
 
 package top.yukonga.miuix.kmp.glass
@@ -49,7 +46,6 @@ import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.glass.internal.drawGlassStroke
 import kotlin.math.roundToInt
 
-
 @Immutable
 data class GlassPopupSizing(
     val minWidth: Dp = GlassPopupDefaults.MinWidth,
@@ -57,7 +53,6 @@ data class GlassPopupSizing(
     val maxHeight: Dp = GlassPopupDefaults.MaxHeight,
     val safeMargin: Dp = GlassPopupDefaults.SafeMargin,
 )
-
 
 @Immutable
 data class GlassPopupVisuals(
@@ -69,13 +64,11 @@ data class GlassPopupVisuals(
     val containerColor: Color,
 )
 
-
 @Immutable
 data class GlassPopupFrame(
     val rect: Rect,
     val cornerRadius: Dp,
 )
-
 
 @Immutable
 class GlassPopupPlacement internal constructor(
@@ -83,7 +76,6 @@ class GlassPopupPlacement internal constructor(
 
     val alignTop: Boolean,
 )
-
 
 internal fun placeGlassPopup(
     anchor: Rect,
@@ -106,8 +98,6 @@ internal fun placeGlassPopup(
     val top = wanted.coerceIn(margin, (page.height - size.height - margin).coerceAtLeast(margin))
     return GlassPopupPlacement(Rect(left, top, left + size.width, top + size.height), alignTop)
 }
-
-
 
 @Composable
 internal fun GlassPopupSurface(
@@ -248,7 +238,6 @@ internal fun GlassPopupSurface(
     }
 }
 
-
 @Composable
 internal fun BoxScope.GlassPopupBackground(
     backdrop: Backdrop?,
@@ -289,7 +278,6 @@ internal fun BoxScope.GlassPopupBackground(
     )
 }
 
-
 internal fun Density.popupShadowOutsets(shadow: GlassShadow?): LayerOutsets {
     if (shadow == null) return LayerOutsets.Zero
     val sourceScale = density / GlassDefaults.SourceDensity
@@ -304,13 +292,11 @@ internal fun Density.popupShadowOutsets(shadow: GlassShadow?): LayerOutsets {
     )
 }
 
-
 private class MeasuredPanel {
     var end: Size = Size.Zero
     var rect: Rect = Rect.Zero
     var cornerRadius: Dp = 0.dp
 }
-
 
 private class MeasuredCorner(private val measured: MeasuredPanel) : CornerSize {
     override fun toPx(shapeSize: Size, density: Density): Float = with(density) { measured.cornerRadius.toPx() }

@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.foundation.background
@@ -34,7 +31,6 @@ import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.LocalTextStyles
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 fun BadgedBox(
     badge: @Composable BoxScope.() -> Unit,
@@ -57,8 +53,6 @@ fun BadgedBox(
                 .fastFirst { it.layoutId == "badge" }
                 .measure(
 
-
-
                     constraints.copy(minHeight = 0),
                 )
 
@@ -73,10 +67,8 @@ fun BadgedBox(
             width = totalWidth,
             height = totalHeight,
 
-
             alignmentLines = mapOf(FirstBaseline to firstBaseline, LastBaseline to lastBaseline),
         ) {
-
 
             val hasContent = badgePlaceable.width > (BadgeDefaults.Size.roundToPx())
             val badgeHorizontalOffset =
@@ -85,7 +77,6 @@ fun BadgedBox(
                 if (hasContent) BadgeWithContentVerticalOffset else BadgeOffset
 
             anchorPlaceable.placeRelative(0, 0)
-
 
             val badgeX =
                 minOf(
@@ -104,7 +95,6 @@ fun BadgedBox(
     }
 }
 
-
 @Composable
 fun Badge(
     modifier: Modifier = Modifier,
@@ -114,7 +104,6 @@ fun Badge(
 ) {
     val size = if (content != null) BadgeDefaults.LargeSize else BadgeDefaults.Size
     val shape = CircleShape
-
 
     Row(
         modifier =
@@ -133,9 +122,6 @@ fun Badge(
     ) {
         if (content != null) {
 
-
-
-
             val style = MiuixTheme.textStyles.footnote2.copy(
                 lineHeight = 16.sp,
                 lineHeightStyle = LineHeightStyle(
@@ -152,23 +138,18 @@ fun Badge(
     }
 }
 
-
 object BadgeDefaults {
 
     val Size = 6.dp
 
-
     val LargeSize = 16.dp
-
 
     val containerColor: Color
         @Composable get() = MiuixTheme.colorScheme.error
 
-
     val contentColor: Color
         @Composable get() = MiuixTheme.colorScheme.onError
 }
-
 
 @Composable
 private fun ProvideContentColorTextStyle(
@@ -187,21 +168,10 @@ private fun ProvideContentColorTextStyle(
     )
 }
 
-
-
-
 internal val BadgeWithContentHorizontalPadding = 4.dp
-
-
-
-
 
 internal val BadgeWithContentHorizontalOffset = 12.dp
 internal val BadgeWithContentVerticalOffset = 14.dp
-
-
-
-
 
 internal val BadgeOffset = 6.dp
 
@@ -214,7 +184,6 @@ internal fun Modifier.badgeBounds() = this.layout { measurable, constraints ->
         width = placeable.width,
         height = placeable.height,
         rulers = {
-
 
             BadgeEndRuler provides coordinates.size.width.toFloat()
             BadgeTopRuler provides 0f

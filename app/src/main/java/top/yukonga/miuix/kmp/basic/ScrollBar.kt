@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.animation.core.animate
@@ -56,7 +53,6 @@ import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.abs
 
-
 @ExperimentalScrollBarApi
 interface ScrollBarAdapter {
     val scrollOffset: Double
@@ -69,7 +65,6 @@ interface ScrollBarAdapter {
 internal val ScrollBarAdapter.maxScrollOffset: Double
     get() = (contentSize - viewportSize).coerceAtLeast(0.0)
 
-
 @ExperimentalScrollBarApi
 @Composable
 fun rememberScrollBarAdapter(
@@ -77,7 +72,6 @@ fun rememberScrollBarAdapter(
 ): ScrollBarAdapter = remember(scrollState) {
     ScrollStateAdapter(scrollState)
 }
-
 
 @ExperimentalScrollBarApi
 @Composable
@@ -87,7 +81,6 @@ fun rememberScrollBarAdapter(
     LazyListAdapter(scrollState)
 }
 
-
 @ExperimentalScrollBarApi
 @Composable
 fun rememberScrollBarAdapter(
@@ -96,14 +89,12 @@ fun rememberScrollBarAdapter(
     LazyGridAdapter(scrollState)
 }
 
-
 @ExperimentalScrollBarApi
 @Immutable
 data class ScrollBarColors(
     val thumbColor: Color,
     val trackColor: Color,
 )
-
 
 @ExperimentalScrollBarApi
 @Composable
@@ -131,7 +122,6 @@ fun VerticalScrollBar(
         endPadding = endPadding,
     )
 }
-
 
 @ExperimentalScrollBarApi
 @Composable

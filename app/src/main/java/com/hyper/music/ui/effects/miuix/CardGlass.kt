@@ -12,14 +12,11 @@ import top.yukonga.miuix.kmp.basic.CardColors
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 fun cardGlassEnabled(): Boolean {
     val wallpaper by WallpaperManager.state.collectAsState()
     return wallpaper.hasImage
 }
-
-
 
 @Composable
 fun cardGlassAlpha(): Float {
@@ -33,7 +30,6 @@ fun Modifier.cardGlass(shape: Shape): Modifier {
     val scheme = MiuixTheme.colorScheme
     return this.background(scheme.surfaceContainer.copy(alpha = alpha), shape)
 }
-
 
 @Composable
 fun cardGlassColors(): CardColors = if (cardGlassEnabled()) {

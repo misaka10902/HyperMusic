@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.preference
 
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,7 +18,6 @@ import top.yukonga.miuix.kmp.basic.BasicComponentDefaults
 import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.SwitchColors
 import top.yukonga.miuix.kmp.basic.SwitchDefaults
-
 
 @Composable
 @NonRestartableComposable

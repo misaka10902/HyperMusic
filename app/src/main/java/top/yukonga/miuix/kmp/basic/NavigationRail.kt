@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.animation.core.SpringSpec
@@ -72,7 +69,6 @@ import top.yukonga.miuix.kmp.icon.basic.Sidebar
 import top.yukonga.miuix.kmp.squircle.squircleBackground
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 fun NavigationRail(
     modifier: Modifier = Modifier,
@@ -102,7 +98,6 @@ fun NavigationRail(
         content = content,
     )
 }
-
 
 @Composable
 fun NavigationRail(
@@ -157,8 +152,6 @@ private fun NavigationRailImpl(
 
     val effectiveExpandedWidth = expandedWidth.coerceAtLeast(minWidth)
 
-
-
     val expandProgress = if (isExpandable) {
         animateFloatAsState(
             targetValue = if (isExpanded) 1f else 0f,
@@ -172,7 +165,6 @@ private fun NavigationRailImpl(
         NavigationRailExpandInfo(progress = expandProgress, collapsedWidth = minWidth)
     }
     Row(
-
 
         modifier = modifier
             .fillMaxHeight()
@@ -242,7 +234,6 @@ private fun NavigationRailImpl(
     }
 }
 
-
 @Composable
 private fun NavigationRailExpandToggle(
     state: NavigationRailState,
@@ -273,7 +264,6 @@ private fun NavigationRailExpandToggle(
         )
     }
 }
-
 
 @Composable
 fun NavigationRailItem(
@@ -365,7 +355,6 @@ fun NavigationRailItem(
     }
 }
 
-
 @Composable
 private fun NavigationRailItemExpandable(
     info: NavigationRailExpandInfo,
@@ -400,7 +389,6 @@ private fun NavigationRailItemExpandable(
         Layout(
             modifier = Modifier.fillMaxWidth(),
             content = {
-
 
                 Box(
                     modifier = Modifier
@@ -448,9 +436,6 @@ private fun NavigationRailItemExpandable(
             val iconW = iconPlaceable.width
             val iconH = iconPlaceable.height
 
-
-
-
             val expandedLabelMax = (width - 2 * marginPx - 2 * leadingInset - iconW - expandedSpacing).coerceAtLeast(0)
             val labelPlaceable = measurables.fastFirst { it.layoutId == "label" }.measure(
                 Constraints(maxWidth = lerp(width, expandedLabelMax, fraction), maxHeight = constraints.maxHeight),
@@ -463,21 +448,14 @@ private fun NavigationRailItemExpandable(
             val collapsedIndVPad = NavigationRailDefaults.CollapsedIndicatorVerticalPadding.roundToPx()
             val expandedVPad = NavigationRailDefaults.ExpandedItemContentVerticalPadding.roundToPx()
 
-
-
             val collapsedHeight = topPad + iconH + collapsedIndVPad * 2 + collapsedSpacing + labelH + topPad
             val expandedHeight = expandedVPad * 2 + maxOf(iconH, labelH)
             val height = lerp(collapsedHeight.toFloat(), expandedHeight.toFloat(), fraction).fastRoundToInt()
-
-
 
             val collapsedIconX = (info.collapsedWidth.toPx() - iconW) / 2f
             val expandedIconX = (marginPx + leadingInset).toFloat()
             val iconX = lerp(collapsedIconX, expandedIconX, fraction).fastRoundToInt()
             val iconY = lerp((topPad + collapsedIndVPad).toFloat(), (height - iconH) / 2f, fraction).fastRoundToInt()
-
-
-
 
             val indicatorVPad = lerp(collapsedIndVPad.toFloat(), expandedVPad.toFloat(), fraction).fastRoundToInt()
             val indicatorH = iconH + indicatorVPad * 2
@@ -488,7 +466,6 @@ private fun NavigationRailItemExpandable(
                 .coerceAtLeast(0)
             val indicatorPlaceable = measurables.fastFirst { it.layoutId == "indicator" }
                 .measure(Constraints.fixed(indicatorW, indicatorH))
-
 
             val collapsedLabelY = topPad + iconH + collapsedIndVPad * 2 + collapsedSpacing
             val collapsedLabelX = collapsedIconX + iconW / 2f - labelW / 2f
@@ -504,7 +481,6 @@ private fun NavigationRailItemExpandable(
         }
     }
 }
-
 
 @Composable
 private fun NavigationRailItemLabel(
@@ -528,67 +504,47 @@ private fun NavigationRailItemLabel(
     )
 }
 
-
 private val RailExpandSpring: SpringSpec<Float> =
     folmeSpring(damping = 1f, response = 0.35f, visibilityThreshold = 0.001f)
 
-
 private val ExpandedItemShape = RoundedCornerShape(NavigationRailDefaults.ExpandedItemCornerRadius)
-
 
 object NavigationRailDefaults {
 
     val MinWidth = 80.dp
 
-
     val ExpandedWidth = 240.dp
-
 
     val VerticalPadding = 24.dp
 
-
     val HeaderSpacing = 24.dp
-
 
     val IconSize = 28.dp
 
-
     val IconTextSpacing = 4.dp
-
 
     val ItemVerticalPadding = 12.dp
 
-
     val LabelFontSize = 12.sp
-
 
     val ExpandedLabelFontSize = 16.sp
 
-
     val ExpandedItemHorizontalMargin = 12.dp
-
 
     val ExpandedItemCornerRadius = 16.dp
 
-
     val CollapsedIndicatorVerticalPadding = 4.dp
-
 
     val ExpandedItemContentHorizontalPadding = 14.dp
 
-
     val ExpandedItemContentVerticalPadding = 14.dp
-
 
     val ExpandedItemIconTextSpacing = 16.dp
 
-
     val ExpandContentDescription = "Expand navigation rail"
-
 
     val CollapseContentDescription = "Collapse navigation rail"
 }
-
 
 @Stable
 internal class NavigationRailExpandInfo(
@@ -596,18 +552,14 @@ internal class NavigationRailExpandInfo(
     val collapsedWidth: Dp,
 )
 
-
 internal val LocalNavigationRailExpandInfo = compositionLocalOf<NavigationRailExpandInfo?> { null }
-
 
 enum class NavigationRailValue {
 
     Collapsed,
 
-
     Expanded,
 }
-
 
 @Stable
 class NavigationRailState(initialValue: NavigationRailValue = NavigationRailValue.Collapsed) {
@@ -615,19 +567,15 @@ class NavigationRailState(initialValue: NavigationRailValue = NavigationRailValu
     var currentValue: NavigationRailValue by mutableStateOf(initialValue)
         private set
 
-
     val isExpanded: Boolean get() = currentValue == NavigationRailValue.Expanded
-
 
     fun expand() {
         currentValue = NavigationRailValue.Expanded
     }
 
-
     fun collapse() {
         currentValue = NavigationRailValue.Collapsed
     }
-
 
     fun toggle() {
         currentValue = if (isExpanded) NavigationRailValue.Collapsed else NavigationRailValue.Expanded
@@ -641,7 +589,6 @@ class NavigationRailState(initialValue: NavigationRailValue = NavigationRailValu
         )
     }
 }
-
 
 @Composable
 fun rememberNavigationRailState(

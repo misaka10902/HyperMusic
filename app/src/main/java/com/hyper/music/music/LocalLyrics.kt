@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import java.io.File
 
-
 object LocalLyrics {
 
     private const val TLYRIC_DELIMITER = "\n[TLYRIC]\n"
@@ -49,8 +48,6 @@ object LocalLyrics {
         }
     }
 
-
-
     private fun parseId3(b: ByteArray): String? {
         if (b.size < 10 || b[0] != 'I'.code.toByte() || b[1] != 'D'.code.toByte() ||
             b[2] != '3'.code.toByte()
@@ -76,7 +73,6 @@ object LocalLyrics {
         }
         return null
     }
-
 
     private fun decodeUslt(b: ByteArray, off: Int, len: Int): String? {
         if (len < 4) return null
@@ -108,8 +104,6 @@ object LocalLyrics {
         }
         return text.trim('\u0000', ' ', '\n', '\r').takeIf { it.isNotBlank() }
     }
-
-
 
     private fun parseFlac(b: ByteArray): String? {
         if (b.size < 42 || String(b, 0, 4, Charsets.US_ASCII) != "fLaC") return null
@@ -158,8 +152,6 @@ object LocalLyrics {
         }
         return lyrics?.trim()?.takeIf { it.isNotBlank() }
     }
-
-
 
     private fun syncSafe(a: Byte, b: Byte, c: Byte, d: Byte): Int =
         ((a.toInt() and 0x7F) shl 21) or

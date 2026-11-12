@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.theme
 
 import androidx.compose.runtime.Stable
@@ -10,7 +7,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.graphics.Color
-
 
 @Stable
 class Colors(

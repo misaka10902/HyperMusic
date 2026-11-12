@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.animation.animateColorAsState
@@ -51,7 +48,6 @@ import top.yukonga.miuix.kmp.glass.internal.drawGlassStroke
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.roundToInt
 
-
 @Immutable
 data class GlassTabColors(
     val selectedContainerColor: Color,
@@ -63,43 +59,32 @@ data class GlassTabColors(
     val restingStrokeAlpha: Float,
 )
 
-
 object GlassTabRowDefaults {
-
 
     val Height: Dp = 40.dp
 
-
     val NeutralHeight: Dp = 35.dp
-
 
     val TabGap: Dp = 12.dp
 
-
     val TabPaddingHorizontal: Dp = 16.dp
-
 
     val TabPaddingVertical: Dp = 6.dp
 
-
     private val RestingAlpha: Float = 0.067f
-
 
     @Composable
     fun shape(height: Dp = Height): GlassShape = GlassShape(height / 2, smoothing = 0f)
-
 
     @Composable
     fun material(): GlassMaterial = GlassMaterials.puredThinGlass(
         isDark = MiuixTheme.colorScheme.background.luminance() < 0.5f,
     )
 
-
     @Composable
     fun stroke(): GlassStroke = GlassStrokes.forTheme(
         isDark = MiuixTheme.colorScheme.background.luminance() < 0.5f,
     )
-
 
     @Composable
     fun primaryColors(
@@ -130,7 +115,6 @@ object GlassTabRowDefaults {
         )
     }
 
-
     @Composable
     fun neutralColors(): GlassTabColors {
         val isDark = MiuixTheme.colorScheme.background.luminance() < 0.5f
@@ -151,7 +135,6 @@ object GlassTabRowDefaults {
         )
     }
 }
-
 
 @Composable
 fun GlassTabRow(
@@ -286,37 +269,28 @@ fun GlassTabRow(
     }
 }
 
-
 object GlassSegmentedTabRowDefaults {
-
 
     val Height: Dp = 40.dp
 
-
     val TrackPadding: Dp = 3.dp
-
 
     val TabGap: Dp = 8.dp
 
-
     val TabPaddingHorizontal: Dp = 16.dp
-
 
     @Composable
     fun shape(height: Dp = Height): GlassShape = GlassShape(height / 2, smoothing = 0f)
-
 
     @Composable
     fun material(): GlassMaterial = GlassMaterials.puredThinGlass(
         isDark = MiuixTheme.colorScheme.background.luminance() < 0.5f,
     )
 
-
     @Composable
     fun stroke(): GlassStroke = GlassStrokes.forTheme(
         isDark = MiuixTheme.colorScheme.background.luminance() < 0.5f,
     )
-
 
     @Composable
     fun restingTrackColor(): Color = if (MiuixTheme.colorScheme.background.luminance() < 0.5f) {
@@ -325,7 +299,6 @@ object GlassSegmentedTabRowDefaults {
         Color.White
     }
 
-
     @Composable
     fun indicatorColor(): Color = if (MiuixTheme.colorScheme.background.luminance() < 0.5f) {
         Color.White.copy(alpha = IndicatorAlpha)
@@ -333,10 +306,8 @@ object GlassSegmentedTabRowDefaults {
         Color.Black.copy(alpha = 0.06f)
     }
 
-
     private val IndicatorAlpha: Float = 0.133f
 }
-
 
 @Composable
 fun GlassSegmentedTabRow(

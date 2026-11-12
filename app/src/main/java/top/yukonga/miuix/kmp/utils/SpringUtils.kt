@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.utils
 
 import androidx.compose.runtime.withFrameNanos
@@ -21,13 +18,11 @@ internal object SpringMath {
     const val STANDARD_SPRING_PERIOD = 0.4f
     const val SLOWER_SPRING_PERIOD_FOR_HIGH_VELOCITY = 0.55f
 
-
     fun obtainDampingDistance(normalizedInput: Float, range: Float): Float {
         val x = max(0.0f, min(normalizedInput, 1.0f)).toDouble()
         val dampedFactor = x - x.pow(2.0) + (x.pow(3.0) / 3.0)
         return (dampedFactor * range).toFloat()
     }
-
 
     fun obtainTouchDistance(currentPixelOffset: Float, range: Float): Float {
         var absPixelOffset = abs(currentPixelOffset)
@@ -53,7 +48,6 @@ private class SpringOperator(dampingRatio: Float, naturalPeriod: Float) {
         stiffnessOverMass = angularFrequency * angularFrequency
         dampingCoefficient = 2.0 * dampingRatio * angularFrequency
     }
-
 
     fun updateVelocity(
         currentVelocity: Double,
@@ -117,7 +111,6 @@ internal class SpringEngine {
         return false
     }
 }
-
 
 internal suspend fun SpringEngine.runSettleAnimation(
     startValue: Float,

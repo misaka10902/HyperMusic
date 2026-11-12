@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.animation.core.LinearEasing
@@ -36,7 +33,6 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
-
 
 @Composable
 fun LinearProgressIndicator(
@@ -103,7 +99,6 @@ fun LinearProgressIndicator(
         }
     }
 }
-
 
 @Composable
 fun CircularProgressIndicator(
@@ -191,7 +186,6 @@ fun CircularProgressIndicator(
     }
 }
 
-
 @Composable
 fun InfiniteProgressIndicator(
     modifier: Modifier = Modifier,
@@ -240,7 +234,6 @@ fun InfiniteProgressIndicator(
     }
 }
 
-
 private fun DrawScope.drawIndeterminateSegment(
     animatedValue: Float,
     segmentIndex: Int,
@@ -275,7 +268,6 @@ private fun DrawScope.drawIndeterminateSegment(
     }
 }
 
-
 private fun DrawScope.drawCircularBackground(
     color: Color,
     radius: Float,
@@ -294,21 +286,15 @@ object ProgressIndicatorDefaults {
 
     val DefaultLinearProgressIndicatorHeight = 6.dp
 
-
     val DefaultCircularProgressIndicatorStrokeWidth = 4.dp
-
 
     val DefaultCircularProgressIndicatorSize = 30.dp
 
-
     val DefaultInfiniteProgressIndicatorStrokeWidth = 2.dp
-
 
     val DefaultInfiniteProgressIndicatorOrbitingDotSize = 2.dp
 
-
     val DefaultInfiniteProgressIndicatorSize = 20.dp
-
 
     @Composable
     fun progressIndicatorColors(

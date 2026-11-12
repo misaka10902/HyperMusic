@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.animation.core.animateFloatAsState
@@ -19,14 +16,12 @@ import androidx.compose.ui.platform.LocalDensity
 import kotlin.math.max
 import kotlin.math.min
 
-
 @Stable
 fun glassPressScale(shorterSidePx: Float, density: Float): Float = if (shorterSidePx <= 0f) {
     1f
 } else {
     max((shorterSidePx - GlassMotion.PRESS_INSET_DP * density) / shorterSidePx, GlassMotion.PRESS_SCALE_MIN)
 }
-
 
 @Composable
 fun Modifier.glassPress(

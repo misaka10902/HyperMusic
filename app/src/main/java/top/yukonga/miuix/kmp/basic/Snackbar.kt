@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.animation.AnimatedVisibility
@@ -74,17 +71,13 @@ import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.time.Duration.Companion.milliseconds
 
-
 sealed interface SnackbarDuration {
 
     data object Short : SnackbarDuration
 
-
     data object Long : SnackbarDuration
 
-
     data object Indefinite : SnackbarDuration
-
 
     data class Custom(val durationMillis: kotlin.Long) : SnackbarDuration {
         init {
@@ -93,15 +86,12 @@ sealed interface SnackbarDuration {
     }
 }
 
-
 enum class SnackbarResult {
 
     Dismissed,
 
-
     ActionPerformed,
 }
-
 
 @Immutable
 data class SnackbarVisuals(
@@ -111,14 +101,11 @@ data class SnackbarVisuals(
     val duration: SnackbarDuration,
 )
 
-
 interface SnackbarData {
 
     val visuals: SnackbarVisuals
 
-
     suspend fun dismiss()
-
 
     suspend fun performAction()
 }
@@ -129,9 +116,7 @@ private enum class SnackbarSwipeToDismissValue {
     Settled,
 }
 
-
 private val HostBottomPadding = 12.dp
-
 
 @Stable
 class SnackbarHostState {
@@ -153,7 +138,6 @@ class SnackbarHostState {
             entries.remove(entry)
         }
     }
-
 
     suspend fun showSnackbar(
         message: String,
@@ -211,7 +195,6 @@ class SnackbarHostState {
     )
 }
 
-
 internal fun SnackbarDuration.toMillis(
     hasAction: Boolean,
     accessibilityManager: AccessibilityManager?,
@@ -232,7 +215,6 @@ internal fun SnackbarDuration.toMillis(
         containsControls = hasAction,
     )
 }
-
 
 @Composable
 fun SnackbarHost(
@@ -314,7 +296,6 @@ fun SnackbarHost(
                         .zIndex((state.currentSnackbars.size - index).toFloat()),
                     visibleState = visibleState,
 
-
                     enter = slideInVertically(initialOffsetY = { bottomPaddingPx }) + expandVertically(
                         expandFrom = Alignment.Top,
                         clip = false,
@@ -337,7 +318,6 @@ fun SnackbarHost(
         }
     }
 }
-
 
 @Composable
 fun Snackbar(
@@ -428,7 +408,6 @@ fun Snackbar(
     }
 }
 
-
 @Immutable
 data class SnackbarColors(
     val containerColor: Color,
@@ -438,20 +417,15 @@ data class SnackbarColors(
     val actionContainerColor: Color,
 )
 
-
 object SnackbarDefaults {
 
     val CornerRadius = 16.dp
 
-
     val InsideMargin = PaddingValues(all = 12.dp)
-
 
     val OuterPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 8.dp)
 
-
     val ActionCornerRadius = 50.dp
-
 
     val ActionInsideMargin = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
 

@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.utils
 
 import androidx.compose.animation.core.AnimationState
@@ -56,7 +53,6 @@ import kotlin.math.atan2
 import kotlin.math.roundToInt
 import kotlin.math.sign
 
-
 internal interface PagerScrollConfig {
 
     val isSmoothScrollingEnabled: Boolean
@@ -66,8 +62,6 @@ internal interface PagerScrollConfig {
 
     fun Density.calculateMouseWheelScroll(event: PointerEvent, bounds: IntSize): Offset
 }
-
-
 
 internal fun Modifier.pagerNonTouchScroll(
     state: PagerState,
@@ -91,7 +85,6 @@ private data class PagerNonTouchScrollElement(
     }
 }
 
-
 private interface PagerNestedScrollScope {
     fun scrollBy(offset: Offset, source: NestedScrollSource): Offset
 }
@@ -105,7 +98,6 @@ private data class PagerMouseWheelScrollDelta(
         value = value + other.value,
 
         timeMillis = maxOf(timeMillis, other.timeMillis),
-
 
         shouldApplyImmediately = shouldApplyImmediately,
     )
@@ -191,7 +183,6 @@ private class PagerNonTouchScrollNode(
         scrollLogic.update(state, flingBehavior)
     }
 
-
     private fun updateScrollDirection() {
         scrollLogic.reverseDirection = ScrollableDefaults.reverseDirection(
             layoutDirection = currentValueOf(LocalLayoutDirection),
@@ -236,7 +227,6 @@ private class PagerNonTouchScrollNode(
     }
 }
 
-
 private object PagerNestedScrollConnection : NestedScrollConnection {
     override fun onPostScroll(
         consumed: Offset,
@@ -246,7 +236,6 @@ private object PagerNestedScrollConnection : NestedScrollConnection {
 
     override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity = Velocity.Zero
 }
-
 
 private class PagerScrollingLogic(
     pagerState: PagerState,
@@ -300,12 +289,10 @@ private class PagerScrollingLogic(
 
     fun Offset.toFloat(): Float = x
 
-
     fun Offset.toSingleAxisDeltaFromAngle(): Float {
         val angle = atan2(y.absoluteValue, x.absoluteValue)
         return if (angle >= VERTICAL_AXIS_THRESHOLD_ANGLE) 0f else x
     }
-
 
     fun PagerNestedScrollScope.dispatchScroll(delta: Float, source: NestedScrollSource): Float {
         val offset = delta.reverseIfNeeded().toOffset()
@@ -320,7 +307,6 @@ private class PagerScrollingLogic(
 
         val singleAxisDeltaForSelfScroll =
             scrollAvailableAfterPreScroll.singleAxisOffset().reverseIfNeeded().toFloat()
-
 
         val consumedBySelfScroll =
             scrollBy(singleAxisDeltaForSelfScroll).toOffset().reverseIfNeeded()
@@ -340,7 +326,6 @@ private class PagerScrollingLogic(
             nestedScrollScope.block()
         }
     }
-
 
     suspend fun flingWithVelocity(initialVelocity: Velocity) {
         val availableVelocity = initialVelocity.singleAxisVelocity()
@@ -387,7 +372,6 @@ private val NoOpScrollScope: ScrollScope =
         override fun scrollBy(pixels: Float): Float = pixels
     }
 
-
 private class PagerSnapFlingBehavior(
     private val originalFlingBehavior: TargetedFlingBehavior,
     private val pagerState: PagerState,
@@ -409,7 +393,6 @@ private class PagerSnapFlingBehavior(
                 }
             }
 
-
         if (
             pagerState.currentPageOffsetFraction != 0.0f &&
             abs(pagerState.currentPageOffsetFraction) < 1e-3
@@ -427,7 +410,6 @@ private fun resolveFlingBehavior(flingBehavior: FlingBehavior, pagerState: Pager
     flingBehavior
 }
 
-
 private class PagerDifferentialVelocityTracker {
     private val xVelocityTracker = VelocityTracker1D(isDataDifferential = true)
     private val yVelocityTracker = VelocityTracker1D(isDataDifferential = true)
@@ -443,7 +425,6 @@ private class PagerDifferentialVelocityTracker {
         return Velocity(velocityX, velocityY)
     }
 }
-
 
 private abstract class PagerNonTouchScrollingLogic(
     protected val scrollingLogic: PagerScrollingLogic,
@@ -465,13 +446,10 @@ private abstract class PagerNonTouchScrollingLogic(
 
     val velocityTracker = PagerDifferentialVelocityTracker()
 
-
     abstract fun onPointerEvent(pointerEvent: PointerEvent, pass: PointerEventPass, bounds: IntSize)
-
 
     abstract fun startReceivingEvents(coroutineScope: CoroutineScope)
 }
-
 
 private class PagerMouseWheelScrollingLogic(
     scrollingLogic: PagerScrollingLogic,
@@ -487,15 +465,10 @@ private class PagerMouseWheelScrollingLogic(
         if (pointerEvent.type != PointerEventType.Scroll) return
         if (pointerEvent.isConsumed) return
 
-
-
         if (pass == PointerEventPass.Initial && isScrolling) {
             onMouseWheel(pointerEvent, bounds)
             pointerEvent.consume()
         }
-
-
-
 
         if (pass == PointerEventPass.Main && !isScrolling) {
             val consumed = onMouseWheel(pointerEvent, bounds)
@@ -540,8 +513,6 @@ private class PagerMouseWheelScrollingLogic(
                         timeMillis = pointerEvent.changes.first().uptimeMillis,
                         shouldApplyImmediately = !mouseWheelScrollConfig.isSmoothScrollingEnabled ||
 
-
-
                             mouseWheelScrollConfig.isPreciseWheelScroll(pointerEvent),
                     ),
                 )
@@ -560,7 +531,6 @@ private class PagerMouseWheelScrollingLogic(
     }
 
     private fun PagerScrollingLogic.canConsumeDelta(scrollDelta: Offset): Boolean {
-
 
         val delta = scrollDelta.reverseIfNeeded().toSingleAxisDeltaFromAngle()
         return if (delta == 0f) {
@@ -600,8 +570,6 @@ private class PagerMouseWheelScrollingLogic(
             return withTimeoutOrNull(timeoutMillis) { channel.busyReceive() }
                 ?.let {
 
-
-
                     val previousDeltaShouldApplyImmediately = targetScrollDelta.shouldApplyImmediately
                     targetScrollDelta =
                         it.copy(shouldApplyImmediately = previousDeltaShouldApplyImmediately)
@@ -625,7 +593,6 @@ private class PagerMouseWheelScrollingLogic(
                     dispatchMouseWheelScroll(targetValueLeftover)
                     requiredAnimation = waitNextScrollDelta(SCROLL_PROGRESS_TIMEOUT)
                 } else {
-
 
                     val instantDelta = sign(targetValueLeftover) * threshold
                     dispatchMouseWheelScroll(instantDelta)
@@ -652,7 +619,6 @@ private class PagerMouseWheelScrollingLogic(
                         nextScrollDelta != null
                     }
                     if (!requiredAnimation) {
-
 
                         requiredAnimation =
                             waitNextScrollDelta(SCROLL_PROGRESS_TIMEOUT - durationMillis)
@@ -700,7 +666,6 @@ private class PagerMouseWheelScrollingLogic(
     private fun PagerNestedScrollScope.dispatchMouseWheelScroll(delta: Float): Float = with(scrollingLogic) { dispatchScroll(delta, NestedScrollSource.UserInput) }
 }
 
-
 private class PagerTrackpadScrollingLogic(
     scrollingLogic: PagerScrollingLogic,
     onScrollStopped: suspend (velocity: Velocity) -> Unit,
@@ -720,15 +685,10 @@ private class PagerTrackpadScrollingLogic(
         }
         if (pointerEvent.isConsumed) return
 
-
-
         if (pass == PointerEventPass.Initial && isScrolling) {
             onPan(pointerEvent)
             pointerEvent.consume()
         }
-
-
-
 
         if (pass == PointerEventPass.Main && !isScrolling) {
             val consumed = onPan(pointerEvent)
@@ -847,7 +807,6 @@ private val PointerEvent.isConsumed: Boolean
     get() = changes.fastAny { it.isConsumed }
 
 private fun PointerEvent.consume() = changes.fastForEach { it.consume() }
-
 
 private suspend fun <T> Channel<T>.busyReceive(): T = coroutineScope {
     val job = launch {

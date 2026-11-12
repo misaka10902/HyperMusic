@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.animation.core.Animatable
@@ -18,7 +15,6 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import kotlinx.coroutines.launch
 
-
 @Composable
 internal fun rememberGlassPopupBackProgress(
     show: Boolean,
@@ -33,7 +29,6 @@ internal fun rememberGlassPopupBackProgress(
     LaunchedEffect(show, active, retainWhenInactive) {
         if (show || (!active && !retainWhenInactive)) progress.snapTo(0f)
     }
-
 
     if (LocalNavigationEventDispatcherOwner.current != null) {
         val backState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
@@ -56,6 +51,5 @@ internal fun rememberGlassPopupBackProgress(
     }
     return progress.asState()
 }
-
 
 internal fun popupFractionWithBack(fraction: Float, backProgress: Float): Float = fraction * (1f - backProgress.coerceIn(0f, 1f))

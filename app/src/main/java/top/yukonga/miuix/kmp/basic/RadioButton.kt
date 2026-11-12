@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -41,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.SinkFeedback
 import top.yukonga.miuix.kmp.utils.pressable
-
 
 @Composable
 fun RadioButton(
@@ -115,7 +111,6 @@ fun RadioButton(
             )
             .clip(capsuleShape)
             .drawWithCache {
-
 
                 val viewportSize = 56f
                 val strokeWidth = 7.0f / viewportSize * size.width

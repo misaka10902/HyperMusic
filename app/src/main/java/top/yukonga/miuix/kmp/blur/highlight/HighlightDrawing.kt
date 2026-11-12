@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.blur.highlight
 
 import androidx.compose.ui.graphics.Paint
@@ -9,7 +6,6 @@ import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.util.fastCoerceAtMost
 import top.yukonga.miuix.kmp.blur.RuntimeShaderCache
-
 
 internal fun ContentDrawScope.drawHighlight(
     highlight: Highlight,

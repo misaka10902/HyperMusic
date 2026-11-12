@@ -177,7 +177,6 @@ fun HyperPlayerPageContent(
             null
         } else if (song.isLocal) {
 
-
             runCatching {
                 withContext(kotlinx.coroutines.Dispatchers.IO) { LocalLyrics.read(context, song) }
             }.getOrNull()
@@ -190,7 +189,6 @@ fun HyperPlayerPageContent(
         lyricLoading = false
     }
     val lyricIndex = currentLineIndex(lyrics, state.positionMs)
-
 
     var cachedLyrics by remember { mutableStateOf(emptyList<LyricLine>()) }
     LaunchedEffect(lyrics) { if (lyrics.isNotEmpty()) cachedLyrics = lyrics }
@@ -319,7 +317,27 @@ fun HyperPlayerPageContent(
 
         }
 
-        if (isLandscape) {
+        val isTablet = maxWidth >= 600.dp && maxHeight >= 600.dp && isLandscape
+        if (isTablet) {
+            TabletPlayerUi(
+                state = state,
+                track = track,
+                reveal = reveal,
+                isFavorite = isFavorite,
+                circular = circular,
+                pageCorner = pageCorner,
+                onToggleFavorite = { toggleFavorite() },
+                onOpenQueue = onOpenQueue,
+                onMore = onMore,
+                onOpenSleepTimer = onOpenSleepTimer,
+                lyrics = lyrics,
+                lyricIndex = lyricIndex,
+                haptic = haptic,
+                coverScale = coverScale,
+                showLyricsTranslation = settings.showLyricsTranslation,
+                lyricCentered = settings.lyricCentered,
+            )
+        } else if (isLandscape) {
             Box(
                 modifier = Modifier
                     .fillMaxSize(),
@@ -401,7 +419,6 @@ fun HyperPlayerPageContent(
             val coverSize = (minOf(maxWidth, maxHeight) * CoverSizeFraction)
                 .coerceAtLeast(0.dp)
 
-
             val expandLyricsArea = !compact
             Crossfade(
                 targetState = showLyrics,
@@ -409,13 +426,11 @@ fun HyperPlayerPageContent(
                 label = "coverOrLyrics",
             ) { isLyrics ->
 
-
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = if (compact) Alignment.BottomCenter else Alignment.Center,
                 ) {
                     if (isLyrics && expandLyricsArea) {
-
 
                         Crossfade(
                             targetState = shownLyrics,
@@ -685,7 +700,6 @@ private fun PlayerTitle(
     val align = if (centered) Alignment.CenterHorizontally else Alignment.Start
     val textAlign = if (centered) TextAlign.Center else TextAlign.Start
 
-
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
@@ -727,171 +741,30 @@ private fun PlayerTitle(
 }
 
 @Composable
-private fun LandscapePlayerUi(
+private fun PlayerRightControls(
     state: HyperPlayerState,
     track: PlayerTrack,
     reveal: PlayerReveal,
     isFavorite: Boolean,
-    circular: Boolean,
-    pageCorner: Dp,
     onToggleFavorite: () -> Unit,
     onOpenQueue: () -> Unit,
     onMore: () -> Unit,
     onOpenSleepTimer: () -> Unit,
-    lyrics: List<LyricLine>,
-    lyricIndex: Int,
-    showLyrics: Boolean,
-    onShowLyricsChange: (Boolean) -> Unit,
     haptic: HapticFeedback,
-    coverScale: Float,
-    showLyricsTranslation: Boolean,
-    lyricCentered: Boolean,
+    modifier: Modifier = Modifier,
+    cover: (@Composable () -> Unit)? = null,
 ) {
-    val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding().coerceAtLeast(26.dp)
-    val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding().coerceAtLeast(16.dp)
-    Row(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(start = 28.dp, end = 28.dp, top = statusTop, bottom = navBottom),
-        verticalAlignment = Alignment.CenterVertically,
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        var swipeProgress by remember { mutableFloatStateOf(0f) }
-        BoxWithConstraints(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .padding(end = 24.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            val coverSize = minOf(maxWidth, maxHeight) * 0.86f
-            Box(
-                modifier = Modifier
-                    .size(coverSize)
-                    .graphicsLayer {
-                        alpha = state.expandProgress.coerceIn(0f, 1f)
-                    }
-                    // 形状只作用在封面本身：这里不能裁切整个容器，
-                    // 否则圆形封面模式下歌词页也会被裁成圆形。
-                    .then(
-                        if (track.hasSong) {
-                            Modifier
-                        } else {
-                            Modifier
-                                .coverFrame(circular, pageCorner)
-                                .background(MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.6f))
-                        }
-                    )
-                    .then(
-                        if (track.hasSong) {
-                            Modifier.pointerInput(showLyrics) {
-                                val threshold = size.width * 0.14f
-                                detectHorizontalDragGestures(
-                                    onDragStart = { swipeProgress = 0f },
-                                    onDragEnd = { swipeProgress = 0f },
-                                    onDragCancel = { swipeProgress = 0f },
-                                ) { change, dragAmount ->
-                                    change.consume()
-                                    swipeProgress += -dragAmount
-                                    if (!showLyrics && swipeProgress > threshold) {
-                                        swipeProgress = 0f
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        onShowLyricsChange(true)
-                                    } else if (showLyrics && swipeProgress < -threshold) {
-                                        swipeProgress = 0f
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        onShowLyricsChange(false)
-                                    }
-                                }
-                            }
-                        } else {
-                            Modifier
-                        }
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Crossfade(
-                    targetState = showLyrics,
-                    animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing),
-                    label = "landCoverLyrics",
-                ) { isLyrics ->
-                    when {
-                        isLyrics && lyrics.isNotEmpty() -> HyperLyricsView(
-                            lines = lyrics,
-                            currentIndex = lyricIndex,
-                            showTranslation = showLyricsTranslation,
-                            centered = lyricCentered,
-                            onSeek = { state.seekTo(it) },
-                            modifier = Modifier.fillMaxSize(),
-                            onDismiss = { onShowLyricsChange(false) },
-                        )
-
-                        isLyrics -> Column(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
-                        ) {
-                            Image(
-                                imageVector = MiuixIcons.File,
-                                contentDescription = null,
-                                modifier = Modifier.size(48.dp),
-                                colorFilter = ColorFilter.tint(PageTextSecondary.copy(alpha = 0.7f)),
-                            )
-                            Spacer(Modifier.height(14.dp))
-                            Text(
-                                text = "没有歌词",
-                                color = PageTextSecondary,
-                                fontSize = 15.sp,
-                            )
-                        }
-
-                        track.hasSong -> Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .scale(coverScale)
-                                .coverFrame(circular, pageCorner),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            val url = track.coverUrl ?: ""
-                            if (url.isBlank()) {
-                                Image(
-                                    imageVector = MiuixIcons.Music,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(88.dp),
-                                    colorFilter = ColorFilter.tint(Color.White.copy(alpha = 0.92f)),
-                                )
-                            } else {
-                                NetCover(
-                                    url = url,
-                                    modifier = Modifier.fillMaxSize(),
-                                    corner = pageCorner,
-                                    contentDescription = track.title,
-                                    maxSize = CoverSize.LARGE.decode,
-                                )
-                            }
-                        }
-
-                        else -> Image(
-                            imageVector = MiuixIcons.Music,
-                            contentDescription = null,
-                            modifier = Modifier.size(88.dp),
-                            colorFilter = ColorFilter.tint(Color.White.copy(alpha = 0.92f)),
-                        )
-                    }
-                }
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
-            verticalArrangement = Arrangement.Center,
-        ) {
             PlayerTitle(
                 track = track,
                 revealHeader = reveal.header,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
             )
+            cover?.invoke()
 
             HyperProgressBar(
                 progress = safeProgress(state.positionMs, track.durationMs),
@@ -1017,7 +890,290 @@ private fun LandscapePlayerUi(
                     },
                 )
             }
+            }
+}
+
+@Composable
+private fun TabletPlayerUi(
+    state: HyperPlayerState,
+    track: PlayerTrack,
+    reveal: PlayerReveal,
+    isFavorite: Boolean,
+    circular: Boolean,
+    pageCorner: Dp,
+    onToggleFavorite: () -> Unit,
+    onOpenQueue: () -> Unit,
+    onMore: () -> Unit,
+    onOpenSleepTimer: () -> Unit,
+    lyrics: List<LyricLine>,
+    lyricIndex: Int,
+    haptic: HapticFeedback,
+    coverScale: Float,
+    showLyricsTranslation: Boolean,
+    lyricCentered: Boolean,
+) {
+    val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding().coerceAtLeast(26.dp)
+    val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding().coerceAtLeast(16.dp)
+
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(start = 44.dp, end = 44.dp, top = statusTop, bottom = navBottom),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .padding(end = 44.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (lyrics.isNotEmpty()) {
+                HyperLyricsView(
+                    lines = lyrics,
+                    currentIndex = lyricIndex,
+                    showTranslation = showLyricsTranslation,
+                    centered = lyricCentered,
+                    onSeek = { state.seekTo(it) },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                NoLyricsHint()
+            }
         }
+
+        BoxWithConstraints(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+        ) {
+            val coverSize = minOf(maxWidth * 0.6f, maxHeight * 0.32f)
+            PlayerRightControls(
+                state = state,
+                track = track,
+                reveal = reveal,
+                isFavorite = isFavorite,
+                onToggleFavorite = onToggleFavorite,
+                onOpenQueue = onOpenQueue,
+                onMore = onMore,
+                onOpenSleepTimer = onOpenSleepTimer,
+                haptic = haptic,
+                modifier = Modifier.fillMaxSize(),
+                cover = {
+                    Box(
+                        modifier = Modifier
+                            .padding(bottom = 24.dp)
+                            .size(coverSize)
+                            .graphicsLayer { alpha = state.expandProgress.coerceIn(0f, 1f) }
+                            .coverFrame(circular, pageCorner)
+                            .then(
+                                if (track.hasSong) {
+                                    Modifier
+                                } else {
+                                    Modifier.background(
+                                        MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.6f)
+                                    )
+                                }
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        val url = track.coverUrl ?: ""
+                        when {
+                            !track.hasSong -> Image(
+                                imageVector = MiuixIcons.Music,
+                                contentDescription = null,
+                                modifier = Modifier.size(72.dp),
+                                colorFilter = ColorFilter.tint(Color.White.copy(alpha = 0.92f)),
+                            )
+
+                            url.isBlank() -> Image(
+                                imageVector = MiuixIcons.Music,
+                                contentDescription = null,
+                                modifier = Modifier.size(72.dp),
+                                colorFilter = ColorFilter.tint(Color.White.copy(alpha = 0.92f)),
+                            )
+
+                            else -> NetCover(
+                                url = url,
+                                modifier = Modifier.fillMaxSize().scale(coverScale),
+                                corner = pageCorner,
+                                contentDescription = track.title,
+                                maxSize = CoverSize.LARGE.decode,
+                            )
+                        }
+                    }
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun LandscapePlayerUi(
+    state: HyperPlayerState,
+    track: PlayerTrack,
+    reveal: PlayerReveal,
+    isFavorite: Boolean,
+    circular: Boolean,
+    pageCorner: Dp,
+    onToggleFavorite: () -> Unit,
+    onOpenQueue: () -> Unit,
+    onMore: () -> Unit,
+    onOpenSleepTimer: () -> Unit,
+    lyrics: List<LyricLine>,
+    lyricIndex: Int,
+    showLyrics: Boolean,
+    onShowLyricsChange: (Boolean) -> Unit,
+    haptic: HapticFeedback,
+    coverScale: Float,
+    showLyricsTranslation: Boolean,
+    lyricCentered: Boolean,
+) {
+    val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding().coerceAtLeast(26.dp)
+    val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding().coerceAtLeast(16.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(start = 28.dp, end = 28.dp, top = statusTop, bottom = navBottom),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        var swipeProgress by remember { mutableFloatStateOf(0f) }
+        BoxWithConstraints(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .padding(end = 24.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            val coverSize = minOf(maxWidth, maxHeight) * 0.86f
+            Box(
+                modifier = Modifier
+                    .size(coverSize)
+                    .graphicsLayer {
+                        alpha = state.expandProgress.coerceIn(0f, 1f)
+                    }
+
+                    .then(
+                        if (track.hasSong) {
+                            Modifier
+                        } else {
+                            Modifier
+                                .coverFrame(circular, pageCorner)
+                                .background(MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.6f))
+                        }
+                    )
+                    .then(
+                        if (track.hasSong) {
+                            Modifier.pointerInput(showLyrics) {
+                                val threshold = size.width * 0.14f
+                                detectHorizontalDragGestures(
+                                    onDragStart = { swipeProgress = 0f },
+                                    onDragEnd = { swipeProgress = 0f },
+                                    onDragCancel = { swipeProgress = 0f },
+                                ) { change, dragAmount ->
+                                    change.consume()
+                                    swipeProgress += -dragAmount
+                                    if (!showLyrics && swipeProgress > threshold) {
+                                        swipeProgress = 0f
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        onShowLyricsChange(true)
+                                    } else if (showLyrics && swipeProgress < -threshold) {
+                                        swipeProgress = 0f
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        onShowLyricsChange(false)
+                                    }
+                                }
+                            }
+                        } else {
+                            Modifier
+                        }
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Crossfade(
+                    targetState = showLyrics,
+                    animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing),
+                    label = "landCoverLyrics",
+                ) { isLyrics ->
+                    when {
+                        isLyrics && lyrics.isNotEmpty() -> HyperLyricsView(
+                            lines = lyrics,
+                            currentIndex = lyricIndex,
+                            showTranslation = showLyricsTranslation,
+                            centered = lyricCentered,
+                            onSeek = { state.seekTo(it) },
+                            modifier = Modifier.fillMaxSize(),
+                            onDismiss = { onShowLyricsChange(false) },
+                        )
+
+                        isLyrics -> Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            Image(
+                                imageVector = MiuixIcons.File,
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                colorFilter = ColorFilter.tint(PageTextSecondary.copy(alpha = 0.7f)),
+                            )
+                            Spacer(Modifier.height(14.dp))
+                            Text(
+                                text = "没有歌词",
+                                color = PageTextSecondary,
+                                fontSize = 15.sp,
+                            )
+                        }
+
+                        track.hasSong -> Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .scale(coverScale)
+                                .coverFrame(circular, pageCorner),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            val url = track.coverUrl ?: ""
+                            if (url.isBlank()) {
+                                Image(
+                                    imageVector = MiuixIcons.Music,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(88.dp),
+                                    colorFilter = ColorFilter.tint(Color.White.copy(alpha = 0.92f)),
+                                )
+                            } else {
+                                NetCover(
+                                    url = url,
+                                    modifier = Modifier.fillMaxSize(),
+                                    corner = pageCorner,
+                                    contentDescription = track.title,
+                                    maxSize = CoverSize.LARGE.decode,
+                                )
+                            }
+                        }
+
+                        else -> Image(
+                            imageVector = MiuixIcons.Music,
+                            contentDescription = null,
+                            modifier = Modifier.size(88.dp),
+                            colorFilter = ColorFilter.tint(Color.White.copy(alpha = 0.92f)),
+                        )
+                    }
+                }
+            }
+        }
+
+        PlayerRightControls(
+            state = state,
+            track = track,
+            reveal = reveal,
+            isFavorite = isFavorite,
+            onToggleFavorite = onToggleFavorite,
+            onOpenQueue = onOpenQueue,
+            onMore = onMore,
+            onOpenSleepTimer = onOpenSleepTimer,
+            haptic = haptic,
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+        )
     }
 }
 

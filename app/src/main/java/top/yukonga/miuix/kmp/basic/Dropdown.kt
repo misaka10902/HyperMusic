@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.foundation.Image
@@ -56,7 +53,6 @@ fun RowScope.DropdownArrowEndAction(
         contentDescription = null,
     )
 }
-
 
 @Composable
 fun DropdownImpl(
@@ -166,8 +162,6 @@ fun DropdownImpl(
 
         if (hasSubmenu) {
 
-
-
             val chevronColor = when {
                 !enabled -> MiuixTheme.colorScheme.disabledOnSecondaryVariant
                 isSelected -> dropdownColors.selectedContentColor
@@ -221,7 +215,6 @@ fun DropdownImpl(
     )
 }
 
-
 @Deprecated(
     message = "Use DropdownImpl instead. SpinnerItemImpl is a thin alias kept for compatibility.",
     replaceWith = ReplaceWith(
@@ -253,7 +246,6 @@ fun SpinnerItemImpl(
     )
 }
 
-
 @Immutable
 data class DropdownColors(
     val contentColor: Color,
@@ -265,13 +257,11 @@ data class DropdownColors(
     val selectedIndicatorColor: Color,
 )
 
-
 @Stable
 data class DropdownEntry(
     val items: List<DropdownItem>,
     val enabled: Boolean = true,
 )
-
 
 @Stable
 data class DropdownItem(
@@ -299,39 +289,27 @@ object DropdownDefaults {
 
     val MinHeight: Dp = 56.dp
 
-
     val MinWidth: Dp = 200.dp
-
 
     val CheckIconSize: Dp = 20.dp
 
-
     val ArrowSize: DpSize = DpSize(width = 10.dp, height = 16.dp)
-
 
     val ChevronSize: DpSize = DpSize(width = 10.dp, height = 16.dp)
 
-
     val IconMinSize: Dp = 26.dp
-
 
     val MaxItemTextWidth: Dp = 216.dp
 
-
     val InsideHorizontalPadding: Dp = 20.dp
-
 
     val DialogHorizontalPadding: Dp = 28.dp
 
-
     val FirstLastVerticalPadding: Dp = 20.dp
-
 
     val MiddleVerticalPadding: Dp = 12.dp
 
-
     val IconEndPadding: Dp = 12.dp
-
 
     val CheckIconStartPadding: Dp = 12.dp
 

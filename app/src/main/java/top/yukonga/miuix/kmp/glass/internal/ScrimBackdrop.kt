@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass.internal
 
 import androidx.compose.runtime.Stable
@@ -14,7 +11,6 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.unit.Density
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.BackdropEffectScope
-
 
 @Stable
 internal class ScrimBackdrop(

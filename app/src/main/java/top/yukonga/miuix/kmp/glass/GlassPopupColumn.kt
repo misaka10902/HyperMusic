@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.glass
 
 import androidx.compose.foundation.layout.ColumnScope
@@ -29,7 +26,6 @@ import kotlin.math.roundToInt
 
 private const val POPUP_PROBE_COUNT = 8
 
-
 @Composable
 internal fun GlassPopupColumn(
     modifier: Modifier = Modifier,
@@ -41,7 +37,6 @@ internal fun GlassPopupColumn(
         measurePolicy = PopupColumnMeasurePolicy,
     )
 }
-
 
 private object PopupColumnScope : ColumnScope {
     @Stable

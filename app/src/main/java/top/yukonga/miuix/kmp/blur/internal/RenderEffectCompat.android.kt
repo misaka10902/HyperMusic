@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.blur.internal
 
 import android.graphics.BlendMode
@@ -28,9 +25,7 @@ internal fun runtimeShaderEffect(
     uniformShaderName,
 ).asComposeRenderEffect()
 
-
 private fun sigmaToBlurRadius(sigma: Float): Float = ((sigma - 0.5f) / 0.57735f).coerceAtLeast(0f)
-
 
 private class ProgressiveMaskCache {
     var ax = Float.NaN
@@ -41,19 +36,12 @@ private class ProgressiveMaskCache {
     lateinit var level2: android.graphics.RenderEffect
     lateinit var level1: android.graphics.RenderEffect
 
-
     lateinit var ramp: android.graphics.RenderEffect
-
 
     lateinit var sharp: android.graphics.RenderEffect
 
-
     var unpremul: android.graphics.RenderEffect? = null
 }
-
-
-
-
 
 internal fun progressiveStackEffect(
     scope: BackdropEffectScopeImpl,
@@ -83,7 +71,6 @@ internal fun progressiveStackEffect(
         mask.setFloatUniform("in_curve", curve)
         val androidMask = mask.asAndroidRuntimeShader()
 
-
         fun bandMask(level: Float, slope: Float): android.graphics.RenderEffect {
             mask.setFloatUniform("in_level", level)
             mask.setFloatUniform("in_slope", slope)
@@ -101,10 +88,6 @@ internal fun progressiveStackEffect(
         masks.curve = curve
     }
     val pre = preEffect?.asAndroidRenderEffect()
-
-
-
-
 
     fun blurred(sigmaX: Float, sigmaY: Float): android.graphics.RenderEffect? {
         val radiusX = sigmaToBlurRadius(sigmaX)
@@ -139,7 +122,6 @@ internal fun progressiveStackEffect(
     stack = android.graphics.RenderEffect.createBlendModeEffect(stack, maskedLevel(sigma1X, sigma1Y, masks.level2), BlendMode.SRC_OVER)
     stack = android.graphics.RenderEffect.createBlendModeEffect(stack, maskedLevel(sigma0X, sigma0Y, masks.level1), BlendMode.SRC_OVER)
     if (nativeSharpEnd) {
-
 
         val sharpLevel = if (pre == null) {
             masks.sharp

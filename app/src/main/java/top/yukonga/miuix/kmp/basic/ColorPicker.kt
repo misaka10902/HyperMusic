@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.foundation.background
@@ -55,7 +52,6 @@ import top.yukonga.miuix.kmp.color.space.OkLch
 import kotlin.math.ceil
 import kotlin.math.min
 
-
 @Composable
 fun ColorPicker(
     color: Color,
@@ -109,7 +105,6 @@ fun ColorPicker(
     }
 }
 
-
 @Composable
 fun HsvColorPicker(
     color: Color,
@@ -120,7 +115,6 @@ fun HsvColorPicker(
 ) {
     val currentOnColorChanged by rememberUpdatedState(onColorChanged)
     val capsuleShape = CircleShape
-
 
     val hsv = remember { color.toHsv() }
     var currentHue by remember { mutableFloatStateOf(hsv.h) }
@@ -180,7 +174,6 @@ fun HsvColorPicker(
             )
         }
 
-
         HsvHueSlider(
             currentHue = currentHue,
             onHueChanged = { newHue ->
@@ -189,7 +182,6 @@ fun HsvColorPicker(
             },
             hapticEffect = hapticEffect,
         )
-
 
         HsvSaturationSlider(
             currentHue = currentHue,
@@ -201,7 +193,6 @@ fun HsvColorPicker(
             hapticEffect = hapticEffect,
         )
 
-
         HsvValueSlider(
             currentHue = currentHue,
             currentSaturation = currentSaturation,
@@ -212,7 +203,6 @@ fun HsvColorPicker(
             },
             hapticEffect = hapticEffect,
         )
-
 
         HsvAlphaSlider(
             currentHue = currentHue,
@@ -227,7 +217,6 @@ fun HsvColorPicker(
         )
     }
 }
-
 
 @Composable
 fun HsvHueSlider(
@@ -247,7 +236,6 @@ fun HsvHueSlider(
         hapticEffect = hapticEffect,
     )
 }
-
 
 @Composable
 fun HsvSaturationSlider(
@@ -271,7 +259,6 @@ fun HsvSaturationSlider(
     )
 }
 
-
 @Composable
 fun HsvValueSlider(
     currentHue: Float,
@@ -291,7 +278,6 @@ fun HsvValueSlider(
         hapticEffect = hapticEffect,
     )
 }
-
 
 @Composable
 fun HsvAlphaSlider(
@@ -318,7 +304,6 @@ fun HsvAlphaSlider(
     )
 }
 
-
 @Composable
 fun OkHsvColorPicker(
     color: Color,
@@ -329,7 +314,6 @@ fun OkHsvColorPicker(
 ) {
     val currentOnColorChanged by rememberUpdatedState(onColorChanged)
     val capsuleShape = CircleShape
-
 
     val okhsv = remember { Transforms.colorToOkhsv(color) }
     var currentH by remember { mutableFloatStateOf(okhsv[0]) }
@@ -389,7 +373,6 @@ fun OkHsvColorPicker(
             )
         }
 
-
         OkHsvHueSlider(
             currentH = currentH,
             onHueChanged = {
@@ -398,7 +381,6 @@ fun OkHsvColorPicker(
             },
             hapticEffect = hapticEffect,
         )
-
 
         OkHsvSaturationSlider(
             currentH = currentH,
@@ -410,7 +392,6 @@ fun OkHsvColorPicker(
             hapticEffect = hapticEffect,
         )
 
-
         OkHsvValueSlider(
             currentH = currentH,
             currentS = currentS,
@@ -421,7 +402,6 @@ fun OkHsvColorPicker(
             },
             hapticEffect = hapticEffect,
         )
-
 
         OkHsvAlphaSlider(
             currentH = currentH,
@@ -436,7 +416,6 @@ fun OkHsvColorPicker(
         )
     }
 }
-
 
 @Composable
 fun OkHsvHueSlider(
@@ -456,7 +435,6 @@ fun OkHsvHueSlider(
         hapticEffect = hapticEffect,
     )
 }
-
 
 @Composable
 fun OkHsvSaturationSlider(
@@ -481,7 +459,6 @@ fun OkHsvSaturationSlider(
     )
 }
 
-
 @Composable
 fun OkHsvValueSlider(
     currentH: Float,
@@ -505,7 +482,6 @@ fun OkHsvValueSlider(
         hapticEffect = hapticEffect,
     )
 }
-
 
 @Composable
 fun OkHsvAlphaSlider(
@@ -532,7 +508,6 @@ fun OkHsvAlphaSlider(
     )
 }
 
-
 @Composable
 fun OkLabColorPicker(
     color: Color,
@@ -543,7 +518,6 @@ fun OkLabColorPicker(
 ) {
     val currentOnColorChanged by rememberUpdatedState(onColorChanged)
     val capsuleShape = CircleShape
-
 
     val ok = remember { color.toOkLab() }
     var currentL by remember { mutableFloatStateOf(ok.l / 100f) }
@@ -603,7 +577,6 @@ fun OkLabColorPicker(
             )
         }
 
-
         OkLabLightnessSlider(
             currentL = currentL,
             currentA = currentA,
@@ -614,7 +587,6 @@ fun OkLabColorPicker(
             },
             hapticEffect = hapticEffect,
         )
-
 
         OkLabAChannelSlider(
             currentL = currentL,
@@ -627,7 +599,6 @@ fun OkLabColorPicker(
             hapticEffect = hapticEffect,
         )
 
-
         OkLabBChannelSlider(
             currentL = currentL,
             currentA = currentA,
@@ -638,7 +609,6 @@ fun OkLabColorPicker(
             },
             hapticEffect = hapticEffect,
         )
-
 
         OkLabAlphaSlider(
             currentL = currentL,
@@ -654,7 +624,6 @@ fun OkLabColorPicker(
     }
 }
 
-
 @Composable
 fun OkLchColorPicker(
     color: Color,
@@ -665,7 +634,6 @@ fun OkLchColorPicker(
 ) {
     val currentOnColorChanged by rememberUpdatedState(onColorChanged)
     val capsuleShape = CircleShape
-
 
     val oklch = remember { color.toOkLch() }
     var currentL by remember { mutableFloatStateOf(oklch.l / 100f) }
@@ -725,7 +693,6 @@ fun OkLchColorPicker(
             )
         }
 
-
         OkLchHueSlider(
             currentL = currentL,
             currentC = currentC,
@@ -736,7 +703,6 @@ fun OkLchColorPicker(
             },
             hapticEffect = hapticEffect,
         )
-
 
         OkLchLightnessSlider(
             currentL = currentL,
@@ -749,7 +715,6 @@ fun OkLchColorPicker(
             hapticEffect = hapticEffect,
         )
 
-
         OkLchChromaSlider(
             currentL = currentL,
             currentC = currentC,
@@ -760,7 +725,6 @@ fun OkLchColorPicker(
             },
             hapticEffect = hapticEffect,
         )
-
 
         OkLchAlphaSlider(
             currentL = currentL,
@@ -876,7 +840,6 @@ fun OkLchAlphaSlider(
     )
 }
 
-
 @Composable
 fun OkLabLightnessSlider(
     currentL: Float,
@@ -904,7 +867,6 @@ fun OkLabLightnessSlider(
         hapticEffect = hapticEffect,
     )
 }
-
 
 @Composable
 fun OkLabAChannelSlider(
@@ -938,7 +900,6 @@ fun OkLabAChannelSlider(
     )
 }
 
-
 @Composable
 fun OkLabBChannelSlider(
     currentL: Float,
@@ -970,7 +931,6 @@ fun OkLabBChannelSlider(
         hapticEffect = hapticEffect,
     )
 }
-
 
 @Composable
 fun OkLabAlphaSlider(
@@ -1034,7 +994,6 @@ fun Modifier.drawCheckerboard(
         }
     },
 )
-
 
 @Composable
 private fun ColorSlider(
@@ -1167,7 +1126,6 @@ private fun SliderIndicator(
             },
     )
 }
-
 
 private fun handleSliderInteraction(
     positionX: Float,

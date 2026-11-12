@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.blur.internal
 
 import androidx.compose.runtime.Stable
@@ -9,7 +6,6 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
-
 
 @Stable
 internal class ShapeProvider(var shapeBlock: () -> Shape) {

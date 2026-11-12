@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 歌单占位图标：用户提供的同心双圆环（黑胶/光盘轮廓），960x960 视口，path 原样保留。
-     实际颜色由 Image 的 ColorFilter.tint 控制，fillColor 仅作占位。 -->
+
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="46dp"
     android:height="46dp"

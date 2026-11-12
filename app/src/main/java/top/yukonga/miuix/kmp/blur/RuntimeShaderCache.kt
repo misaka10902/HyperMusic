@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.blur
 
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -8,13 +5,10 @@ import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.internal.SynchronizedObject
 import kotlinx.coroutines.internal.synchronized
 
-
 sealed interface RuntimeShaderCache {
-
 
     fun obtainRuntimeShader(key: String, string: String): RuntimeShader
 }
-
 
 val LocalRuntimeShaderCache = staticCompositionLocalOf<RuntimeShaderCache> {
     RuntimeShaderCacheImpl()

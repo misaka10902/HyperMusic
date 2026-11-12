@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.blur
 
 import androidx.compose.ui.Modifier
@@ -12,7 +9,6 @@ import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.platform.InspectorInfo
 import top.yukonga.miuix.kmp.blur.internal.recordLayer
-
 
 fun Modifier.layerBackdrop(backdrop: LayerBackdrop): Modifier = this then LayerBackdropElement(backdrop)
 

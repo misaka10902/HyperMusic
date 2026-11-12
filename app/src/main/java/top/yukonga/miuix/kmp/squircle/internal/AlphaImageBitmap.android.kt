@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.squircle.internal
 
 import android.graphics.Bitmap

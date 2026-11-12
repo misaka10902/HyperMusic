@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.animation.AnimatedVisibility
@@ -14,7 +11,6 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
@@ -63,7 +59,6 @@ import top.yukonga.miuix.kmp.icon.basic.SearchCleanup
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.hasFocusReassignBug
-
 
 @Composable
 fun SearchBar(
@@ -115,7 +110,6 @@ fun SearchBar(
         },
     )
 }
-
 
 @Composable
 fun InputField(
@@ -186,9 +180,6 @@ fun InputField(
         derivedStateOf { if (!(query.isNotEmpty() || expanded)) label else "" }
     }
 
-
-
-
     val workaroundEnabled = !hasFocusReassignBug || expanded
     val expandOnTapModifier = if (workaroundEnabled || !enabled) {
         Modifier
@@ -258,8 +249,6 @@ fun InputField(
     LaunchedEffect(expanded) {
         if (expanded) {
 
-
-
             focusRequester.requestFocus()
         } else if (focused) {
             delay(100)
@@ -273,26 +262,19 @@ fun InputField(
     }
 }
 
-
 object SearchBarDefaults {
 
     val InsideMargin = DpSize(12.dp, 0.dp)
 
-
     val InputFieldMinHeight = 45.dp
-
 
     val InputFieldFontSize = 17.sp
 
-
     val LeadingIconStartPadding = 16.dp
-
 
     val LeadingIconEndPadding = 8.dp
 
-
     val TrailingIconStartPadding = 8.dp
-
 
     val TrailingIconEndPadding = 16.dp
 }

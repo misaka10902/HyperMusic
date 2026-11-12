@@ -1,6 +1,3 @@
-
-
-
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.foundation.Canvas
@@ -17,7 +14,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-
 @Composable
 @NonRestartableComposable
 fun HorizontalDivider(
@@ -32,7 +28,6 @@ fun HorizontalDivider(
         end = Offset(size.width, thickness.toPx() / 2),
     )
 }
-
 
 @Composable
 @NonRestartableComposable
@@ -51,9 +46,7 @@ fun VerticalDivider(
 
 object DividerDefaults {
 
-
     val Thickness = 0.75.dp
-
 
     val DividerColor @Composable get() = MiuixTheme.colorScheme.dividerLine
 }
