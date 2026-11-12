@@ -1,0 +1,67 @@
+package top.yukonga.miuix.kmp.theme
+
+import androidx.compose.ui.graphics.lerp
+
+/**
+ * 把 [this] 的全部颜色从 [from] 插值到 [to]，[fraction] 为进度（0f..1f）。
+ *
+ * 用途：深浅色切换时做整体渐变。主题色全部是 mutableStateOf 状态，每帧写入插值结果，
+ * 所有读取主题色的控件（文字、卡片、按钮、底色）就会平滑过渡；壁纸是独立绘制的位图，
+ * 不参与插值，因此不会出现「壁纸跟着渐变」的情况。
+ */
+internal fun Colors.lerpColors(from: Colors, to: Colors, fraction: Float) {
+    val f = fraction.coerceIn(0f, 1f)
+    this.primary = lerp(from.primary, to.primary, f)
+    this.onPrimary = lerp(from.onPrimary, to.onPrimary, f)
+    this.primaryVariant = lerp(from.primaryVariant, to.primaryVariant, f)
+    this.onPrimaryVariant = lerp(from.onPrimaryVariant, to.onPrimaryVariant, f)
+    this.error = lerp(from.error, to.error, f)
+    this.onError = lerp(from.onError, to.onError, f)
+    this.errorContainer = lerp(from.errorContainer, to.errorContainer, f)
+    this.onErrorContainer = lerp(from.onErrorContainer, to.onErrorContainer, f)
+    this.disabledPrimary = lerp(from.disabledPrimary, to.disabledPrimary, f)
+    this.disabledOnPrimary = lerp(from.disabledOnPrimary, to.disabledOnPrimary, f)
+    this.disabledPrimaryButton = lerp(from.disabledPrimaryButton, to.disabledPrimaryButton, f)
+    this.disabledOnPrimaryButton = lerp(from.disabledOnPrimaryButton, to.disabledOnPrimaryButton, f)
+    this.disabledPrimarySlider = lerp(from.disabledPrimarySlider, to.disabledPrimarySlider, f)
+    this.primaryContainer = lerp(from.primaryContainer, to.primaryContainer, f)
+    this.onPrimaryContainer = lerp(from.onPrimaryContainer, to.onPrimaryContainer, f)
+    this.secondary = lerp(from.secondary, to.secondary, f)
+    this.onSecondary = lerp(from.onSecondary, to.onSecondary, f)
+    this.secondaryVariant = lerp(from.secondaryVariant, to.secondaryVariant, f)
+    this.onSecondaryVariant = lerp(from.onSecondaryVariant, to.onSecondaryVariant, f)
+    this.disabledSecondary = lerp(from.disabledSecondary, to.disabledSecondary, f)
+    this.disabledOnSecondary = lerp(from.disabledOnSecondary, to.disabledOnSecondary, f)
+    this.disabledSecondaryVariant = lerp(from.disabledSecondaryVariant, to.disabledSecondaryVariant, f)
+    this.disabledOnSecondaryVariant = lerp(from.disabledOnSecondaryVariant, to.disabledOnSecondaryVariant, f)
+    this.secondaryContainer = lerp(from.secondaryContainer, to.secondaryContainer, f)
+    this.onSecondaryContainer = lerp(from.onSecondaryContainer, to.onSecondaryContainer, f)
+    this.secondaryContainerVariant = lerp(from.secondaryContainerVariant, to.secondaryContainerVariant, f)
+    this.onSecondaryContainerVariant = lerp(from.onSecondaryContainerVariant, to.onSecondaryContainerVariant, f)
+    this.tertiaryContainer = lerp(from.tertiaryContainer, to.tertiaryContainer, f)
+    this.onTertiaryContainer = lerp(from.onTertiaryContainer, to.onTertiaryContainer, f)
+    this.tertiaryContainerVariant = lerp(from.tertiaryContainerVariant, to.tertiaryContainerVariant, f)
+    this.background = lerp(from.background, to.background, f)
+    this.onBackground = lerp(from.onBackground, to.onBackground, f)
+    this.onBackgroundVariant = lerp(from.onBackgroundVariant, to.onBackgroundVariant, f)
+    this.surface = lerp(from.surface, to.surface, f)
+    this.onSurface = lerp(from.onSurface, to.onSurface, f)
+    this.surfaceVariant = lerp(from.surfaceVariant, to.surfaceVariant, f)
+    this.onSurfaceSecondary = lerp(from.onSurfaceSecondary, to.onSurfaceSecondary, f)
+    this.onSurfaceVariantSummary = lerp(from.onSurfaceVariantSummary, to.onSurfaceVariantSummary, f)
+    this.onSurfaceVariantActions = lerp(from.onSurfaceVariantActions, to.onSurfaceVariantActions, f)
+    this.disabledOnSurface = lerp(from.disabledOnSurface, to.disabledOnSurface, f)
+    this.surfaceContainer = lerp(from.surfaceContainer, to.surfaceContainer, f)
+    this.onSurfaceContainer = lerp(from.onSurfaceContainer, to.onSurfaceContainer, f)
+    this.onSurfaceContainerVariant = lerp(from.onSurfaceContainerVariant, to.onSurfaceContainerVariant, f)
+    this.surfaceContainerHigh = lerp(from.surfaceContainerHigh, to.surfaceContainerHigh, f)
+    this.onSurfaceContainerHigh = lerp(from.onSurfaceContainerHigh, to.onSurfaceContainerHigh, f)
+    this.surfaceContainerHighest = lerp(from.surfaceContainerHighest, to.surfaceContainerHighest, f)
+    this.onSurfaceContainerHighest = lerp(from.onSurfaceContainerHighest, to.onSurfaceContainerHighest, f)
+    this.outline = lerp(from.outline, to.outline, f)
+    this.dividerLine = lerp(from.dividerLine, to.dividerLine, f)
+    this.windowDimming = lerp(from.windowDimming, to.windowDimming, f)
+    this.sliderKeyPoint = lerp(from.sliderKeyPoint, to.sliderKeyPoint, f)
+    this.sliderKeyPointForeground = lerp(from.sliderKeyPointForeground, to.sliderKeyPointForeground, f)
+    this.sliderBackground = lerp(from.sliderBackground, to.sliderBackground, f)
+}
