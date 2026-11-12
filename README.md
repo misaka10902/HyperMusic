@@ -23,22 +23,22 @@
 
 <table>  
   <tr>  
-    <td><img src="./screenshot/1.png" width="200" alt="01"></td>  
-    <td><img src="./screenshot/2.png" width="200" alt="02"></td>  
-    <td><img src="./screenshot/3.png" width="200" alt="03"></td>  
-    <td><img src="./screenshot/4.png" width="200" alt="04"></td>  
+    <td><img src="./assets/1.png" width="200" alt="01"></td>  
+    <td><img src="./assets/2.png" width="200" alt="02"></td>  
+    <td><img src="./assets/3.png" width="200" alt="03"></td>  
+    <td><img src="./assets/4.png" width="200" alt="04"></td>  
   </tr>  
   <tr>  
-    <td><img src="./screenshot/5.png" width="200" alt="05"></td>  
-    <td><img src="./screenshot/6.png" width="200" alt="06"></td>  
-    <td><img src="./screenshot/7.png" width="200" alt="07"></td>  
-    <td><img src="./screenshot/8.png" width="200" alt="08"></td>  
+    <td><img src="./assets/5.png" width="200" alt="05"></td>  
+    <td><img src="./assets/6.png" width="200" alt="06"></td>  
+    <td><img src="./assets/7.png" width="200" alt="07"></td>  
+    <td><img src="./assets/8.png" width="200" alt="08"></td>  
   </tr>  
   <tr>  
-    <td><img src="./screenshot/9.png" width="200" alt="09"></td>  
-    <td><img src="./screenshot/10.png" width="200" alt="10"></td>  
-    <td><img src="./screenshot/11.png" width="200" alt="11"></td>  
-    <td><img src="./screenshot/12.png" width="200" alt="12"></td>  
+    <td><img src="./assets/9.png" width="200" alt="09"></td>  
+    <td><img src="./assets/10.png" width="200" alt="10"></td>  
+    <td><img src="./assets/11.png" width="200" alt="11"></td>  
+    <td><img src="./assets/12.png" width="200" alt="12"></td>  
   </tr>  
 </table>
 
@@ -46,17 +46,17 @@
 
 <table>  
   <tr>  
-    <td><img src="./screenshot/13.png" width="200" alt="01"></td>  
-    <td><img src="./screenshot/14.png" width="200" alt="02"></td>  
-    <td><img src="./screenshot/15.png" width="200" alt="03"></td>  
-    <td><img src="./screenshot/16.png" width="200" alt="04"></td>  
+    <td><img src="./assets/13.png" width="200" alt="01"></td>  
+    <td><img src="./assets/14.png" width="200" alt="02"></td>  
+    <td><img src="./assets/15.png" width="200" alt="03"></td>  
+    <td><img src="./assets/16.png" width="200" alt="04"></td>  
   </tr>  
 </table>
 
 <table>  
   <tr>  
-    <td><img src="./screenshot/17.jpg" width="400" alt="05"></td>  
-    <td><img src="./screenshot/18.jpg" width="400" alt="06"></td>  
+    <td><img src="./assets/17.jpg" width="400" alt="05"></td>  
+    <td><img src="./assets/18.jpg" width="400" alt="06"></td>  
   </tr>  
 </table>
 
