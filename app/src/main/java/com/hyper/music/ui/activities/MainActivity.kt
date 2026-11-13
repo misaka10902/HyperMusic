@@ -1,4 +1,7 @@
 package com.hyper.music.ui.activities
+import androidx.compose.ui.graphics.takeOrElse
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.glass.GlassIconButton
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 
 import android.Manifest
@@ -23,6 +26,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.IntentSenderRequest
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -34,6 +38,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -101,10 +106,6 @@ import com.hyper.music.music.WallpaperManager
 import com.hyper.music.music.CoverLoader
 import com.hyper.music.music.LocalSongs
 import com.hyper.music.music.MediaCache
-import com.hyper.music.ui.basic.CollapsibleTopAppBar
-import com.hyper.music.ui.basic.HyperTopBarButton
-import com.hyper.music.ui.basic.ProgressiveBlurTopBar
-import com.hyper.music.ui.basic.rememberSharedScrollBehavior
 import com.hyper.music.ui.components.ArtistPickerSheet
 import com.hyper.music.ui.components.ConfirmDialog
 import com.hyper.music.ui.components.HyperSheet
@@ -149,6 +150,7 @@ import com.hyper.music.util.CrashLogger
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.NativeTextField
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
@@ -162,6 +164,7 @@ import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.Favorites
 import top.yukonga.miuix.kmp.icon.extended.FileDownloads
 import top.yukonga.miuix.kmp.glass.GlassDialog
+import top.yukonga.miuix.kmp.glass.GlassTopAppBar
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.LocalDialogStates
 import top.yukonga.miuix.kmp.utils.LocalPopupStates
@@ -237,10 +240,10 @@ fun HyperApp() {
     val scope = rememberCoroutineScope()
 
     var selectedTab by remember { mutableIntStateOf(0) }
-    val scrollBehavior = rememberSharedScrollBehavior()
-    val exploreScrollBehavior = rememberSharedScrollBehavior()
-    val historyScrollBehavior = rememberSharedScrollBehavior()
-    val playlistScrollBehavior = rememberSharedScrollBehavior()
+    val scrollBehavior = MiuixScrollBehavior()
+    val exploreScrollBehavior = MiuixScrollBehavior()
+    val historyScrollBehavior = MiuixScrollBehavior()
+    val playlistScrollBehavior = MiuixScrollBehavior()
 
     val playerState = rememberHyperPlayerState()
 
@@ -514,7 +517,7 @@ fun HyperApp() {
             drawContent()
         }
 
-        WallpaperPageBox(topBlurEnabled = advancedMaterial) {
+        WallpaperPageBox {
             content(pageBackdrop)
         }
     }
@@ -556,166 +559,157 @@ fun HyperApp() {
         ) {
             entry<RootRoute> {
 
-    val topEndActions: (@Composable (Float, Float) -> Unit)? = if (selectionActive) {
-    val extra = selectionBar?.singleAction
-    val selectAll = selectionBar?.selectAllAction
-    { backdropAlpha, shadowAlpha ->
-        Row {
-            if (selectAll != null) {
-                HyperTopBarButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                        selectAll.onClick()
-                    },
-                    backdrop = backdrop,
-                    icon = selectAll.icon,
-                    contentDescription = selectAll.label,
-                    iconSize = 22.dp,
-                    iconTint = selectAll.tint,
-                    backdropAlpha = backdropAlpha,
-                    shadowAlpha = shadowAlpha,
-                )
-                Spacer(Modifier.width(10.dp))
-            }
-            HyperTopBarButton(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                    if (extra != null) extra.onClick() else exitSelection()
-                },
-                backdrop = backdrop,
-                icon = extra?.icon ?: MiuixIcons.Close,
-                contentDescription = extra?.label ?: "退出多选",
-                iconSize = 22.dp,
-                backdropAlpha = backdropAlpha,
-                shadowAlpha = shadowAlpha,
-            )
-        }
-    }
-} else when (selectedTab) {
-    0 -> {
-        { backdropAlpha, shadowAlpha ->
-            HyperTopBarButton(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                    playerState.collapse()
-                    pushRoute(MusicRoute.Downloads())
-                },
-                backdrop = backdrop,
-                icon = MiuixIcons.FileDownloads,
-                contentDescription = "已下载的歌曲",
-                iconSize = 23.dp,
-                backdropAlpha = backdropAlpha,
-                shadowAlpha = shadowAlpha,
-            )
-        }
-    }
-    1 -> {
-        { backdropAlpha, shadowAlpha ->
-            HyperTopBarButton(
-                onClick = {
+    // 普通态与多选态切换时，右侧图标交叉淡化，避免图标硬切
+    val topActionsContent: (@Composable () -> Unit) = {
+        AnimatedContent(
+            targetState = if (selectionActive) -1 else selectedTab,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(190)) togetherWith fadeOut(animationSpec = tween(140))
+            },
+            contentAlignment = Alignment.CenterEnd,
+            label = "topEndActions",
+        ) { key ->
+            if (key == -1) {
+                val extra = selectionBar?.singleAction
+                val selectAll = selectionBar?.selectAllAction
+                Row {
+                    if (selectAll != null) {
+                        GlassIconButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                                selectAll.onClick()
+                            },
+                        ) {
+                            Icon(
+                                imageVector = selectAll.icon,
+                                contentDescription = selectAll.label,
+                                modifier = Modifier.size(22.dp),
+                                tint = (selectAll.tint).takeOrElse { MiuixTheme.colorScheme.onSurface },
+                            )
+                        }
+                        Spacer(Modifier.width(10.dp))
+                    }
+                    GlassIconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            if (extra != null) extra.onClick() else exitSelection()
+                        },
+                    ) {
+                        Icon(
+                            imageVector = extra?.icon ?: MiuixIcons.Close,
+                            contentDescription = extra?.label ?: "退出多选",
+                            modifier = Modifier.size(22.dp),
+                            tint = MiuixTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+            } else {
+                when (key) {
+                    0 -> GlassIconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            playerState.collapse()
+                            pushRoute(MusicRoute.Downloads())
+                        },
+                    ) {
+                        Icon(
+                            imageVector = MiuixIcons.FileDownloads,
+                            contentDescription = "已下载的歌曲",
+                            modifier = Modifier.size(23.dp),
+                            tint = MiuixTheme.colorScheme.onSurface,
+                        )
+                    }
 
-                    if (MusicLibrary.history.value.isEmpty()) return@HyperTopBarButton
-                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                    confirmClearHistory = true
-                },
-                backdrop = backdrop,
-                icon = MiuixIcons.Delete,
-                contentDescription = "清空历史记录",
-                iconSize = 24.dp,
-                backdropAlpha = backdropAlpha,
-                shadowAlpha = shadowAlpha,
-            )
-        }
-    }
-    2 -> {
-        { backdropAlpha, shadowAlpha ->
-            Row {
-                HyperTopBarButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                        playerState.collapse()
-                        pushRoute(MusicRoute.Favorites())
-                    },
-                    backdrop = backdrop,
-                    icon = MiuixIcons.Favorites,
-                    contentDescription = "我喜欢的歌曲",
-                    iconSize = 22.dp,
-                    backdropAlpha = backdropAlpha,
-                    shadowAlpha = shadowAlpha,
-                )
-                Spacer(Modifier.width(10.dp))
-                HyperTopBarButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                        importPendingSongs = emptyList()
-                        showImportSheet = true
-                    },
-                    backdrop = backdrop,
-                    icon = MiuixIcons.Add,
-                    contentDescription = "添加歌单",
-                    iconSize = 23.dp,
-                    backdropAlpha = backdropAlpha,
-                    shadowAlpha = shadowAlpha,
-                )
+                    1 -> GlassIconButton(
+                        onClick = {
+                            if (MusicLibrary.history.value.isEmpty()) return@GlassIconButton
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            confirmClearHistory = true
+                        },
+                    ) {
+                        Icon(
+                            imageVector = MiuixIcons.Delete,
+                            contentDescription = "清空历史记录",
+                            modifier = Modifier.size(24.dp),
+                            tint = MiuixTheme.colorScheme.onSurface,
+                        )
+                    }
+
+                    2 -> Row {
+                        GlassIconButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                                playerState.collapse()
+                                pushRoute(MusicRoute.Favorites())
+                            },
+                        ) {
+                            Icon(
+                                imageVector = MiuixIcons.Favorites,
+                                contentDescription = "我喜欢的歌曲",
+                                modifier = Modifier.size(22.dp),
+                                tint = MiuixTheme.colorScheme.onSurface,
+                            )
+                        }
+                        Spacer(Modifier.width(10.dp))
+                        GlassIconButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                                importPendingSongs = emptyList()
+                                showImportSheet = true
+                            },
+                        ) {
+                            Icon(
+                                imageVector = MiuixIcons.Add,
+                                contentDescription = "添加歌单",
+                                modifier = Modifier.size(23.dp),
+                                tint = MiuixTheme.colorScheme.onSurface,
+                            )
+                        }
+                    }
+                }
             }
         }
     }
-    else -> null
-}
+
 
                 Scaffold(
                     containerColor = if (wallpaperActive.hasImage) Color.Transparent else MiuixTheme.colorScheme.surface,
                     topBar = {
+                        val barScrollBehavior = when (selectedTab) {
+                            0 -> exploreScrollBehavior
+                            1 -> historyScrollBehavior
+                            2 -> playlistScrollBehavior
+                            else -> scrollBehavior
+                        }
                         if (tablet) {
                             TabletTopBar(
                                 titles = TAB_TITLES,
                                 selectedTab = selectedTab,
                                 onTabSelected = { selectedTab = it },
                                 backdrop = backdrop,
-                                actions = topEndActions,
+                                scrollBehavior = barScrollBehavior,
+                                progressiveBlur = advancedMaterial,
+                                actions = topActionsContent,
                             )
                         } else {
-                        ProgressiveBlurTopBar(
-                            backdrop = backdrop,
-                            scrollBehavior = when (selectedTab) {
-                                0 -> exploreScrollBehavior
-                                1 -> historyScrollBehavior
-                                2 -> playlistScrollBehavior
-                                else -> scrollBehavior
-                            },
-                            blurAlpha = 1f,
-                        ) {
-                            CollapsibleTopAppBar(
-                                title = if (selectionActive) {
-                                    "已选择 ${selectionBar?.count ?: 0} 项"
-                                } else {
-                                    TAB_TITLES[selectedTab]
+                            val barTitle = if (selectionActive) {
+                                "已选择 ${selectionBar?.count ?: 0} 项"
+                            } else {
+                                TAB_TITLES[selectedTab]
+                            }
+                            GlassTopAppBar(
+                                title = barTitle,
+                                largeTitle = barTitle,
+                                subtitle = if (selectionActive) "" else when (selectedTab) {
+                                    1 -> "共${MusicLibrary.history.collectAsState().value.size}首历史播放歌曲"
+                                    2 -> "共${MusicLibrary.playlists.collectAsState().value.size}个歌单"
+                                    else -> ""
                                 },
-                                largeTitle = if (selectionActive) {
-                                    "已选择 ${selectionBar?.count ?: 0} 项"
-                                } else {
-                                    TAB_TITLES[selectedTab]
-                                },
-                                subtitle = if (selectionActive) null else when (selectedTab) {
-                                    1 -> {
-                                        val count = MusicLibrary.history.collectAsState().value.size
-                                        "共${count}首历史播放歌曲"
-                                    }
-                                    2 -> {
-                                        val count = MusicLibrary.playlists.collectAsState().value.size
-                                        "共${count}个歌单"
-                                    }
-                                    else -> null
-                                },
-                                scrollBehavior = when (selectedTab) {
-                                    0 -> exploreScrollBehavior
-                                    1 -> historyScrollBehavior
-                                    2 -> playlistScrollBehavior
-                                    else -> scrollBehavior
-                                },
-                                endAction = topEndActions,
+                                backdrop = backdrop,
+                                progressiveBlur = advancedMaterial,
+                                scrollBehavior = barScrollBehavior,
+                                actions = { topActionsContent() },
                             )
-                        }
                         }
                     },
                     bottomBar = {
@@ -742,15 +736,21 @@ fun HyperApp() {
                         WallpaperBackground()
                         Crossfade(
                             targetState = selectedTab,
-
-                            modifier = if (tablet) {
-                                Modifier.fillMaxHeight().widthIn(max = 1100.dp).align(Alignment.TopCenter)
-                            } else {
-                                Modifier.fillMaxSize()
-                            },
+                            modifier = Modifier.fillMaxSize(),
                             animationSpec = tween(180, easing = FastOutSlowInEasing),
                             label = "tabContent",
                         ) { tab ->
+                            // 平板限宽居中放在内容层，Crossfade 自身拿到有界约束，避免子页高度被算成 wrap 而无法滚动
+                            Box(
+                                modifier = if (tablet) {
+                                    Modifier
+                                        .fillMaxHeight()
+                                        .widthIn(max = 1100.dp)
+                                        .align(Alignment.TopCenter)
+                                } else {
+                                    Modifier.fillMaxSize()
+                                },
+                            ) {
                             when (tab) {
                             0 -> ExploreScreen(
                                 onPlaySongs = { list, index -> playList(list, index) },
@@ -761,6 +761,7 @@ fun HyperApp() {
                                 active = !overlayVisible && !playerState.isExpanded,
                                 onSearchEngagedChange = { exploreSearchEngaged = it },
                                 exitSearchSignal = exploreExitSearchSignal,
+                                scrollBehavior = exploreScrollBehavior,
                             )
 
                             1 -> HistoryScreen(
@@ -804,6 +805,7 @@ fun HyperApp() {
                             )
 
                             else -> SettingsScreen(
+                                topInset = contentPadding.calculateTopPadding(),
                                 scrollBehavior = scrollBehavior,
                                 hyperBackdrop = backdrop,
                                 onOpenWallpaper = {
@@ -819,6 +821,7 @@ fun HyperApp() {
                                     pushRoute(MusicRoute.AboutApp())
                                 },
                             )
+                            }
                             }
                         }
 

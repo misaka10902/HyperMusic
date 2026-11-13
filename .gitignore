@@ -49,3 +49,8 @@ _local/
 *.log
 *.tar.gz
 *.tgz
+
+# --- 打包产物（APK/源码包不入库）---
+*.zip
+*.apk
+release/

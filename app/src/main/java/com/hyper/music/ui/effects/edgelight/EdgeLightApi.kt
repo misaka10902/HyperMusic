@@ -52,50 +52,6 @@ fun Modifier.edgeLight(
 }
 
 @Stable
-fun Modifier.edgeLightDirectional(
-    shape: Shape,
-    color: Color = Color.White.copy(alpha = 0.5f),
-    width: Dp = 1.dp,
-    blurRadius: Dp = 2.dp,
-    intensity: Float = 1f,
-    angle: Float = 45f,
-    falloff: Float = 1f
-): Modifier {
-    return this.edgeLight(
-        shape = shape,
-        edgeLight = EdgeLight.Directional(
-            color = color,
-            width = width,
-            blurRadius = blurRadius,
-            intensity = intensity,
-            angle = angle,
-            falloff = falloff
-        )
-    )
-}
-
-@Stable
-fun Modifier.edgeLightGlow(
-    shape: Shape,
-    color: Color = Color.White.copy(alpha = 0.5f),
-    width: Dp = 1.dp,
-    blurRadius: Dp = 2.dp,
-    intensity: Float = 1f,
-    glowSize: Float = 10f
-): Modifier {
-    return this.edgeLight(
-        shape = shape,
-        edgeLight = EdgeLight.Glow(
-            color = color,
-            width = width,
-            blurRadius = blurRadius,
-            intensity = intensity,
-            glowSize = glowSize
-        )
-    )
-}
-
-@Stable
 fun Modifier.edgeLightIf(
     shape: Shape,
     condition: Boolean,

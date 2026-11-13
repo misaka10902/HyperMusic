@@ -99,12 +99,6 @@ object MusicLibrary {
         prefs.edit().putFloat(KEY_VOLUME, v).apply()
     }
 
-    fun setCoverCornerRadius(radius: Float) {
-        val r = radius.coerceIn(0f, 72f)
-        _settings.value = _settings.value.copy(coverCornerRadius = r)
-        prefs.edit().putFloat(KEY_COVER_RADIUS, r).apply()
-    }
-
     fun setCoverCircular(circular: Boolean) {
         _settings.value = _settings.value.copy(coverCircular = circular)
         prefs.edit().putBoolean(KEY_COVER_CIRCLE, circular).apply()
@@ -118,11 +112,6 @@ object MusicLibrary {
     fun setLiveLyric(enabled: Boolean) {
         _settings.value = _settings.value.copy(liveLyric = enabled)
         prefs.edit().putBoolean(KEY_LIVE_LYRIC, enabled).apply()
-    }
-
-    fun setAudioFocus(enabled: Boolean) {
-        _settings.value = _settings.value.copy(audioFocus = enabled)
-        prefs.edit().putBoolean(KEY_AUDIO_FOCUS, enabled).apply()
     }
 
     fun setDownloadQuality(quality: AudioQuality) {

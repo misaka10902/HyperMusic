@@ -57,7 +57,7 @@ fun WallpaperScreen(
 
     DetailPage(
         title = "更换背景",
-        subtitle = "建议配合调整显示模式以获得更佳的视觉效果",
+        subtitle = "建议配合调整显示模式使视觉效果更佳",
         onBack = onBack,
         backdrop = backdrop,
         header = {},
@@ -115,7 +115,7 @@ fun WallpaperScreen(
                             onValueChange = { WallpaperManager.setCardOpacity(it) },
                             title = "卡片不透明度",
                             valueText = "${(state.cardOpacity * 100).toInt()}%",
-                            valueRange = 0f..1f,
+                            valueRange = WallpaperManager.MIN_CARD_OPACITY..1f,
                             steps = 0,
                         )
                     }

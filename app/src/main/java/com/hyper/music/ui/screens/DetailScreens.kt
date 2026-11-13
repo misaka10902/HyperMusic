@@ -1,11 +1,17 @@
 package com.hyper.music.ui.screens
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.graphics.takeOrElse
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.glass.GlassIconButton
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -40,7 +46,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -61,7 +66,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hyper.music.R
@@ -74,30 +78,32 @@ import com.hyper.music.music.NetCover
 import com.hyper.music.music.Song
 import com.hyper.music.music.WallpaperManager
 import com.hyper.music.music.WallpaperBackground
-import com.hyper.music.ui.basic.CollapsibleTopAppBar
-import com.hyper.music.ui.basic.HyperTopBarButton
-import com.hyper.music.ui.basic.ProgressiveBlurTopBar
 import com.hyper.music.ui.basic.RightAlignedTooltipPositionProvider
 import com.hyper.music.ui.basic.chipBounce
 import com.hyper.music.ui.basic.rememberChipBounce
-import com.hyper.music.ui.basic.rememberSharedScrollBehavior
 import com.hyper.music.ui.components.ConfirmDialog
 import com.hyper.music.ui.effects.miuix.LocalActiveBackdrop
+import com.hyper.music.ui.effects.miuix.LocalAdvancedMaterialEnabled
 import com.hyper.music.ui.effects.miuix.cardGlassAlpha
 import com.hyper.music.ui.components.EmptyHint
 import com.hyper.music.ui.components.RefreshIndicator
 import com.hyper.music.ui.components.ReorderGeom
+import com.hyper.music.ui.components.ReorderGeometryRegistry
 import com.hyper.music.ui.components.SelectionAction
 import com.hyper.music.ui.components.SelectionBarState
+import com.hyper.music.ui.components.SongPairRow
 import com.hyper.music.ui.components.TrackRow
 import com.hyper.music.ui.components.dragReorderItem
 import com.hyper.music.ui.components.rememberDragReorderState
+import com.hyper.music.ui.components.reorderGeometry
 import com.hyper.music.ui.components.formatTime
-import com.hyper.music.ui.utils.fallbackTopBarHeight
-import com.hyper.music.ui.utils.overScrollVertical
+import top.yukonga.miuix.kmp.utils.overScrollVertical
+import com.hyper.music.ui.utils.songColumns
 import kotlinx.coroutines.launch
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.RichTooltipBox
+import top.yukonga.miuix.kmp.glass.GlassTopAppBar
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TooltipAnchorPosition
 import top.yukonga.miuix.kmp.icon.MiuixIcons
@@ -115,7 +121,6 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.spring
 import androidx.compose.ui.draw.alpha
 import androidx.compose.animation.core.animateTo
 import androidx.compose.ui.graphics.graphicsLayer
@@ -136,108 +141,96 @@ internal fun DetailPage(
     compactTitle: Boolean = false,
     subtitle: String? = null,
     listState: LazyListState = rememberLazyListState(),
-    endAction: (@Composable (backdropAlpha: Float, shadowAlpha: Float) -> Unit)? = null,
+    endAction: (@Composable () -> Unit)? = null,
+    endActionKey: Any? = null,
     overlay: @Composable BoxScope.() -> Unit = {},
     list: LazyListScope.() -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
-    val scrollBehavior = rememberSharedScrollBehavior()
+    val advancedMaterial = LocalAdvancedMaterialEnabled.current
+    val scrollBehavior = MiuixScrollBehavior()
     val density = LocalDensity.current
-    val measuredPx = scrollBehavior.currentHeightPx
-    val topBarHeightDp = if (measuredPx > 0f) {
-        with(density) { measuredPx.toDp() }
-    } else {
-        fallbackTopBarHeight(showLargeTitle = !compactTitle)
-    }
 
     var headerHeightPx by remember { mutableIntStateOf(0) }
     val headerHeightDp = with(density) { headerHeightPx.toDp() }
 
-    val smallTitleThresholdPx = remember(density) { with(density) { 56.dp.toPx() } }
-    val showSmallTitle by remember(listState, compactTitle) {
-        derivedStateOf {
-            compactTitle &&
-                (listState.firstVisibleItemIndex > 0 ||
-                    listState.firstVisibleItemScrollOffset > smallTitleThresholdPx)
-        }
-    }
-
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.fillMaxSize(),
         containerColor = if (WallpaperManager.state.collectAsState().value.hasImage) {
             Color.Transparent
         } else {
             MiuixTheme.colorScheme.surface
         },
         topBar = {
-            ProgressiveBlurTopBar(
+            GlassTopAppBar(
+                title = title,
+                largeTitle = title,
+                subtitle = subtitle.orEmpty(),
+                showLargeTitle = !compactTitle,
                 backdrop = backdrop,
+                progressiveBlur = advancedMaterial,
                 scrollBehavior = scrollBehavior,
-                blurAlpha = 1f,
-            ) {
-                CollapsibleTopAppBar(
-                    title = title,
-                    largeTitle = title,
-                    subtitle = subtitle,
-                    scrollBehavior = scrollBehavior,
-                    showLargeTitle = !compactTitle,
-                    showSmallTitle = if (compactTitle) showSmallTitle else null,
-                    startAction = { backdropAlpha, shadowAlpha ->
-                        HyperTopBarButton(
-                            onClick = onBack,
-                            backdrop = backdrop,
-                            icon = MiuixIcons.Glass.ChevronBackward,
+                navigationIcon = {
+                    GlassIconButton(
+                        onClick = onBack,
+                    ) {
+                        Icon(
+                            imageVector = MiuixIcons.Glass.ChevronBackward,
                             contentDescription = "返回",
-                            iconSize = 25.dp,
-
-                            iconOffset = DpOffset(x = 1.5.dp, y = 0.dp),
-                            backdropAlpha = backdropAlpha,
-                            shadowAlpha = shadowAlpha,
+                            modifier = Modifier.size(25.dp).offset(x = 1.5.dp, y = 0.dp),
+                            tint = MiuixTheme.colorScheme.onSurface,
                         )
-                    },
-                    endAction = endAction,
-                )
-            }
+                    }
+                },
+                actions = {
+                    // 进入/退出多选时右侧图标交叉淡化
+                    AnimatedContent(
+                        targetState = endActionKey ?: title,
+                        transitionSpec = {
+                            fadeIn(animationSpec = tween(190)) togetherWith fadeOut(animationSpec = tween(140))
+                        },
+                        contentAlignment = Alignment.CenterEnd,
+                        label = "detailEndAction",
+                    ) { endAction?.invoke() }
+                },
+            )
         },
-    ) { _ ->
+    ) { contentPadding ->
+        val topBarHeightDp = contentPadding.calculateTopPadding()
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .layerBackdrop(backdrop),
         ) {
-
-        WallpaperBackground()
-
-        Box(Modifier.matchParentSize()) { background() }
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .overScrollVertical()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .scrollEndHaptic(hapticFeedbackType = HapticFeedbackType.TextHandleMove),
-            contentPadding = PaddingValues(
-                top = topBarHeightDp + 8.dp,
-                bottom = androidx.compose.foundation.layout.WindowInsets.navigationBars
-                    .asPaddingValues().calculateBottomPadding() +
-                    DetailBottomReserve,
-            ),
-        ) {
-            item {
-                Box(Modifier.fillMaxWidth().onSizeChanged { headerHeightPx = it.height }) {
-                    header()
+            WallpaperBackground()
+            Box(Modifier.matchParentSize()) { background() }
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .overScrollVertical()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .scrollEndHaptic(hapticFeedbackType = HapticFeedbackType.TextHandleMove),
+                contentPadding = PaddingValues(
+                    top = topBarHeightDp,
+                    bottom = androidx.compose.foundation.layout.WindowInsets.navigationBars
+                        .asPaddingValues().calculateBottomPadding() + DetailBottomReserve,
+                ),
+            ) {
+                item {
+                    Box(Modifier.fillMaxWidth().onSizeChanged { headerHeightPx = it.height }) {
+                        header()
+                    }
                 }
+                list()
             }
-            list()
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = topBarHeightDp + headerHeightDp, bottom = 96.dp),
-        ) {
-            overlay()
-        }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = topBarHeightDp + headerHeightDp, bottom = 96.dp),
+            ) {
+                overlay()
+            }
         }
     }
 }
@@ -343,6 +336,7 @@ fun PlaylistDetailScreen(
     onSelectionChange: (SelectionBarState?) -> Unit = {},
     onExport: (() -> Unit)? = null,
 ) {
+    val columns = songColumns()
     val playlists by MusicLibrary.playlists.collectAsState()
     val playlist = playlists.firstOrNull { it.id == playlistId }
     val songs = playlist?.songs.orEmpty()
@@ -400,21 +394,13 @@ fun PlaylistDetailScreen(
     val dragState = rememberDragReorderState { from, to ->
         MusicLibrary.reorderPlaylistSongs(playlistId, from, to)
     }
-    fun songGeoms(): List<ReorderGeom> = listState.layoutInfo.visibleItemsInfo.mapNotNull { info ->
-        val dataIndex = info.index - 1
-        if (dataIndex < 0) null else ReorderGeom(
-            dataIndex,
-            0f,
-            info.offset.toFloat(),
-            0f,
-            info.size.toFloat(),
-        )
-    }
+    val geomRegistry = remember { ReorderGeometryRegistry() }
+    fun songGeoms(): List<ReorderGeom> = geomRegistry.snapshot(songs.size)
 
-    val exportAction: (@Composable (Float, Float) -> Unit)? = if (onExport == null) {
+    val exportAction: (@Composable () -> Unit)? = if (onExport == null) {
         null
     } else {
-        { backdropAlpha: Float, shadowAlpha: Float ->
+        {
 
             RichTooltipBox(
                 text = EXPORT_TIP,
@@ -425,42 +411,44 @@ fun PlaylistDetailScreen(
                     RightAlignedTooltipPositionProvider(spacing = 8)
                 },
             ) {
-                HyperTopBarButton(
+                GlassIconButton(
                     onClick = onExport,
-                    backdrop = backdrop,
-                    icon = MiuixIcons.UploadCloud,
-                    contentDescription = "导出歌单",
-                    iconSize = 25.dp,
-                    backdropAlpha = backdropAlpha,
-                    shadowAlpha = shadowAlpha,
-                )
+                ) {
+                    Icon(
+                        imageVector = MiuixIcons.UploadCloud,
+                        contentDescription = "导出歌单",
+                        modifier = Modifier.size(25.dp),
+                        tint = MiuixTheme.colorScheme.onSurface,
+                    )
+                }
             }
         }
     }
 
-    val topEndAction: (@Composable (Float, Float) -> Unit)? = if (multiSelect) {
-        { backdropAlpha: Float, shadowAlpha: Float ->
+    val topEndAction: (@Composable () -> Unit)? = if (multiSelect) {
+        {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                HyperTopBarButton(
+                GlassIconButton(
                     onClick = { toggleSelectAll() },
-                    backdrop = backdrop,
-                    icon = MiuixIcons.SelectAll,
-                    contentDescription = if (allSelected) "取消全选" else "全选",
-                    iconSize = 22.dp,
-                    iconTint = if (allSelected) scheme.primary else Color.Unspecified,
-                    backdropAlpha = backdropAlpha,
-                    shadowAlpha = shadowAlpha,
-                )
+                ) {
+                    Icon(
+                        imageVector = MiuixIcons.SelectAll,
+                        contentDescription = if (allSelected) "取消全选" else "全选",
+                        modifier = Modifier.size(22.dp),
+                        tint = (if (allSelected) scheme.primary else Color.Unspecified).takeOrElse { MiuixTheme.colorScheme.onSurface },
+                    )
+                }
                 Spacer(Modifier.width(10.dp))
-                HyperTopBarButton(
+                GlassIconButton(
                     onClick = { exitEdit() },
-                    backdrop = backdrop,
-                    icon = MiuixIcons.Close,
-                    contentDescription = "退出多选",
-                    iconSize = 22.dp,
-                    backdropAlpha = backdropAlpha,
-                    shadowAlpha = shadowAlpha,
-                )
+                ) {
+                    Icon(
+                        imageVector = MiuixIcons.Close,
+                        contentDescription = "退出多选",
+                        modifier = Modifier.size(22.dp),
+                        tint = MiuixTheme.colorScheme.onSurface,
+                    )
+                }
             }
         }
     } else exportAction
@@ -472,6 +460,7 @@ fun PlaylistDetailScreen(
         compactTitle = true,
         listState = listState,
         endAction = topEndAction,
+        endActionKey = multiSelect,
         header = {
             Column(
                 modifier = Modifier
@@ -552,45 +541,56 @@ fun PlaylistDetailScreen(
                 }
             }
         } else {
-            itemsIndexed(songs, key = { _, s -> s.id }) { index, song ->
-                TrackRow(
-                    song = song,
-                    modifier = Modifier
-
-                        .animateItem(
-                            fadeInSpec = tween(200),
-                            placementSpec = spring(dampingRatio = 1f, stiffness = 320f),
-                            fadeOutSpec = tween(260),
-                        )
-                        .dragReorderItem(
-                            id = song.id,
-                            index = index,
-                            state = dragState,
-                            enabled = multiSelect,
-                            snapshot = { songGeoms() },
-                        ),
-                    onClick = {
-                        if (multiSelect) {
-                            selectedIds = if (song.id in selectedIds) {
-                                selectedIds - song.id
+            itemsIndexed(songs.chunked(columns), key = { _, group -> group.first().id }) { groupIndex, group ->
+                SongPairRow(
+                    pair = group,
+                    startIndex = groupIndex * columns,
+                    columns = columns,
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = tween(200),
+                        placementSpec = null,
+                        fadeOutSpec = tween(260),
+                    ),
+                ) { index, song ->
+                    TrackRow(
+                        song = song,
+                        modifier = Modifier
+                            .dragReorderItem(
+                                id = song.id,
+                                index = index,
+                                state = dragState,
+                                enabled = multiSelect,
+                                snapshot = { songGeoms() },
+                            )
+                            .reorderGeometry(geomRegistry, index),
+                        onClick = {
+                            if (multiSelect) {
+                                selectedIds = if (song.id in selectedIds) {
+                                    selectedIds - song.id
+                                } else {
+                                    selectedIds + song.id
+                                }
                             } else {
-                                selectedIds + song.id
+                                onPlay(songs, index)
                             }
+                        },
+                        onMore = { onMore(song, true) },
+                        selectionMode = multiSelect,
+                        selected = song.id in selectedIds,
+                        contentPadding = if (columns == 2) {
+                            PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                         } else {
-                            onPlay(songs, index)
-                        }
-                    },
-                    onMore = { onMore(song, true) },
-                    selectionMode = multiSelect,
-                    selected = song.id in selectedIds,
-                    onLongPress = if (multiSelect) null else {
-                        {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            editing = true
-                            selectedIds = selectedIds + song.id
-                        }
-                    },
-                )
+                            PaddingValues(start = 28.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
+                        },
+                        onLongPress = if (multiSelect) null else {
+                            {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                editing = true
+                                selectedIds = selectedIds + song.id
+                            }
+                        },
+                    )
+                }
             }
         }
     }
@@ -749,7 +749,7 @@ fun FavoritesScreen(
 
                         .animateItem(
                             fadeInSpec = tween(200),
-                            placementSpec = spring(dampingRatio = 1f, stiffness = 320f),
+                            placementSpec = null,
                             fadeOutSpec = tween(260),
                         )
                         .dragReorderItem(
@@ -809,6 +809,7 @@ fun ArtistScreen(
     onMore: (Song) -> Unit,
     onOpenAlbum: (String) -> Unit,
 ) {
+    val columns = songColumns()
     var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var tab by remember { mutableIntStateOf(0) }
@@ -940,17 +941,28 @@ fun ArtistScreen(
                         EmptyHint("暂无歌曲")
                     }
                 }
-                itemsIndexed(songs, key = { _, s -> s.id }) { index, song ->
-                    val a = itemAlpha(index)
-                    TrackRow(
-                        song = song,
-                        onClick = { onPlay(songs, index) },
-                        onMore = { onMore(song) },
-                        modifier = Modifier.graphicsLayer {
-                            alpha = a
-                            translationY = (1f - a) * slidePx
-                        },
-                    )
+                itemsIndexed(songs.chunked(columns), key = { _, group -> group.first().id }) { groupIndex, group ->
+                    SongPairRow(
+                        pair = group,
+                        startIndex = groupIndex * columns,
+                        columns = columns,
+                    ) { index, song ->
+                        val a = itemAlpha(index)
+                        TrackRow(
+                            song = song,
+                            onClick = { onPlay(songs, index) },
+                            onMore = { onMore(song) },
+                            contentPadding = if (columns == 2) {
+                                PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                            } else {
+                                PaddingValues(start = 28.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
+                            },
+                            modifier = Modifier.graphicsLayer {
+                                alpha = a
+                                translationY = (1f - a) * slidePx
+                            },
+                        )
+                    }
                 }
                 if (hasMore) item {
                     val a = itemAlpha(songs.size)
@@ -1050,6 +1062,7 @@ fun AlbumScreen(
     onPlay: (List<Song>, Int) -> Unit,
     onMore: (Song) -> Unit,
 ) {
+    val columns = songColumns()
     var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     val scheme = MiuixTheme.colorScheme
@@ -1149,18 +1162,29 @@ fun AlbumScreen(
     ) {
         if (!loading) when {
             songs.isEmpty() -> item { EmptyHint("暂无歌曲") }
-            else -> itemsIndexed(songs, key = { _, s -> s.id }) { index, song ->
-                val a = itemAlpha(index)
-                TrackRow(
-                    song = song,
-                    onClick = { onPlay(songs, index) },
-                    onMore = { onMore(song) },
-                    showCover = false,
-                    modifier = Modifier.graphicsLayer {
-                        alpha = a
-                        translationY = (1f - a) * slidePx
-                    },
-                )
+            else -> itemsIndexed(songs.chunked(columns), key = { _, group -> group.first().id }) { groupIndex, group ->
+                SongPairRow(
+                    pair = group,
+                    startIndex = groupIndex * columns,
+                    columns = columns,
+                ) { index, song ->
+                    val a = itemAlpha(index)
+                    TrackRow(
+                        song = song,
+                        onClick = { onPlay(songs, index) },
+                        onMore = { onMore(song) },
+                        showCover = false,
+                        contentPadding = if (columns == 2) {
+                            PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                        } else {
+                            PaddingValues(start = 28.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
+                        },
+                        modifier = Modifier.graphicsLayer {
+                            alpha = a
+                            translationY = (1f - a) * slidePx
+                        },
+                    )
+                }
             }
         }
     }

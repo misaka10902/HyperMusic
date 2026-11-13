@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
@@ -36,7 +37,6 @@ import top.yukonga.miuix.kmp.basic.BlurTopAppBar
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.TopAppBarDefaults
 import top.yukonga.miuix.kmp.blur.Backdrop
-import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurDefaults
 import top.yukonga.miuix.kmp.blur.ProgressiveBlur
 import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
@@ -113,6 +113,19 @@ object GlassTopAppBarDefaults {
         1.00f to color.copy(alpha = 0f),
     )
 
+    /**
+     * 渐进模糊之上的着色：从屏幕最顶端就是半透明，向下快速淡出。
+     * 与 [bandBrush] 不同，它不会在顶部形成一段不透明的纯色带，
+     * 因此模糊从屏幕顶端即可见，而不是从状态栏下沿才开始。
+     */
+    @Stable
+    fun blurTintBrush(color: Color): Brush = Brush.verticalGradient(
+        0.00f to color.copy(alpha = 0.34f),
+        0.40f to color.copy(alpha = 0.24f),
+        0.70f to color.copy(alpha = 0.12f),
+        1.00f to color.copy(alpha = 0f),
+    )
+
     val BandOverhang: Dp = 28.dp
 
     @Composable
@@ -164,6 +177,7 @@ fun GlassTopAppBar(
     defaultWindowInsetsPadding: Boolean = true,
     titleAlpha: () -> Float = { 1f },
     backgroundAlpha: () -> Float = { 1f },
+    showLargeTitle: Boolean = true,
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
     bottomContent: @Composable () -> Unit = {},
@@ -195,6 +209,7 @@ fun GlassTopAppBar(
         contentModifier = contentModifier,
         titleAlpha = titleAlpha,
         backgroundAlpha = backgroundAlpha,
+        showLargeTitle = showLargeTitle,
         navigationIcon = navigationIcon,
         actions = actions,
         bottomContent = bottomContent,
@@ -226,6 +241,7 @@ fun GlassTopAppBar(
     defaultWindowInsetsPadding: Boolean = true,
     titleAlpha: () -> Float = { 1f },
     backgroundAlpha: () -> Float = { 1f },
+    showLargeTitle: Boolean = true,
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
     bottomContent: @Composable () -> Unit = {},
@@ -262,34 +278,50 @@ fun GlassTopAppBar(
     Box(modifier = modifier) {
         if (progressiveBackdrop != null && rawBackdrop != null) {
             val topInsets = WindowInsets.statusBars
-            val blurColors = BlurDefaults.blurColors(
-                blendColors = listOf(BlendColorEntry(MiuixTheme.colorScheme.surface.copy(alpha = 0.3f))),
-            )
+            val blurColors = BlurDefaults.blurColors()
+            // 模糊之上的着色必须从屏幕顶端就是半透明，否则会盖出一块纯色，
+            // 让模糊看起来是从状态栏下沿才开始
+            val blurTint = GlassTopAppBarDefaults.blurTintBrush(MiuixTheme.colorScheme.surface)
+            val rampPx = with(LocalDensity.current) {
+                GlassTopAppBarDefaults.ProgressiveBlurRampDistance.toPx()
+            }
+            val blurRamp = {
+                val ramp = scrollBehavior?.let {
+                    (-it.state.contentOffset / rampPx).coerceIn(0f, 1f)
+                } ?: maskProgress.value
+                ramp * backgroundAlpha().coerceIn(0f, 1f)
+            }
             Box(
                 modifier = Modifier
                     .matchParentSize()
                     .layout { measurable, constraints ->
-
+                        // 渐变带高度即顶栏高度，从屏幕顶部开始；不额外向下延伸，
+                        // 否则超出 layer 边界会被裁出一条硬边。
                         val barHeight = topInsets.getTop(this) + TopAppBarDefaults.CollapsedHeight.toPx()
-                        val height = ((barHeight + 20.dp.toPx()) * 1.2f).roundToInt()
+                        val fallback = ((barHeight + 20.dp.toPx()) * 1.2f).roundToInt()
+                        val height = if (constraints.hasBoundedHeight && constraints.maxHeight > 0) {
+                            constraints.maxHeight
+                        } else {
+                            fallback
+                        }
                         val placeable = measurable.measure(constraints.copy(minHeight = height, maxHeight = height))
                         layout(constraints.maxWidth, constraints.maxHeight) { placeable.placeRelative(0, 0) }
                     }
                     .onGloballyPositioned { backgroundCoordinates = it }
+                    .graphicsLayer { this.alpha = blurRamp() }
                     .layerBackdrop(progressiveBackdrop)
-                    .graphicsLayer {
-                        val ramp = scrollBehavior?.let {
-                            (-it.state.contentOffset / GlassTopAppBarDefaults.ProgressiveBlurRampDistance.toPx()).coerceIn(0f, 1f)
-                        } ?: maskProgress.value
-                        this.alpha = ramp * backgroundAlpha().coerceIn(0f, 1f)
-                    }
                     .progressiveTextureBlur(
                         backdrop = rawBackdrop,
                         shape = RectangleShape,
                         gradient = ProgressiveBlur.Top.copy(curve = 0.5f),
                         blurRadius = GlassTopAppBarDefaults.ProgressiveBlurRadius.value,
                         colors = blurColors,
-                    ),
+                    )
+                    // 着色用会淡出的渐变叠在模糊之上，而不是整块均匀覆盖，避免底部硬边
+                    .drawWithContent {
+                        drawContent()
+                        drawRect(brush = blurTint)
+                    },
             )
         } else {
             val overhangPx = with(LocalDensity.current) { bandOverhang.toPx() }
@@ -328,6 +360,7 @@ fun GlassTopAppBar(
                 title = title,
                 modifier = contentModifier,
                 titleAlpha = titleAlpha,
+                showLargeTitle = showLargeTitle,
                 largeTitle = largeTitle,
                 largeTitleBlurRadius = largeTitleBlurRadius,
                 subtitle = subtitle,

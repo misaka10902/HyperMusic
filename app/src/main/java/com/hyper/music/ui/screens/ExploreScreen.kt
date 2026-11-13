@@ -17,6 +17,8 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -48,12 +50,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -65,8 +64,13 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.hyper.music.music.GdApi
 import com.hyper.music.music.MusicLibrary
 import com.hyper.music.music.Song
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
+import top.yukonga.miuix.kmp.glass.GlassTabRow
+import top.yukonga.miuix.kmp.glass.GlassTabRowDefaults
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.hyper.music.ui.components.EmptyHint
 import com.hyper.music.ui.components.RefreshIndicator
+import com.hyper.music.ui.components.SongPairRow
 import com.hyper.music.ui.components.TrackRow
 import com.hyper.music.ui.basic.chipBounce
 import com.hyper.music.ui.basic.rememberChipBounce
@@ -103,7 +107,12 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import com.hyper.music.music.SearchHistoryStore
-import com.hyper.music.music.WallpaperManager
+import com.hyper.music.ui.utils.contentFraction
+import com.hyper.music.ui.utils.horizontalEdgeFade
+import com.hyper.music.ui.utils.isLargeScreen
+import com.hyper.music.ui.utils.songColumns
+import top.yukonga.miuix.kmp.utils.overScrollVertical
+import com.hyper.music.ui.utils.rememberWindowSizeDp
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.updateTransition
@@ -111,10 +120,8 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.layout.layout
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import top.yukonga.miuix.kmp.basic.Card
 import com.hyper.music.ui.components.ConfirmDialog
 import com.hyper.music.ui.effects.miuix.cardGlass
-import com.hyper.music.ui.effects.miuix.cardGlassColors
 import com.hyper.music.ui.effects.miuix.cardGlassAlpha
 import com.hyper.music.ui.effects.miuix.LocalActiveBackdrop
 
@@ -124,24 +131,9 @@ private val SearchFieldTopGap = 10.dp
 
 private val SectionGap = 12.dp
 
-private val TabChipHeight = 36.dp
+private val TabChipHeight = GlassTabRowDefaults.Height
 
 private val PlayBarTopReserve = 133.dp
-
-private fun Modifier.fadeVerticalEdges(): Modifier = this
-    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-    .drawWithContent {
-        drawContent()
-        drawRect(
-            brush = Brush.verticalGradient(
-                0.00f to Color.Transparent,
-                0.07f to Color.Black,
-                0.93f to Color.Black,
-                1.00f to Color.Transparent,
-            ),
-            blendMode = BlendMode.DstIn,
-        )
-    }
 
 @Composable
 fun ExploreScreen(
@@ -154,6 +146,7 @@ fun ExploreScreen(
     active: Boolean = true,
     onSearchEngagedChange: (Boolean) -> Unit = {},
     exitSearchSignal: Int = 0,
+    scrollBehavior: ScrollBehavior? = null,
 ) {
     var query by remember { mutableStateOf("") }
     var focused by remember { mutableStateOf(false) }
@@ -274,6 +267,10 @@ fun ExploreScreen(
         keyboard?.hide()
     }
 
+    val wideScreen = isLargeScreen(rememberWindowSizeDp())
+    // 大屏下搜索框与分类 Tab 收缩到内容区宽度的 2/3 并保持居中
+    val fieldFraction = if (wideScreen) 2f / 3f else 1f
+
     val searchEngaged = searchMode || query.isNotBlank() || searchedKeyword.isNotBlank()
 
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
@@ -339,45 +336,43 @@ fun ExploreScreen(
             }
     }
 
+    val tabsVisible = searchMode && searched
+
     val screenKey = when {
         !searchMode -> "browse"
         !searched -> "history"
         else -> "results-$category"
     }
-
-    val scheme = MiuixTheme.colorScheme
-    val wallpaperActive = WallpaperManager.state.collectAsState().value.hasImage
-
-    val tabsVisible = searchMode && searched
+    val screenAlpha = remember(screenKey) { Animatable(0f) }
+    val screenRisePx = with(LocalDensity.current) { 12.dp.toPx() }
+    LaunchedEffect(screenKey) {
+        screenAlpha.animateTo(1f, tween(280, easing = FastOutSlowInEasing))
+    }
 
     val searchFieldZone = SearchFieldTopGap + SearchFieldHeight + SectionGap
     val tabZone = if (tabsVisible) TabChipHeight else 0.dp
-    val headerHeight = searchFieldZone + tabZone
-    val contentTop = headerHeight
-
-    val screenAlpha = remember(screenKey) { Animatable(0f) }
-    val screenSlidePx = with(LocalDensity.current) { 16.dp.toPx() }
-    LaunchedEffect(screenKey) {
-        screenAlpha.animateTo(1f, tween(300, easing = FastOutSlowInEasing))
-    }
+    val contentTop = topInset + searchFieldZone + tabZone
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(top = topInset),
+        modifier = modifier.fillMaxSize(),
     ) {
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .overScrollVertical()
+                .then(
+                    scrollBehavior?.let { Modifier.nestedScroll(it.nestedScrollConnection) }
+                        ?: Modifier
+                )
                 .graphicsLayer {
                     alpha = screenAlpha.value
-                    translationY = (1f - screenAlpha.value) * screenSlidePx
+                    translationY = (1f - screenAlpha.value) * screenRisePx
                 },
         ) {
             when {
 
-                loading && searchedKeyword.isBlank() -> SearchLoadingIndicator()
+                loading && searchedKeyword.isBlank() -> SearchLoadingIndicator(topInset = topInset)
 
                 !searchMode -> RecommendSection(
                     onPlaySongs = onPlaySongs,
@@ -417,83 +412,94 @@ fun ExploreScreen(
             }
         }
 
-        if (!wallpaperActive) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(contentTop)
-                    .background(scheme.surface),
-            )
-        }
-
-        Column(modifier = Modifier.fillMaxWidth()) {
-            SearchField(
-                query = query,
-                onQueryChange = { query = it },
-                onSearch = { submit(query.trim(), hideKeyboard = true) },
-                onFocusChange = { focused = it; if (it) searchMode = true },
-                searchMode = searchMode,
-                modifier = Modifier
-                    .padding(start = 24.dp, end = 24.dp, top = SearchFieldTopGap),
-                onInputCreated = { inputRef = it },
-                onInputReleased = { inputRef = null },
-            )
-            if (tabsVisible) {
-
-                Spacer(Modifier.height(SectionGap))
-                Row(
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(top = topInset),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(modifier = Modifier.fillMaxWidth(fieldFraction)) {
+                SearchField(
+                    query = query,
+                    onQueryChange = { query = it },
+                    onSearch = { submit(query.trim(), hideKeyboard = true) },
+                    onFocusChange = { focused = it; if (it) searchMode = true },
+                    searchMode = searchMode,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(TabChipHeight)
-                        .padding(start = 24.dp, end = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    SegmentTab("歌曲", selected = category == 0) { category = 0 }
-                    SegmentTab("歌手", selected = category == 1) { category = 1 }
-                    SegmentTab("专辑", selected = category == 2) { category = 2 }
-                }
-            }
-        }
+                        .padding(
+                            start = if (wideScreen) 0.dp else 24.dp,
+                            end = if (wideScreen) 0.dp else 24.dp,
+                            top = SearchFieldTopGap,
+                        ),
+                    onInputCreated = { inputRef = it },
+                    onInputReleased = { inputRef = null },
+                )
 
-        val showExit = searchMode || query.isNotBlank()
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(end = 24.dp, top = SearchFieldTopGap)
-                .size(SearchFieldHeight)
-                .zIndex(10f)
-                .then(
-                    if (showExit) Modifier.pointerInput(Unit) {
-                        detectTapGestures(onTap = { exitSearch() })
-                    } else Modifier
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            AnimatedVisibility(
-                visible = showExit,
-                enter = scaleIn(
-                    initialScale = 0f,
-                    animationSpec = spring(dampingRatio = 0.55f, stiffness = 420f),
-                ) + fadeIn(animationSpec = tween(120)),
-                exit = scaleOut(
-                    targetScale = 0f,
-                    animationSpec = tween(160),
-                ) + fadeOut(animationSpec = tween(140)),
-            ) {
+                val showExit = searchMode || query.isNotBlank()
                 Box(
                     modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(
+                            end = if (wideScreen) 0.dp else 24.dp,
+                            top = SearchFieldTopGap,
+                        )
                         .size(SearchFieldHeight)
-                        .clip(CircleShape)
-                        .cardGlass(CircleShape),
+                        .zIndex(10f)
+                        .then(
+                            if (showExit) Modifier.pointerInput(Unit) {
+                                detectTapGestures(onTap = { exitSearch() })
+                            } else Modifier
+                        ),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Image(
-                        imageVector = MiuixIcons.Close,
-                        contentDescription = "退出搜索",
-                        modifier = Modifier.size(20.dp),
-                        colorFilter = ColorFilter.tint(scheme.onSurfaceSecondary),
-                    )
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = showExit,
+                        enter = scaleIn(
+                            initialScale = 0f,
+                            animationSpec = spring(dampingRatio = 0.55f, stiffness = 420f),
+                        ) + fadeIn(animationSpec = tween(120)),
+                        exit = scaleOut(
+                            targetScale = 0f,
+                            animationSpec = tween(160),
+                        ) + fadeOut(animationSpec = tween(140)),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(SearchFieldHeight)
+                                .clip(CircleShape)
+                                .cardGlass(CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Image(
+                                imageVector = MiuixIcons.Close,
+                                contentDescription = "退出搜索",
+                                modifier = Modifier.size(20.dp),
+                                colorFilter = ColorFilter.tint(MiuixTheme.colorScheme.onSurfaceSecondary),
+                            )
+                        }
+                    }
                 }
+            }
+
+            if (tabsVisible) {
+                Spacer(Modifier.height(SectionGap))
+                GlassTabRow(
+                    tabs = listOf("歌曲", "歌手", "专辑"),
+                    selectedIndex = category,
+                    onSelect = { category = it },
+                    backdrop = null,
+                    modifier = Modifier
+                        .fillMaxWidth(fieldFraction)
+                        .then(
+                            if (wideScreen) {
+                                Modifier
+                            } else {
+                                Modifier.padding(horizontal = 24.dp)
+                            }
+                        ),
+                    colors = GlassTabRowDefaults.primaryColors(
+                        containerAlpha = cardGlassAlpha(),
+                    ),
+                )
             }
         }
 
@@ -554,69 +560,58 @@ private fun SearchResults(
     onLoadMoreSongs: () -> Unit,
     loadingMoreSongs: Boolean,
 ) {
-
+    val contentPadding = PaddingValues(
+        top = topPadding + SectionGap,
+        bottom = androidx.compose.foundation.layout.WindowInsets.navigationBars
+            .asPaddingValues().calculateBottomPadding() + PlayBarTopReserve + SectionGap,
+    )
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(
-                start = 24.dp,
-                end = 24.dp,
-
-                top = topPadding + SectionGap,
-
-                bottom = PlayBarTopReserve + SectionGap,
-            ),
+            .padding(start = 24.dp, end = 24.dp),
     ) {
-        Card(
-            modifier = Modifier.fillMaxSize().cardGlass(RoundedCornerShape(20.dp)),
-            cornerRadius = 20.dp,
-            insideMargin = PaddingValues(vertical = 6.dp),
-            colors = cardGlassColors(),
-        ) {
-            Box(modifier = Modifier.weight(1f).fadeVerticalEdges()) {
-                when (category) {
-                    0 -> SongResultList(
-                        songs = songs,
-                        loading = loading,
-                        listState = listState,
-                        onPlaySongs = onPlaySongs,
-                        onMore = onMore,
-                        onLoadMore = onLoadMoreSongs,
-                        loadingMore = loadingMoreSongs,
-                    )
+        when (category) {
+            0 -> SongResultList(
+                songs = songs,
+                loading = loading,
+                listState = listState,
+                contentPadding = contentPadding,
+                onPlaySongs = onPlaySongs,
+                onMore = onMore,
+                onLoadMore = onLoadMoreSongs,
+                loadingMore = loadingMoreSongs,
+            )
 
-                    1 -> if (artists.isEmpty() && !loading) {
-                        EmptyHint(
-                            text = "没有找到相关歌手",
-                            centered = true,
-                            icon = MiuixIcons.Contacts,
-                        )
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(vertical = 2.dp),
-                        ) {
-                            items(artists, key = { it.id }) { a ->
-                                ArtistResultRow(artist = a, onClick = { onOpenArtist(a.name) })
-                            }
-                        }
+            1 -> if (artists.isEmpty() && !loading) {
+                EmptyHint(
+                    text = "没有找到相关歌手",
+                    centered = true,
+                    icon = MiuixIcons.Contacts,
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = contentPadding,
+                ) {
+                    items(artists, key = { it.id }) { a ->
+                        ArtistResultRow(artist = a, onClick = { onOpenArtist(a.name) })
                     }
+                }
+            }
 
-                    2 -> if (albums.isEmpty() && !loading) {
-                        EmptyHint(
-                            text = "没有找到相关专辑",
-                            centered = true,
-                            icon = MiuixIcons.Album,
-                        )
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(vertical = 2.dp),
-                        ) {
-                            items(albums, key = { it.id }) { al ->
-                                AlbumResultRow(album = al, onClick = { onOpenAlbum(al.name, al.artist) })
-                            }
-                        }
+            2 -> if (albums.isEmpty() && !loading) {
+                EmptyHint(
+                    text = "没有找到相关专辑",
+                    centered = true,
+                    icon = MiuixIcons.Album,
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = contentPadding,
+                ) {
+                    items(albums, key = { it.id }) { al ->
+                        AlbumResultRow(album = al, onClick = { onOpenAlbum(al.name, al.artist) })
                     }
                 }
             }
@@ -625,45 +620,17 @@ private fun SearchResults(
 }
 
 @Composable
-private fun SegmentTab(text: String, selected: Boolean, onClick: () -> Unit) {
-    val scheme = MiuixTheme.colorScheme
-
-    val unselectedBg = scheme.surfaceContainer.copy(alpha = cardGlassAlpha())
-    val interactionSource = remember { MutableInteractionSource() }
-    val bounce = rememberChipBounce(interactionSource)
-    Box(
-
-        modifier = Modifier
-            .chipBounce(bounce)
-            .squircleClip(18.dp)
-            .background(if (selected) scheme.primary else unselectedBg)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
-            )
-            .padding(horizontal = 20.dp, vertical = 8.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = text,
-            color = if (selected) Color.White else scheme.onSurface,
-            fontSize = 14.sp,
-            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
-        )
-    }
-}
-
-@Composable
 private fun SongResultList(
     songs: List<Song>,
     loading: Boolean,
     listState: androidx.compose.foundation.lazy.LazyListState,
+    contentPadding: PaddingValues,
     onPlaySongs: (List<Song>, Int) -> Unit,
     onMore: (Song) -> Unit,
     onLoadMore: () -> Unit,
     loadingMore: Boolean,
 ) {
+    val columns = songColumns()
     if (songs.isEmpty() && !loading) {
         EmptyHint(
             text = "没有找到相关歌曲",
@@ -674,16 +641,25 @@ private fun SongResultList(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(vertical = 2.dp),
+            contentPadding = contentPadding,
         ) {
-            itemsIndexed(songs, key = { index, s -> "${s.id}#$index" }) { index, song ->
-                TrackRow(
-                    song = song,
-                    onClick = { onPlaySongs(songs, index) },
-                    onMore = { onMore(song) },
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                    moreAlignEnd = true,
-                )
+            itemsIndexed(songs.chunked(columns), key = { _, group -> group.first().id }) { groupIndex, group ->
+                SongPairRow(
+                    pair = group,
+                    startIndex = groupIndex * columns,
+                    columns = columns,
+                ) { index, song ->
+                    TrackRow(
+                        song = song,
+                        onClick = { onPlaySongs(songs, index) },
+                        onMore = { onMore(song) },
+                        contentPadding = PaddingValues(
+                            horizontal = if (columns == 2) 8.dp else 0.dp,
+                            vertical = 8.dp,
+                        ),
+                        moreAlignEnd = true,
+                    )
+                }
             }
             if (loadingMore) {
                 item(key = "loadingMore") {
@@ -710,7 +686,7 @@ private fun ArtistResultRow(artist: SearchArtist, onClick: () -> Unit) {
                 indication = null,
                 onClick = onClick,
             )
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 0.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         NetCover(
@@ -749,7 +725,7 @@ private fun AlbumResultRow(album: SearchAlbum, onClick: () -> Unit) {
                 indication = null,
                 onClick = onClick,
             )
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 0.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         NetCover(
@@ -972,22 +948,33 @@ private fun RecommendSection(onPlaySongs: (List<Song>, Int) -> Unit, topPadding:
         return
     }
     val scheme = MiuixTheme.colorScheme
-    Column(modifier = Modifier.fillMaxSize().padding(top = topPadding)) {
+    val columns = songColumns()
+    val fraction = contentFraction(columns)
+    val sidePad = if (columns == 2) 0.dp else 28.dp
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth(fraction)
+            .verticalScroll(rememberScrollState())
+            .padding(top = topPadding),
+    ) {
         Text(
             text = "猜你想听",
             color = scheme.onSurface,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 28.dp, end = 28.dp, top = 8.dp, bottom = 14.dp),
+            modifier = Modifier.padding(start = sidePad, end = sidePad, top = 8.dp, bottom = 14.dp),
         )
         LazyRow(
-            contentPadding = PaddingValues(horizontal = 28.dp),
+            modifier = if (columns == 2) Modifier.horizontalEdgeFade(56.dp) else Modifier,
+            contentPadding = PaddingValues(horizontal = sidePad),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             itemsIndexed(songs, key = { _, s -> s.id }) { index, song ->
                 RecommendCard(song = song) { onPlaySongs(songs, index) }
             }
         }
+    }
     }
 }
 
@@ -1095,9 +1082,13 @@ private fun SearchHistorySection(
         clearAlpha.animateTo(0f, tween(220, easing = FastOutSlowInEasing))
         onClearFinished()
     }
+    val columns = songColumns()
+    val fraction = contentFraction(columns)
+    val sidePad = if (columns == 2) 0.dp else 28.dp
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth(fraction)
             .verticalScroll(rememberScrollState())
             .padding(top = topPadding + 8.dp, bottom = 140.dp),
     ) {
@@ -1106,21 +1097,21 @@ private fun SearchHistorySection(
             color = scheme.onSurface,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 28.dp, end = 28.dp, bottom = 16.dp),
+            modifier = Modifier.padding(start = sidePad, end = sidePad, bottom = 16.dp),
         )
         if (history.isEmpty()) {
             Text(
                 text = "暂无搜索历史",
                 color = scheme.onSurfaceSecondary.copy(alpha = 0.75f),
                 fontSize = 14.sp,
-                modifier = Modifier.padding(start = 28.dp),
+                modifier = Modifier.padding(start = sidePad),
             )
         } else {
 
             Box(modifier = Modifier.graphicsLayer { alpha = clearAlpha.value }) {
             Column {
             FlowRow(
-                modifier = Modifier.padding(start = 28.dp, end = 18.dp),
+                modifier = Modifier.padding(start = sidePad, end = if (columns == 2) sidePad else 18.dp),
                 horizontalArrangement = Arrangement.Start,
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
@@ -1179,6 +1170,7 @@ private fun SearchHistorySection(
             }
             }
         }
+    }
     }
 }
 
@@ -1258,13 +1250,13 @@ private fun HistoryChip(
 private val SearchLoadingTop = 320.dp
 
 @Composable
-private fun SearchLoadingIndicator() {
+private fun SearchLoadingIndicator(topInset: Dp) {
     Box(modifier = Modifier.fillMaxSize()) {
         RefreshIndicator(
             text = "正在刷新",
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = SearchLoadingTop),
+                .padding(top = topInset + SearchLoadingTop),
         )
     }
 }

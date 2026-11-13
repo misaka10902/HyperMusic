@@ -6,7 +6,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
@@ -130,10 +129,6 @@ private fun androidx.compose.ui.graphics.Color.toArgb(): Int {
     val blue = (blue * 255).toInt()
     val alpha = (alpha * 255).toInt()
     return (alpha shl 24) or (red shl 16) or (green shl 8) or blue
-}
-
-internal fun RuntimeShader.toShaderBrush(): ShaderBrush {
-    return ShaderBrush(this)
 }
 
 internal fun isRuntimeShaderSupported(): Boolean {

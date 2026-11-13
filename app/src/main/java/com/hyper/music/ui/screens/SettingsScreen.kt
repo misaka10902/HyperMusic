@@ -25,8 +25,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hyper.music.music.AudioQuality
@@ -36,7 +36,7 @@ import com.hyper.music.music.PlaybackController
 import com.hyper.music.music.SystemDirectoryPicker
 import com.hyper.music.music.displayPathOfTreeUri
 import com.hyper.music.ui.basic.OverlayDropdownMenu
-import com.hyper.music.ui.basic.SharedScrollBehavior
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import com.hyper.music.ui.basic.rememberDropdownColors
 import com.hyper.music.ui.effects.miuix.LocalAdvancedMaterialEnabled
 import com.hyper.music.ui.effects.miuix.cardGlass
@@ -44,9 +44,8 @@ import com.hyper.music.ui.effects.miuix.cardGlassColors
 import com.hyper.music.ui.player.BottomBarAreaHeight
 import com.hyper.music.ui.player.MiniPlayerHeight
 import com.hyper.music.ui.player.MiniPlayerToNavBarSpacing
-import com.hyper.music.ui.utils.fallbackTopBarHeight
 import com.hyper.music.ui.utils.horizontalContentPadding
-import com.hyper.music.ui.utils.overScrollVertical
+import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.DropdownColors
 import top.yukonga.miuix.kmp.basic.DropdownEntry
@@ -85,7 +84,8 @@ private const val THEME_COLOR = "theme_color"
 
 @Composable
 fun SettingsScreen(
-    scrollBehavior: SharedScrollBehavior? = null,
+    topInset: Dp = 0.dp,
+    scrollBehavior: ScrollBehavior? = null,
     hyperBackdrop: Backdrop? = null,
     onOpenWallpaper: () -> Unit = {},
     onOpenPlayerSettings: () -> Unit = {},
@@ -125,14 +125,6 @@ fun SettingsScreen(
         (context as? Activity)?.applyThemeAwareSystemBars()
     }
 
-    val density = LocalDensity.current
-    val measuredTopBarPx = scrollBehavior?.currentHeightPx ?: 0f
-    val topBarHeightDp = if (measuredTopBarPx > 0f) {
-        with(density) { measuredTopBarPx.toDp() }
-    } else {
-        fallbackTopBarHeight(showLargeTitle = true)
-    }
-
     val folderLauncher = rememberLauncherForActivityResult(SystemDirectoryPicker()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         runCatching {
@@ -157,7 +149,7 @@ fun SettingsScreen(
         contentPadding = PaddingValues(
             start = horizontalContentPadding(),
             end = horizontalContentPadding(),
-            top = topBarHeightDp + 8.dp,
+            top = topInset,
             bottom = WindowInsets.navigationBars.asPaddingValues()
                 .calculateBottomPadding() + MiniPlayerHeight + MiniPlayerToNavBarSpacing +
                 BottomBarAreaHeight + 30.dp
@@ -437,6 +429,8 @@ private fun DownloadSection(
     val haptic = LocalHapticFeedback.current
     SettingsSection(
         title = "下载设置",
+        footnote = "下载列表会列出所有在下载文件夹中保存的歌曲文件，所以可能会出现其他来源的歌曲。" +
+            "由于 GD API 限制，不建议短时间内下载大量歌曲，否则会触发风控临时拉黑，敬请谅解。",
     ) {
         ArrowPreference(
             title = "下载位置",

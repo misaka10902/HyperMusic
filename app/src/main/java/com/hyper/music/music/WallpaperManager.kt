@@ -23,7 +23,6 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,6 +49,7 @@ object WallpaperManager {
     private const val MAX_EDGE = 1024
     const val MAX_BLUR = 25f
     const val MAX_DIM = 0.85f
+    const val MIN_CARD_OPACITY = 0.3f
 
     private val _state = MutableStateFlow(WallpaperState())
     val state: StateFlow<WallpaperState> = _state
@@ -72,7 +72,7 @@ object WallpaperManager {
             hasImage = file().exists(),
             blur = prefs.getFloat(KEY_BLUR, 0f).coerceIn(0f, MAX_BLUR),
             dim = prefs.getFloat(KEY_DIM, 0.2f).coerceIn(0f, MAX_DIM),
-            cardOpacity = prefs.getFloat(KEY_CARD_OPACITY, 0.4f).coerceIn(0f, 1f),
+            cardOpacity = prefs.getFloat(KEY_CARD_OPACITY, 0.4f).coerceIn(MIN_CARD_OPACITY, 1f),
         )
     }
 
@@ -89,7 +89,7 @@ object WallpaperManager {
     }
 
     fun setCardOpacity(value: Float) {
-        val v = value.coerceIn(0f, 1f)
+        val v = value.coerceIn(MIN_CARD_OPACITY, 1f)
         if (::prefs.isInitialized) prefs.edit().putFloat(KEY_CARD_OPACITY, v).apply()
         _state.value = _state.value.copy(cardOpacity = v)
     }
@@ -147,10 +147,7 @@ object WallpaperManager {
 
 @Composable
 @Suppress("UNUSED_PARAMETER")
-fun WallpaperBackground(
-    topBlurEnabled: Boolean = true,
-    topBlurHeight: Dp = 320.dp,
-) {
+fun WallpaperBackground() {
     val state by WallpaperManager.state.collectAsState()
     val image by produceState<ImageBitmap?>(initialValue = null, key1 = state.version) {
         value = withContext(Dispatchers.IO) { WallpaperManager.loadBitmap() }
@@ -192,8 +189,6 @@ fun WallpaperBackground(
 @Composable
 fun WallpaperPageBox(
     modifier: Modifier = Modifier,
-    topBlurEnabled: Boolean = true,
-    topBlurHeight: Dp = 320.dp,
     content: @Composable BoxScope.() -> Unit,
 ) {
     Box(
@@ -201,10 +196,7 @@ fun WallpaperPageBox(
             .fillMaxSize()
             .background(MiuixTheme.colorScheme.surface),
     ) {
-        WallpaperBackground(
-            topBlurEnabled = topBlurEnabled,
-            topBlurHeight = topBlurHeight,
-        )
+        WallpaperBackground()
         content()
     }
 }

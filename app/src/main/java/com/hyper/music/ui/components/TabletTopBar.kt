@@ -1,5 +1,6 @@
 package com.hyper.music.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -9,14 +10,32 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hyper.music.ui.utils.isAppDarkTheme
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.Backdrop
+import top.yukonga.miuix.kmp.blur.BlurDefaults
+import top.yukonga.miuix.kmp.blur.ProgressiveBlur
+import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
+import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.blur.progressiveTextureBlur
+import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
+import top.yukonga.miuix.kmp.glass.GlassTopAppBarDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private val TabletTabHeight = 46.dp
@@ -30,30 +49,83 @@ fun TabletTopBar(
     onTabSelected: (Int) -> Unit,
     backdrop: Backdrop,
     modifier: Modifier = Modifier,
-    actions: (@Composable (Float, Float) -> Unit)? = null,
+    scrollBehavior: ScrollBehavior? = null,
+    progressiveBlur: Boolean = false,
+    actions: (@Composable () -> Unit)? = null,
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .statusBarsPadding()
-            .padding(top = 10.dp, bottom = 10.dp),
-    ) {
-        TabletTopTabs(
-            titles = titles,
-            selectedIndex = selectedTab,
-            onSelected = onTabSelected,
-            backdrop = backdrop,
-            modifier = Modifier.align(Alignment.Center),
-        )
-        if (actions != null) {
-            Row(
+    val rawBackdrop = backdrop.takeIf { isRuntimeShaderSupported() }
+    var coordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    val progressiveBackdrop = if (progressiveBlur && rawBackdrop != null) {
+        rememberLayerBackdrop {
+            val c = coordinates?.takeIf { it.isAttached }
+            with(rawBackdrop) { drawBackdrop(this@rememberLayerBackdrop, c) }
+            drawContent()
+        }
+    } else {
+        null
+    }
+    val density = LocalDensity.current
+    val rampPx = with(density) { GlassTopAppBarDefaults.ProgressiveBlurRampDistance.toPx() }
+    // 内容上滑后顶栏才浮起：着色/模糊随滚动进度渐显
+    val bandAlpha = {
+        (-(scrollBehavior?.state?.contentOffset ?: 0f) / rampPx).coerceIn(0f, 1f)
+    }
+    val bandBrush = GlassTopAppBarDefaults.bandBrush(MiuixTheme.colorScheme.surface)
+    // 模糊之上的着色：从屏幕最顶端即半透明并向下淡出，避免顶部被纯色盖住
+    val blurTint = GlassTopAppBarDefaults.blurTintBrush(MiuixTheme.colorScheme.surface)
+
+    Box(modifier = modifier.fillMaxWidth()) {
+        // 背景层覆盖含状态栏在内的整块顶栏，渐变从屏幕最顶端开始，避免在状态栏下沿出现切边
+        if (progressiveBackdrop != null && rawBackdrop != null) {
+            Box(
                 modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = 24.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                actions(1f, 0f)
+                    .matchParentSize()
+                    .onGloballyPositioned { coordinates = it }
+                    .graphicsLayer { alpha = bandAlpha() }
+                    .layerBackdrop(progressiveBackdrop)
+                    .progressiveTextureBlur(
+                        backdrop = rawBackdrop,
+                        shape = RectangleShape,
+                        gradient = ProgressiveBlur.Top.copy(curve = 0.5f),
+                        blurRadius = GlassTopAppBarDefaults.ProgressiveBlurRadius.value,
+                        colors = BlurDefaults.blurColors(),
+                    )
+                    .drawWithContent {
+                        drawContent()
+                        drawRect(brush = blurTint)
+                    },
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .graphicsLayer { alpha = bandAlpha() }
+                    .background(bandBrush),
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(top = 10.dp, bottom = 10.dp),
+        ) {
+            TabletTopTabs(
+                titles = titles,
+                selectedIndex = selectedTab,
+                onSelected = onTabSelected,
+                backdrop = backdrop,
+                modifier = Modifier.align(Alignment.Center),
+            )
+            if (actions != null) {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 24.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    actions()
+                }
             }
         }
     }

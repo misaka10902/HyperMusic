@@ -242,6 +242,4 @@ object MediaCache {
             urlPrefs()?.edit()?.clear()?.apply()
         }
     }
-
-    fun invalidateResolvedUrls() = StreamUrlCache.invalidate()
 }

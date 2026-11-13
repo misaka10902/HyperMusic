@@ -709,7 +709,7 @@ private fun PlayerTitle(
                 translationY = (1f - e) * -14.dp.toPx() - 8.dp.toPx()
             },
     ) {
-        val sideInset = if (centered) 0.dp else maxWidth * (1f - CoverSizeFraction) / 2f
+        val sideInset = if (centered) 0.dp else PlayerSpacing.ProgressSideInset
         Column(
             modifier = Modifier
                 .fillMaxWidth()

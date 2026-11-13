@@ -1,4 +1,7 @@
 package com.hyper.music.ui.screens
+import androidx.compose.ui.graphics.graphicsLayer
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.glass.GlassIconButton
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -25,7 +28,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,8 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hyper.music.music.LocalSongs
 import com.hyper.music.music.Song
-import com.hyper.music.ui.basic.HyperTopBarButton
-import com.hyper.music.ui.basic.RightAlignedTooltipPositionProvider
 import com.hyper.music.ui.components.ConfirmDialog
 import com.hyper.music.ui.components.SelectionAction
 import com.hyper.music.ui.components.SelectionBarState
@@ -50,23 +50,15 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.LinearEasing
-import top.yukonga.miuix.kmp.basic.RichTooltipBox
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TooltipAnchorPosition
-import top.yukonga.miuix.kmp.basic.rememberTooltipState
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.FileDownloads
-import top.yukonga.miuix.kmp.icon.extended.Help
 import top.yukonga.miuix.kmp.icon.extended.ListView
 import top.yukonga.miuix.kmp.icon.extended.Playlist
 import top.yukonga.miuix.kmp.icon.extended.Refresh
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-
-private const val HELP_TEXT =
-    "本列表会列出所有在下载文件夹中保存的歌曲文件，所以可能会出现其他来源的歌曲。" +
-        "由于 GD API 限制，不建议短时间内下载大量歌曲，否则会触发风控临时拉黑，敬请谅解。"
 
 @Composable
 fun DownloadsScreen(
@@ -83,7 +75,6 @@ fun DownloadsScreen(
     val context = LocalContext.current
     val scheme = MiuixTheme.colorScheme
     val haptic = LocalHapticFeedback.current
-    val scope = rememberCoroutineScope()
 
     var songs by remember { mutableStateOf(emptyList<Song>()) }
     var loading by remember { mutableStateOf(true) }
@@ -151,8 +142,6 @@ fun DownloadsScreen(
         onDispose { onSelectionChange(null) }
     }
 
-    val tooltipState = rememberTooltipState(isPersistent = true)
-
     val spinTransition = rememberInfiniteTransition(label = "refreshSpin")
     val spin by spinTransition.animateFloat(
         initialValue = 0f,
@@ -160,40 +149,19 @@ fun DownloadsScreen(
         animationSpec = infiniteRepeatable(tween(durationMillis = 900, easing = LinearEasing)),
         label = "refreshSpinDeg",
     )
-    val endAction: @Composable (Float, Float) -> Unit = { backdropAlpha, shadowAlpha ->
+    val endAction: @Composable () -> Unit = {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            HyperTopBarButton(
+            GlassIconButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                     refreshKey++
                 },
-                backdrop = backdrop,
-                icon = MiuixIcons.Refresh,
-                contentDescription = "刷新本地歌曲列表",
-                iconSize = 22.dp,
-                iconRotation = if (loading) spin else 0f,
-                backdropAlpha = backdropAlpha,
-                shadowAlpha = shadowAlpha,
-            )
-            Spacer(Modifier.width(10.dp))
-            RichTooltipBox(
-                text = HELP_TEXT,
-                title = "提示",
-                actionText = "我知道了",
-                state = tooltipState,
-                positioning = TooltipAnchorPosition.Below,
-                positionProvider = remember {
-                    RightAlignedTooltipPositionProvider(spacing = 8)
-                },
             ) {
-                HyperTopBarButton(
-                    onClick = { scope.launch { tooltipState.show() } },
-                    backdrop = backdrop,
-                    icon = MiuixIcons.Help,
-                    contentDescription = "提示",
-                    iconSize = 22.dp,
-                    backdropAlpha = backdropAlpha,
-                    shadowAlpha = shadowAlpha,
+                Icon(
+                    imageVector = MiuixIcons.Refresh,
+                    contentDescription = "刷新本地歌曲列表",
+                    modifier = Modifier.size(22.dp).graphicsLayer { rotationZ = if (loading) spin else 0f },
+                    tint = MiuixTheme.colorScheme.onSurface,
                 )
             }
         }

@@ -1,8 +1,6 @@
 package com.hyper.music.ui.player
 
-import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Color
 import kotlin.math.abs
 import kotlin.math.max
@@ -19,25 +17,6 @@ data class AlbumPalette(
 )
 
 object AlbumPaletteExtractor {
-
-    private const val SAMPLE_TARGET = 56
-
-    fun extract(context: Context, resId: Int): AlbumPalette? = runCatching {
-        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        BitmapFactory.decodeResource(context.resources, resId, bounds)
-        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
-
-        val sample = max(1, min(bounds.outWidth, bounds.outHeight) / SAMPLE_TARGET)
-        val bitmap = BitmapFactory.decodeResource(
-            context.resources,
-            resId,
-            BitmapFactory.Options().apply {
-                inSampleSize = sample
-                inPreferredConfig = Bitmap.Config.ARGB_8888
-            },
-        ) ?: return null
-        paletteOf(bitmap).also { bitmap.recycle() }
-    }.getOrNull()
 
     fun paletteOf(bitmap: Bitmap): AlbumPalette? {
         val width = bitmap.width

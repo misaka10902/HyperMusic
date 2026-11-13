@@ -97,7 +97,7 @@ fun PlaybackQueueSheet(
                 RoundIconButton(
                     icon = MiuixIcons.Close,
                     description = "关闭",
-                    iconSize = 20.dp,
+                    iconSize = 23.dp,
                     modifier = Modifier.align(Alignment.CenterStart),
                     onClick = onDismiss,
                 )
@@ -127,7 +127,7 @@ fun PlaybackQueueSheet(
                 RoundIconButton(
                     icon = MiuixIcons.Delete,
                     description = "清空队列",
-                    iconSize = 21.dp,
+                    iconSize = 24.dp,
                     modifier = Modifier.align(Alignment.CenterEnd),
                     tint = if (state.queue.isEmpty()) {
                         scheme.onSurfaceSecondary.copy(alpha = 0.35f)

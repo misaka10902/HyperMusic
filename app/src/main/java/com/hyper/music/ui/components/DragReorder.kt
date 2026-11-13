@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
@@ -246,3 +247,33 @@ fun Modifier.dragReorderItem(
         }
         .then(gestureModifier)
 }
+
+/**
+ * 两列布局下，列表项几何不再是「一行一项」，无法从 LazyListState 取 y 偏移。
+ * 这里由每个条目自己登记窗口坐标，拖拽开始时快照一次；保留 x 坐标让跨列拖拽也能正确计算。
+ */
+class ReorderGeometryRegistry {
+    private val geoms = mutableMapOf<Int, ReorderGeom>()
+
+    fun update(index: Int, geom: ReorderGeom) {
+        geoms[index] = geom
+    }
+
+    fun snapshot(count: Int): List<ReorderGeom> =
+        geoms.values.filter { it.index in 0 until count }.sortedBy { it.index }
+}
+
+fun Modifier.reorderGeometry(registry: ReorderGeometryRegistry, index: Int): Modifier =
+    this.onGloballyPositioned { coords ->
+        val origin = coords.localToRoot(Offset.Zero)
+        registry.update(
+            index,
+            ReorderGeom(
+                index,
+                origin.x,
+                origin.y,
+                coords.size.width.toFloat(),
+                coords.size.height.toFloat(),
+            ),
+        )
+    }

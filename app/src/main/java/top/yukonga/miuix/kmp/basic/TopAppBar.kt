@@ -1,6 +1,13 @@
 package top.yukonga.miuix.kmp.basic
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationState
@@ -142,6 +149,7 @@ fun BlurTopAppBar(
     navigationIconPadding: Dp = TopAppBarDefaults.NavigationIconPadding,
     actionIconPadding: Dp = TopAppBarDefaults.ActionIconPadding,
     titleAlpha: () -> Float = { 1f },
+    showLargeTitle: Boolean = true,
     bottomContent: @Composable () -> Unit = {},
 ) {
 
@@ -171,6 +179,7 @@ fun BlurTopAppBar(
         actionIconPadding = actionIconPadding,
         scrollBehavior = scrollBehavior,
         modifier = modifier,
+        showLargeTitle = showLargeTitle,
         defaultWindowInsetsPadding = defaultWindowInsetsPadding,
         bottomContent = bottomContent,
     )
@@ -382,6 +391,9 @@ private class ExitUntilCollapsedScrollBehavior(
             ): Offset {
                 if (!canScroll()) return Offset.Zero
                 state.contentOffset += consumed.y
+                if (consumed.y == 0f && available.y != 0f) {
+                    state.contentOffset = (state.contentOffset + available.y).coerceAtMost(0f)
+                }
 
                 if (available.y < 0f || consumed.y < 0f) {
 
@@ -475,6 +487,7 @@ private fun TopAppBarLayout(
     largeTitleBlurRadius: Dp = 0.dp,
     defaultWindowInsetsPadding: Boolean = true,
     titleAlpha: () -> Float = { 1f },
+    showLargeTitle: Boolean = true,
     bottomContent: @Composable () -> Unit = {},
 ) {
     val titleClip = remember { TopAppBarTitleClip() }
@@ -512,13 +525,22 @@ private fun TopAppBarLayout(
         }
     }
 
-    val smallTitleVisible by remember(scrollBehavior) {
+    LaunchedEffect(showLargeTitle, scrollBehavior) {
+        if (!showLargeTitle) {
+            scrollBehavior?.state?.let { state ->
+                state.heightOffsetLimit = 0f
+                state.heightOffset = 0f
+            }
+        }
+    }
+
+    val smallTitleVisible by remember(scrollBehavior, showLargeTitle) {
         derivedStateOf {
             scrollBehavior?.state?.let { state ->
-                if (state.pinnedBySmallTopAppBar) {
-                    state.contentOffset < 0f
-                } else {
-                    state.collapsedFraction * 3f >= 1f
+                when {
+                    !showLargeTitle -> state.contentOffset < 0f
+                    state.pinnedBySmallTopAppBar -> state.contentOffset < 0f
+                    else -> state.collapsedFraction * 3f >= 1f
                 }
             } ?: false
         }
@@ -570,14 +592,28 @@ private fun TopAppBarLayout(
                         translationY = smallTitleTranslationY.value
                     },
             ) {
-                Text(
-                    text = title,
-                    color = animatedTitleColor,
-                    fontSize = MiuixTheme.textStyles.title3.fontSize,
-                    fontWeight = FontWeight.Medium,
-                    overflow = TextOverflow.Ellipsis,
-                    softWrap = false,
-                )
+                AnimatedContent(
+                    targetState = title,
+                    transitionSpec = {
+                        ContentTransform(
+                            targetContentEnter = fadeIn(animationSpec = tween(durationMillis = 220)) +
+                                slideInVertically(animationSpec = tween(durationMillis = 260)) { it / 3 },
+                            initialContentExit = fadeOut(animationSpec = tween(durationMillis = 160)) +
+                                slideOutVertically(animationSpec = tween(durationMillis = 200)) { -it / 3 },
+                            sizeTransform = null,
+                        )
+                    },
+                    label = "topBarSmallTitleSwitch",
+                ) { t ->
+                    Text(
+                        text = t,
+                        color = animatedTitleColor,
+                        fontSize = MiuixTheme.textStyles.title3.fontSize,
+                        fontWeight = FontWeight.Medium,
+                        overflow = TextOverflow.Ellipsis,
+                        softWrap = false,
+                    )
+                }
             }
             Box(
                 Modifier
@@ -586,47 +622,56 @@ private fun TopAppBarLayout(
             ) {
                 actions()
             }
-            Box(
-                Modifier
-                    .layoutId("largeTitle")
-                    .clipTopAppBarTitle(titleClip) { titleClip.largeTitleOrigin }
-                    .padding(top = TopAppBarDefaults.CollapsedHeight)
-                    .padding(horizontal = titlePadding)
-                    .graphicsLayer {
-                        alpha = largeTitleAlpha() * titleAlpha()
+            if (showLargeTitle) {
+                Box(
+                    Modifier
+                        .layoutId("largeTitle")
+                        .clipTopAppBarTitle(titleClip) { titleClip.largeTitleOrigin }
+                        .padding(top = TopAppBarDefaults.CollapsedHeight)
+                        .padding(horizontal = titlePadding)
+                        .graphicsLayer {
+                            alpha = largeTitleAlpha() * titleAlpha()
 
-                        val radius = if (largeTitleBlurRadius > 0.dp) {
-                            largeTitleBlurRadius.toPx() * largeTitleFade()
-                        } else {
-                            0f
-                        }
-                        renderEffect = if (radius > 0.1f) {
-                            BlurEffect(radius, radius, TileMode.Decal)
-                        } else {
-                            null
-                        }
-                    },
-            ) {
-                Column(
-                    modifier = Modifier
-                        .offset {
-                            val v = scrolledOffset()
-                            IntOffset(0, v.fastRoundToInt())
-                        }
-                        .onSizeChanged { updateHeightOffsetLimit(it.height) },
+                            val radius = if (largeTitleBlurRadius > 0.dp) {
+                                largeTitleBlurRadius.toPx() * largeTitleFade()
+                            } else {
+                                0f
+                            }
+                            renderEffect = if (radius > 0.1f) {
+                                BlurEffect(radius, radius, TileMode.Decal)
+                            } else {
+                                null
+                            }
+                        },
                 ) {
-                    Text(
-                        text = largeTitle,
-                        color = animatedLargeTitleColor,
-                        fontSize = MiuixTheme.textStyles.title1.fontSize,
-                        fontWeight = FontWeight.Normal,
-                    )
-                    if (subtitle.isNotEmpty()) {
-                        Text(
-                            text = subtitle,
-                            color = animatedSubtitleColor,
-                            style = MiuixTheme.textStyles.body2,
-                        )
+                    Column(
+                        modifier = Modifier
+                            .offset {
+                                val v = scrolledOffset()
+                                IntOffset(0, v.fastRoundToInt())
+                            }
+                            .onSizeChanged { updateHeightOffsetLimit(it.height) },
+                    ) {
+                        // 大标题切换用对称交叉淡化：旧标题淡出的同时新标题淡入，中间没有空档
+                        Crossfade(
+                            targetState = largeTitle,
+                            animationSpec = tween(durationMillis = 240),
+                            label = "topBarLargeTitleSwitch",
+                        ) { t ->
+                            Text(
+                                text = t,
+                                color = animatedLargeTitleColor,
+                                fontSize = MiuixTheme.textStyles.title1.fontSize,
+                                fontWeight = FontWeight.Normal,
+                            )
+                        }
+                        if (subtitle.isNotEmpty()) {
+                            Text(
+                                text = subtitle,
+                                color = animatedSubtitleColor,
+                                style = MiuixTheme.textStyles.body2,
+                            )
+                        }
                     }
                 }
             }
@@ -700,8 +745,8 @@ private fun TopAppBarLayout(
 
         val largeTitlePlaceable =
             measurables
-                .fastFirst { it.layoutId == "largeTitle" }
-                .measure(
+                .firstOrNull { it.layoutId == "largeTitle" }
+                ?.measure(
                     constraints.copy(
                         minWidth = 0,
                         minHeight = 0,
@@ -721,7 +766,7 @@ private fun TopAppBarLayout(
 
         val collapsedHeight = TopAppBarDefaults.CollapsedHeight.roundToPx()
 
-        val expansion = (largeTitlePlaceable.height - collapsedHeight).coerceAtLeast(0)
+        val expansion = ((largeTitlePlaceable?.height ?: 0) - collapsedHeight).coerceAtLeast(0)
         val barHeight = if (expansion > 0) {
             val offset = scrolledOffset()
             val collapseFraction = if (offset.isNaN()) {
@@ -740,7 +785,11 @@ private fun TopAppBarLayout(
 
         val verticalCenter = collapsedHeight / 2
         val smallSubtitleHeight = smallSubtitlePlaceable?.height ?: 0
-        val smallSubtitleBottom = verticalCenter + titlePlaceable.height / 2 + smallSubtitleHeight
+        // 收起后标题与副标题作为一个整体在顶栏中垂直居中，二者共用同一条中轴线
+        val smallGroupHeight = titlePlaceable.height + smallSubtitleHeight
+        val smallTitleY = verticalCenter - smallGroupHeight / 2
+        val smallSubtitleY = smallTitleY + titlePlaceable.height
+        val smallSubtitleBottom = smallSubtitleY + smallSubtitleHeight
         val expandedBottomPadding = if (smallSubtitlePlaceable != null) {
             TopAppBarDefaults.SubtitleBottomPadding.roundToPx()
         } else {
@@ -763,7 +812,7 @@ private fun TopAppBarLayout(
             } else if (baseX + titlePlaceable.width > constraints.maxWidth - actionIconsPlaceable.width) {
                 baseX += ((constraints.maxWidth - actionIconsPlaceable.width) - (baseX + titlePlaceable.width))
             }
-            val titleY = verticalCenter - titlePlaceable.height / 2
+            val titleY = smallTitleY
             titleClip.titleOrigin = IntOffset(
                 if (layoutDirection == LayoutDirection.Ltr) baseX else constraints.maxWidth - baseX - titlePlaceable.width,
                 titleY,
@@ -772,7 +821,7 @@ private fun TopAppBarLayout(
 
             smallSubtitlePlaceable?.let { subtitle ->
                 val subtitleX = (constraints.maxWidth - subtitle.width) / 2
-                val subtitleY = verticalCenter + titlePlaceable.height / 2
+                val subtitleY = smallSubtitleY
                 titleClip.subtitleOrigin = IntOffset(
                     if (layoutDirection == LayoutDirection.Ltr) subtitleX else constraints.maxWidth - subtitleX - subtitle.width,
                     subtitleY,
@@ -785,11 +834,13 @@ private fun TopAppBarLayout(
                 y = verticalCenter - actionIconsPlaceable.height / 2,
             )
 
-            titleClip.largeTitleOrigin = IntOffset(
-                if (layoutDirection == LayoutDirection.Ltr) 0 else constraints.maxWidth - largeTitlePlaceable.width,
-                0,
-            )
-            largeTitlePlaceable.placeRelative(x = 0, y = 0)
+            largeTitlePlaceable?.let { large ->
+                titleClip.largeTitleOrigin = IntOffset(
+                    if (layoutDirection == LayoutDirection.Ltr) 0 else constraints.maxWidth - large.width,
+                    0,
+                )
+                large.placeRelative(x = 0, y = 0)
+            }
 
             bottomContentPlaceable.placeRelative(x = 0, y = contentTop)
         }

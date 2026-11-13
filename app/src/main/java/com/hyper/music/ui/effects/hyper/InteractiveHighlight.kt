@@ -4,8 +4,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -13,7 +11,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ShaderBrush
-import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.util.fastCoerceIn
 import kotlinx.coroutines.CoroutineScope
@@ -122,21 +119,4 @@ half4 main(float2 coord) {
             }
         }
 
-    val pressOnlyModifier: Modifier =
-        Modifier.pointerInput(animationScope) {
-            awaitEachGesture {
-                val down = awaitFirstDown()
-
-                animationScope.launch {
-                    pressProgressAnimation.animateTo(1f, pressProgressAnimationSpec)
-                }
-
-                do {
-                    val event = awaitPointerEvent(PointerEventPass.Final)
-                } while (event.changes.any { it.pressed })
-                animationScope.launch {
-                    pressProgressAnimation.animateTo(0f, pressProgressAnimationSpec)
-                }
-            }
-        }
 }

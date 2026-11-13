@@ -235,11 +235,6 @@ object PlaybackController {
         .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
         .build()
 
-    fun setAudioFocusEnabled(enabled: Boolean) {
-        val exo = player as? ExoPlayer ?: return
-        exo.setAudioAttributes(audioAttributes(), enabled)
-    }
-
     fun play() {
         val p = player ?: return
         if (p.playbackState == Player.STATE_IDLE) p.prepare()
@@ -324,11 +319,6 @@ object PlaybackController {
 
     fun seekTo(positionMs: Long) {
         player?.seekTo(positionMs.coerceAtLeast(0L))
-    }
-
-    fun seekToProgress(progress: Float) {
-        val duration = _state.value.durationMs
-        if (duration > 0) seekTo((duration * progress.coerceIn(0f, 1f)).toLong())
     }
 
     fun cyclePlayMode() {
@@ -490,10 +480,6 @@ object PlaybackController {
     }
 
     fun currentSong(): Song? = _state.value.song
-
-    fun isInQueue(songId: String): Boolean = queue.any { it.id == songId }
-
-    fun queueSongs(): List<Song> = queue
 
     private fun Song.toMediaItem(br: Int): MediaItem {
         val song = this

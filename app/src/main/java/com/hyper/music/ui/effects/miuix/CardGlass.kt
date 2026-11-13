@@ -21,7 +21,7 @@ fun cardGlassEnabled(): Boolean {
 @Composable
 fun cardGlassAlpha(): Float {
     val state by WallpaperManager.state.collectAsState()
-    return if (cardGlassEnabled()) state.cardOpacity.coerceIn(0f, 1f) else 1f
+    return if (cardGlassEnabled()) state.cardOpacity.coerceIn(WallpaperManager.MIN_CARD_OPACITY, 1f) else 1f
 }
 
 @Composable

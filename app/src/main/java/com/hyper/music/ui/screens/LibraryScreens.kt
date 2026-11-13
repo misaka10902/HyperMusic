@@ -60,15 +60,19 @@ import com.hyper.music.music.MusicLibrary
 import com.hyper.music.music.NetCover
 import com.hyper.music.music.Playlist
 import com.hyper.music.music.Song
-import com.hyper.music.ui.basic.SharedScrollBehavior
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import com.hyper.music.ui.components.ReorderGeom
 import com.hyper.music.ui.components.SelectionAction
 import com.hyper.music.ui.components.SelectionBarState
+import com.hyper.music.ui.components.SongPairRow
 import com.hyper.music.ui.components.ConfirmDialog
 import com.hyper.music.ui.components.TrackRow
 import com.hyper.music.ui.components.dragReorderItem
 import com.hyper.music.ui.components.rememberDragReorderState
-import com.hyper.music.ui.utils.overScrollVertical
+import com.hyper.music.ui.utils.isLargeScreen
+import top.yukonga.miuix.kmp.utils.overScrollVertical
+import com.hyper.music.ui.utils.rememberWindowSizeDp
+import com.hyper.music.ui.utils.songColumns
 import com.hyper.music.ui.effects.miuix.LocalActiveBackdrop
 import top.yukonga.miuix.kmp.basic.Checkbox
 import top.yukonga.miuix.kmp.basic.Text
@@ -94,7 +98,7 @@ fun HistoryScreen(
     onMore: (Song) -> Unit,
     modifier: Modifier = Modifier,
     topInset: Dp = 0.dp,
-    scrollBehavior: SharedScrollBehavior? = null,
+    scrollBehavior: ScrollBehavior? = null,
     onSelectionChange: (SelectionBarState?) -> Unit = {},
     onBatchAddToPlaylist: (List<Song>) -> Unit = {},
     onBatchAddToQueue: (List<Song>) -> Unit = {},
@@ -104,6 +108,11 @@ fun HistoryScreen(
     val listState = rememberLazyListState()
     val scheme = MiuixTheme.colorScheme
     val haptic = LocalHapticFeedback.current
+
+    val columns = songColumns()
+    // 顶栏收起时高度会变小，列表留白若跟着变会让内容上移、顶到标题上；这里锁定展开态留白
+    var stableTopInset by remember { mutableStateOf(topInset) }
+    if (topInset > stableTopInset) stableTopInset = topInset
 
     var displayItems by remember { mutableStateOf(history) }
     var showEmpty by remember { mutableStateOf(history.isEmpty()) }
@@ -169,7 +178,7 @@ fun HistoryScreen(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .padding(top = topInset, bottom = 72.dp)
+                .padding(top = stableTopInset, bottom = 72.dp)
                 .graphicsLayer { alpha = emptyAlpha },
             contentAlignment = Alignment.Center,
         ) {
@@ -195,37 +204,47 @@ fun HistoryScreen(
                     scrollBehavior?.let { Modifier.nestedScroll(it.nestedScrollConnection) }
                         ?: Modifier
                 ),
-            contentPadding = PaddingValues(top = topInset + 6.dp, bottom = ContentBottomReserve),
+            contentPadding = PaddingValues(top = stableTopInset, bottom = ContentBottomReserve),
         ) {
 
-            itemsIndexed(displayItems, key = { _, s -> s.id }) { index, song ->
-                TrackRow(
-
+            itemsIndexed(displayItems.chunked(columns), key = { _, group -> group.first().id }) { groupIndex, group ->
+                SongPairRow(
+                    pair = group,
+                    startIndex = groupIndex * columns,
+                    columns = columns,
                     modifier = Modifier.animateItem(
                         fadeInSpec = tween(200),
                         placementSpec = spring(dampingRatio = 1f, stiffness = 320f),
                         fadeOutSpec = tween(260),
                     ),
-                    song = song,
-                    onClick = {
-                        if (multiSelect) {
-                            selectedIds = if (song.id in selectedIds) {
-                                selectedIds - song.id
+                ) { index, song ->
+                    TrackRow(
+                        song = song,
+                        onClick = {
+                            if (multiSelect) {
+                                selectedIds = if (song.id in selectedIds) {
+                                    selectedIds - song.id
+                                } else {
+                                    selectedIds + song.id
+                                }
                             } else {
-                                selectedIds + song.id
+                                onPlay(displayItems, index)
                             }
+                        },
+                        onMore = { onMore(song) },
+                        selectionMode = multiSelect,
+                        selected = song.id in selectedIds,
+                        contentPadding = if (columns == 2) {
+                            PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                         } else {
-                            onPlay(displayItems, index)
-                        }
-                    },
-                    onMore = { onMore(song) },
-                    selectionMode = multiSelect,
-                    selected = song.id in selectedIds,
-                    onLongPress = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        selectedIds = selectedIds + song.id
-                    },
-                )
+                            PaddingValues(start = 28.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
+                        },
+                        onLongPress = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            selectedIds = selectedIds + song.id
+                        },
+                    )
+                }
             }
         }
 
@@ -252,7 +271,7 @@ fun PlaylistScreen(
     onCreate: () -> Unit,
     modifier: Modifier = Modifier,
     topInset: Dp = 0.dp,
-    scrollBehavior: SharedScrollBehavior? = null,
+    scrollBehavior: ScrollBehavior? = null,
     onRename: (Playlist) -> Unit = {},
     onSelectionChange: (SelectionBarState?) -> Unit = {},
     onBatchDelete: (List<Playlist>) -> Unit = {},
@@ -318,6 +337,8 @@ fun PlaylistScreen(
     }
 
     val gridState = rememberLazyGridState()
+    // 平板/大屏一行 6 个歌单，手机一行 3 个；卡片宽度由网格均分，随屏幕尺寸自适应
+    val wideScreen = isLargeScreen(rememberWindowSizeDp())
     val dragState = rememberDragReorderState { from, to ->
         MusicLibrary.reorderPlaylists(from, to)
     }
@@ -331,12 +352,15 @@ fun PlaylistScreen(
         )
     }
     val insetModifier = modifier
+    // 同上：列表留白锁定展开态，避免顶栏收起时内容上移
+    var stableTopInset by remember { mutableStateOf(topInset) }
+    if (topInset > stableTopInset) stableTopInset = topInset
 
     if (playlists.isEmpty()) {
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .padding(top = topInset, bottom = 72.dp),
+                .padding(top = stableTopInset, bottom = 72.dp),
             contentAlignment = Alignment.Center,
         ) {
             LibraryEmptyState(
@@ -350,7 +374,7 @@ fun PlaylistScreen(
     Box(modifier = Modifier.fillMaxSize()) {
     LazyVerticalGrid(
         state = gridState,
-        columns = GridCells.Fixed(3),
+        columns = GridCells.Fixed(if (wideScreen) 6 else 3),
         modifier = insetModifier
             .fillMaxSize()
             .overScrollVertical()
@@ -362,7 +386,7 @@ fun PlaylistScreen(
         contentPadding = PaddingValues(
             start = 16.dp,
             end = 16.dp,
-            top = topInset + 8.dp,
+            top = stableTopInset,
             bottom = androidx.compose.foundation.layout.WindowInsets.navigationBars
                 .asPaddingValues().calculateBottomPadding() + ContentBottomReserve,
         ),
@@ -378,7 +402,7 @@ fun PlaylistScreen(
 
                     .animateItem(
                         fadeInSpec = tween(200),
-                        placementSpec = spring(dampingRatio = 1f, stiffness = 320f),
+                        placementSpec = null,
                         fadeOutSpec = tween(260),
                     )
                     .dragReorderItem(

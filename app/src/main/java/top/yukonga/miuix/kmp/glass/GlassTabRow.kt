@@ -89,18 +89,21 @@ object GlassTabRowDefaults {
     @Composable
     fun primaryColors(
         selectedContainerColor: Color = MiuixTheme.colorScheme.primary,
-        containerColor: Color = Color.Transparent,
+        containerColor: Color = Color.Unspecified,
+        containerAlpha: Float = 1f,
     ): GlassTabColors {
         val isDark = MiuixTheme.colorScheme.background.luminance() < 0.5f
+        val surface = MiuixTheme.colorScheme.surface
+        val restingColor = (if (isDark) Color.White else Color.Black)
+            .copy(alpha = if (isDark) RestingAlpha else 0.06f)
+            .compositeOver(surface)
+        val base = if (containerColor == Color.Unspecified) restingColor else containerColor
+        val fill = base.copy(alpha = base.alpha * containerAlpha.coerceIn(0f, 1f))
         return GlassTabColors(
             selectedContainerColor = selectedContainerColor,
             selectedContentColor = if (isDark) Color.White.copy(alpha = 0.8f) else Color.White,
-            restingContainerColor = if (isDark) {
-                Color.White.copy(alpha = RestingAlpha).compositeOver(MiuixTheme.colorScheme.surface)
-            } else {
-                Color.White
-            },
-            containerColor = containerColor,
+            restingContainerColor = fill,
+            containerColor = fill,
             contentColor = if (isDark) {
                 Color.White.copy(alpha = 0.5f)
             } else {

@@ -3,13 +3,10 @@
 <head><meta charset="utf-8"></head>
 <body>
 <script>
-// Hyper Music —— 通过系统 WebView 接入 GD Studio API（网易云音源）
-// 原生界面负责 UI 显示与播放，WebView 仅负责发起请求并回传内容。
 const API = 'https://music-api.gdstudio.xyz/api.php';
 const SOURCE = 'netease';
 const UA = 'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36';
 
-// fetch 文本，遇到 503/429/网络抖动自动重试（GD Studio 偶发 503）
 async function fetchText(url, retries) {
   retries = retries || 4;
   let lastErr = null;
@@ -38,15 +35,12 @@ async function fetchText(url, retries) {
 
 async function fetchJson(url, retries) {
   const text = (await fetchText(url, retries)).trim();
-  // 防御：服务端偶发返回 HTML 错误页而非 JSON
   if (text.charAt(0) !== '[' && text.charAt(0) !== '{') throw new Error('bad response');
   return JSON.parse(text);
 }
 
 window.__hyper = {
   search: function (reqId, name, count, page) {
-    // 搜索主力已改走网易云官方接口（见 GdApi.search），
-    // 这里仅作为官方不可用时的兜底，因此只查网易云一个音源。
     const url = API + '?types=search&source=netease&name=' + encodeURIComponent(name) +
       '&count=' + count + '&pages=' + page;
     fetchJson(url, 4).then(function (arr) {
@@ -76,7 +70,6 @@ window.__hyper = {
   }
 };
 
-// 通知原生：桥接页面已就绪，可以开始调用
 HyperBridge.onReady();
 </script>
 </body>
