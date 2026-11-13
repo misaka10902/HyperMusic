@@ -25,12 +25,10 @@ fun isCompactWindow(size: WindowSizeDp): Boolean =
 fun isLargeScreen(size: WindowSizeDp): Boolean =
     size.width >= 600.dp && size.height >= 600.dp
 
-/** 歌曲条目列数：大屏两列，手机单列。 */
 @Composable
 @ReadOnlyComposable
 fun songColumns(): Int = if (isLargeScreen(rememberWindowSizeDp())) 2 else 1
 
-/** 大屏内容区宽度占比，搜索框、推荐、搜索历史共用，保证左右边缘对齐。 */
 fun contentFraction(columns: Int): Float = if (columns == 2) 2f / 3f else 1f
 
 @Composable

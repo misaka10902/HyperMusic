@@ -9,7 +9,6 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 
-/** 平板端横向卡片列表两侧半透明渐隐：边缘内容平滑隐藏，露出底层背景/壁纸。 */
 fun Modifier.horizontalEdgeFade(
     edgeWidth: Dp,
     edgeAlpha: Float = 0f,

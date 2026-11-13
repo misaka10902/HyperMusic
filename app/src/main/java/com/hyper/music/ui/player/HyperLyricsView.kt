@@ -3,8 +3,12 @@ package com.hyper.music.ui.player
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -18,22 +22,28 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -41,14 +51,20 @@ import androidx.compose.ui.unit.sp
 import com.hyper.music.music.LyricLine
 import com.hyper.music.music.MusicLibrary
 import com.hyper.music.music.PlaybackController
-import top.yukonga.miuix.kmp.basic.Text
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.foundation.gestures.animateScrollBy
-import androidx.compose.runtime.withFrameNanos
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import top.yukonga.miuix.kmp.basic.Text
 import kotlin.math.abs
 
 private val LyricsInnerPadding = 8.dp
+
+private const val FOLLOW_RESUME_DELAY_MS = 5_000L
+
+private val LyricScrollSpec = spring<Float>(
+    dampingRatio = 1.1f,
+    stiffness = 420f,
+    visibilityThreshold = 0.5f,
+)
 
 @Composable
 fun HyperLyricsView(
@@ -66,62 +82,110 @@ fun HyperLyricsView(
     val listState = rememberLazyListState(
         initialFirstVisibleItemIndex = currentIndex.coerceIn(0, lines.lastIndex.coerceAtLeast(0)),
     )
-    var positioned by remember { mutableStateOf(false) }
-    var autoScrolling by remember { mutableStateOf(false) }
 
-    LaunchedEffect(currentIndex, lines.size) {
-        if (currentIndex < 0 || lines.isEmpty()) return@LaunchedEffect
-        snapshotFlow { listState.layoutInfo.visibleItemsInfo.isNotEmpty() }.first { it }
-        if (listState.isScrollInProgress) {
-            snapshotFlow { listState.isScrollInProgress }.first { !it }
-        }
+    
+    
+    var isUserBrowsing by remember(lines) { mutableStateOf(false) }
+    var positioned by remember(lines) { mutableStateOf(false) }
+    var followResumeKey by remember(lines) { mutableStateOf(0) }
+    val browsingState = rememberUpdatedState(isUserBrowsing)
+    val scrollInCode = remember { mutableStateOf(false) }
+    val isManualScrolling by remember {
+        derivedStateOf { listState.isScrollInProgress && !scrollInCode.value }
+    }
 
-        suspend fun centerDelta(): Float? {
-            val info = listState.layoutInfo
-            val viewportCenter = (info.viewportStartOffset + info.viewportEndOffset) / 2f
-            val item = info.visibleItemsInfo.firstOrNull { it.index == currentIndex }
-            if (item != null) {
-                return item.offset + item.size / 2f - viewportCenter
-            }
-            listState.animateScrollToItem(currentIndex.coerceAtMost(lines.lastIndex))
-            withFrameNanos { }
-            val info2 = listState.layoutInfo
-            val c2 = (info2.viewportStartOffset + info2.viewportEndOffset) / 2f
-            val item2 = info2.visibleItemsInfo.firstOrNull { it.index == currentIndex } ?: return null
-            return item2.offset + item2.size / 2f - c2
-        }
-
-        val delta = centerDelta() ?: return@LaunchedEffect
-        autoScrolling = true
-        try {
-            if (!positioned) {
-                if (delta != 0f) listState.dispatchRawDelta(delta)
-                positioned = true
-            } else if (delta != 0f) {
-
-                listState.animateScrollBy(
-                    delta,
-                    animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing),
-                )
-
-                val settle = centerDelta()
-                if (settle != null && abs(settle) > 0.5f) {
-                    listState.animateScrollBy(
-                        settle,
-                        animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
-                    )
+    val browsingModifier = Modifier.pointerInput(lines) {
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Final)
+            var movement = Offset.Zero
+            var browsingStarted = false
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Final)
+                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                if (change.changedToUpIgnoreConsumed()) break
+                movement += change.position - change.previousPosition
+                if (!browsingStarted) {
+                    
+                    if (abs(movement.x) > viewConfiguration.touchSlop &&
+                        abs(movement.x) >= abs(movement.y)
+                    ) break
+                    if (abs(movement.y) > viewConfiguration.touchSlop &&
+                        abs(movement.y) > abs(movement.x)
+                    ) {
+                        browsingStarted = true
+                        isUserBrowsing = true
+                    }
                 }
             }
-        } finally {
-            autoScrolling = false
         }
     }
 
-    // 仅播放中、非手动滑动、且开启高级材质时模糊非当前歌词
-    val userDragging = listState.isScrollInProgress && !autoScrolling
-    val blurEnabled = playback.isPlaying && !userDragging && settings.advancedMaterial
+    
+    
 
-    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+    
+    LaunchedEffect(isManualScrolling, isUserBrowsing, playback.isPlaying) {
+        if (!playback.isPlaying || isManualScrolling || !isUserBrowsing) return@LaunchedEffect
+        delay(FOLLOW_RESUME_DELAY_MS)
+        if (!isManualScrolling && isUserBrowsing) {
+            isUserBrowsing = false
+            followResumeKey++
+        }
+    }
+
+    
+    
+    LaunchedEffect(currentIndex, lines, followResumeKey) {
+        if (currentIndex < 0 || lines.isEmpty()) return@LaunchedEffect
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.isNotEmpty() }.first { it }
+        if (isManualScrolling) {
+            snapshotFlow { isManualScrolling }.first { !it }
+        }
+        if (browsingState.value) return@LaunchedEffect
+
+        val info = listState.layoutInfo
+        val target = info.visibleItemsInfo.firstOrNull { it.index == currentIndex }
+
+        
+        if (!positioned) {
+            scrollInCode.value = true
+            try {
+                if (target == null) listState.scrollToItem(currentIndex.coerceAtMost(lines.lastIndex))
+                val after = listState.layoutInfo
+                val item = after.visibleItemsInfo.firstOrNull { it.index == currentIndex }
+                if (item != null) {
+                    val d = item.offset + item.size / 2f -
+                        (after.viewportStartOffset + after.viewportEndOffset) / 2f
+                    if (abs(d) > 0.5f) listState.dispatchRawDelta(d)
+                }
+            } finally {
+                scrollInCode.value = false
+            }
+            positioned = true
+            return@LaunchedEffect
+        }
+
+        scrollInCode.value = true
+        try {
+            
+            if (target == null) {
+                listState.animateScrollToItem(currentIndex.coerceAtMost(lines.lastIndex))
+            }
+            val after = listState.layoutInfo
+            val item = after.visibleItemsInfo.firstOrNull { it.index == currentIndex }
+                ?: return@LaunchedEffect
+            val d = item.offset + item.size / 2f -
+                (after.viewportStartOffset + after.viewportEndOffset) / 2f
+            if (abs(d) > 0.5f) listState.animateScrollBy(d, LyricScrollSpec)
+        } finally {
+            scrollInCode.value = false
+        }
+    }
+
+    
+    val blurEnabled = playback.isPlaying && settings.advancedMaterial && !isUserBrowsing
+
+    BoxWithConstraints(modifier = modifier.fillMaxSize().then(browsingModifier)) {
         val half = maxHeight / 2 - 46.dp
 
         if (lines.isEmpty()) {
@@ -153,7 +217,6 @@ fun HyperLyricsView(
                         drawContent()
                         drawRect(brush = edgeFade, blendMode = BlendMode.DstIn)
                     },
-
                 contentPadding = PaddingValues(
                     start = sideInset,
                     end = sideInset,
@@ -169,13 +232,16 @@ fun HyperLyricsView(
                 items(lines.size, key = { i -> "${lines[i].timeMs}_$i" }) { i ->
                     LyricRow(
                         line = lines[i],
-                        distance = (i - currentIndex).let { if (it < 0) -it else it },
+                        distance = abs(i - currentIndex),
                         isCurrent = i == currentIndex,
                         showTranslation = showTranslation,
                         centered = centered,
                         baseFontSize = baseFontSize,
                         blurEnabled = blurEnabled,
-                        onSeek = onSeek,
+                        onSeek = { time ->
+                            isUserBrowsing = false
+                            onSeek(time)
+                        },
                         onDismiss = onDismiss,
                     )
                 }
@@ -214,13 +280,12 @@ private fun LyricRow(
         label = "lyricRowFocus",
     )
     val blurDp by animateDpAsState(
-        targetValue = when {
-            !blurEnabled || isCurrent -> 0.dp
-            distance == 1 -> 2.dp
-            distance == 2 -> 3.5.dp
-            else -> 5.dp
+        targetValue = if (!blurEnabled || isCurrent) {
+            0.dp
+        } else {
+            (distance * 1.6f).coerceAtMost(5.5f).dp
         },
-        animationSpec = tween(durationMillis = 240, easing = LinearOutSlowInEasing),
+        animationSpec = tween(durationMillis = 300, easing = LinearOutSlowInEasing),
         label = "lyricRowBlur",
     )
 
@@ -245,7 +310,7 @@ private fun LyricRow(
                 if (isCurrent) onDismiss() else onSeek(line.timeMs)
             }
             .padding(vertical = 12.dp)
-            .then(if (blurDp > 0.dp) Modifier.blur(blurDp) else Modifier),
+            .then(if (blurEnabled) Modifier.blur(blurDp) else Modifier),
         horizontalAlignment = if (centered) {
             Alignment.CenterHorizontally
         } else {

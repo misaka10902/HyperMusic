@@ -267,7 +267,7 @@ fun HyperApp() {
 
     val tablet = isLargeScreen(rememberWindowSizeDp())
 
-    // 平板导航条在顶部：进二级页面不再把播放条下移推出屏幕，恒定贴底
+    
     val miniPlayerShift by animateDpAsState(
         targetValue = if (tablet || route == null) 0.dp else MiniPlayerHeight + MiniPlayerToNavBarSpacing,
         animationSpec = tween(durationMillis = 300),
@@ -560,7 +560,7 @@ fun HyperApp() {
         ) {
             entry<RootRoute> {
 
-    // 普通态与多选态切换时，右侧图标交叉淡化，避免图标硬切
+    
     val topActionsContent: (@Composable () -> Unit) = {
         AnimatedContent(
             targetState = if (selectionActive) -1 else selectedTab,
@@ -672,7 +672,6 @@ fun HyperApp() {
         }
     }
 
-
                 Scaffold(
                     containerColor = if (wallpaperActive.hasImage) Color.Transparent else MiuixTheme.colorScheme.surface,
                     topBar = {
@@ -741,7 +740,7 @@ fun HyperApp() {
                             animationSpec = tween(180, easing = FastOutSlowInEasing),
                             label = "tabContent",
                         ) { tab ->
-                            // 平板限宽居中放在内容层，Crossfade 自身拿到有界约束，避免子页高度被算成 wrap 而无法滚动
+                            
                             Box(
                                 modifier = if (tablet) {
                                     Modifier

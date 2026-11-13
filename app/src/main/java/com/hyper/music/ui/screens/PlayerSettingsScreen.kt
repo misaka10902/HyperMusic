@@ -42,6 +42,7 @@ fun PlayerSettingsScreen(
 
     DetailPage(
         title = "播放界面",
+        subtitle = "在播放界面左滑可查看歌词",
         onBack = onBack,
         backdrop = backdrop,
         header = {},

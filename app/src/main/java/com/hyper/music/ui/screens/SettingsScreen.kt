@@ -411,6 +411,7 @@ private fun InterfaceSection(
         )
         SwitchPreference(
             title = "高级材质",
+            summary = "开启后会同时启用歌词模糊",
             checked = musicSettings.advancedMaterial,
             onCheckedChange = {
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)

@@ -113,11 +113,8 @@ object GlassTopAppBarDefaults {
         1.00f to color.copy(alpha = 0f),
     )
 
-    /**
-     * 渐进模糊之上的着色：从屏幕最顶端就是半透明，向下快速淡出。
-     * 与 [bandBrush] 不同，它不会在顶部形成一段不透明的纯色带，
-     * 因此模糊从屏幕顶端即可见，而不是从状态栏下沿才开始。
-     */
+    
+
     @Stable
     fun blurTintBrush(color: Color): Brush = Brush.verticalGradient(
         0.00f to color.copy(alpha = 0.34f),
@@ -279,8 +276,8 @@ fun GlassTopAppBar(
         if (progressiveBackdrop != null && rawBackdrop != null) {
             val topInsets = WindowInsets.statusBars
             val blurColors = BlurDefaults.blurColors()
-            // 模糊之上的着色必须从屏幕顶端就是半透明，否则会盖出一块纯色，
-            // 让模糊看起来是从状态栏下沿才开始
+            
+            
             val blurTint = GlassTopAppBarDefaults.blurTintBrush(MiuixTheme.colorScheme.surface)
             val rampPx = with(LocalDensity.current) {
                 GlassTopAppBarDefaults.ProgressiveBlurRampDistance.toPx()
@@ -295,8 +292,8 @@ fun GlassTopAppBar(
                 modifier = Modifier
                     .matchParentSize()
                     .layout { measurable, constraints ->
-                        // 渐变带高度即顶栏高度，从屏幕顶部开始；不额外向下延伸，
-                        // 否则超出 layer 边界会被裁出一条硬边。
+                        
+                        
                         val barHeight = topInsets.getTop(this) + TopAppBarDefaults.CollapsedHeight.toPx()
                         val fallback = ((barHeight + 20.dp.toPx()) * 1.2f).roundToInt()
                         val height = if (constraints.hasBoundedHeight && constraints.maxHeight > 0) {
@@ -317,7 +314,7 @@ fun GlassTopAppBar(
                         blurRadius = GlassTopAppBarDefaults.ProgressiveBlurRadius.value,
                         colors = blurColors,
                     )
-                    // 着色用会淡出的渐变叠在模糊之上，而不是整块均匀覆盖，避免底部硬边
+                    
                     .drawWithContent {
                         drawContent()
                         drawRect(brush = blurTint)

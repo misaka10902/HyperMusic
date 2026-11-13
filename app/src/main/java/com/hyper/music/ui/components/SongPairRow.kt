@@ -9,11 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/**
- * 歌曲条目的等宽分列行。
- * 每列 weight(1f) 均分；最后一行为奇数时用空白列占位，保证左右视觉对称。
- * columns = 1 时退化为原始单列满宽，手机端行为不变。
- */
 @Composable
 fun <T> SongPairRow(
     pair: List<T>,

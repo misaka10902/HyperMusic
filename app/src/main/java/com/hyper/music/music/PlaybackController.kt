@@ -100,7 +100,7 @@ object PlaybackController {
         exo.addListener(listener)
         AudioFocusMonitor.onPlaybackIntentChanged(exo.playWhenReady)
         exo.volume = MusicLibrary.settings.value.volume
-        // 音频焦点统一由 AudioFocusMonitor 托管，这里关闭 media3 自带焦点避免互相抢占
+        
         (exo as? ExoPlayer)?.setAudioAttributes(audioAttributes(), false)
         applyMode(exo, _state.value.mode)
         restoreSession(exo)
@@ -240,7 +240,7 @@ object PlaybackController {
         .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
         .build()
 
-    /** 设置页切换开关时即时生效。 */
+    
     fun applyAudioFocus() {
         AudioFocusMonitor.setEnabled(MusicLibrary.settings.value.audioFocus)
     }

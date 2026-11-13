@@ -66,16 +66,16 @@ fun TabletTopBar(
     }
     val density = LocalDensity.current
     val rampPx = with(density) { GlassTopAppBarDefaults.ProgressiveBlurRampDistance.toPx() }
-    // 内容上滑后顶栏才浮起：着色/模糊随滚动进度渐显
+    
     val bandAlpha = {
         (-(scrollBehavior?.state?.contentOffset ?: 0f) / rampPx).coerceIn(0f, 1f)
     }
     val bandBrush = GlassTopAppBarDefaults.bandBrush(MiuixTheme.colorScheme.surface)
-    // 模糊之上的着色：从屏幕最顶端即半透明并向下淡出，避免顶部被纯色盖住
+    
     val blurTint = GlassTopAppBarDefaults.blurTintBrush(MiuixTheme.colorScheme.surface)
 
     Box(modifier = modifier.fillMaxWidth()) {
-        // 背景层覆盖含状态栏在内的整块顶栏，渐变从屏幕最顶端开始，避免在状态栏下沿出现切边
+        
         if (progressiveBackdrop != null && rawBackdrop != null) {
             Box(
                 modifier = Modifier

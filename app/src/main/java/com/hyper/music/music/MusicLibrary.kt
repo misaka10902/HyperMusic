@@ -125,15 +125,14 @@ object MusicLibrary {
     }
 
     fun setDownloadPath(path: String, treeUri: String? = null) {
-        prefs.edit().putString(KEY_DOWNLOAD_TREE_URI, treeUri ?: "").apply()
-        setDownloadPathInternal(path)
-    }
-
-    private fun setDownloadPathInternal(path: String) {
+        val uri = treeUri ?: ""
         val normalized = path.trim().ifBlank { MusicSettings.DEFAULT_DOWNLOAD_PATH }
             .let { if (it.endsWith('/')) it else "$it/" }
-        _settings.value = _settings.value.copy(downloadPath = normalized)
-        prefs.edit().putString(KEY_DOWNLOAD_PATH, normalized).apply()
+        _settings.value = _settings.value.copy(downloadPath = normalized, downloadTreeUri = uri)
+        prefs.edit()
+            .putString(KEY_DOWNLOAD_TREE_URI, uri)
+            .putString(KEY_DOWNLOAD_PATH, normalized)
+            .apply()
     }
 
     fun setLyricCentered(centered: Boolean) {
@@ -187,7 +186,7 @@ object MusicLibrary {
     }
 
     fun addHistory(song: Song) {
-        // 历史列表顺序写死：已在列表中的歌曲保持原位，只把新歌追加到尾部，不做任何重排
+        
         val current = _history.value
         if (current.any { it.id == song.id }) return
         val list = current.toMutableList()

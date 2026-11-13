@@ -652,7 +652,7 @@ private fun TopAppBarLayout(
                             }
                             .onSizeChanged { updateHeightOffsetLimit(it.height) },
                     ) {
-                        // 大标题切换用对称交叉淡化：旧标题淡出的同时新标题淡入，中间没有空档
+                        
                         Crossfade(
                             targetState = largeTitle,
                             animationSpec = tween(durationMillis = 240),
@@ -785,7 +785,7 @@ private fun TopAppBarLayout(
 
         val verticalCenter = collapsedHeight / 2
         val smallSubtitleHeight = smallSubtitlePlaceable?.height ?: 0
-        // 收起后标题与副标题作为一个整体在顶栏中垂直居中，二者共用同一条中轴线
+        
         val smallGroupHeight = titlePlaceable.height + smallSubtitleHeight
         val smallTitleY = verticalCenter - smallGroupHeight / 2
         val smallSubtitleY = smallTitleY + titlePlaceable.height

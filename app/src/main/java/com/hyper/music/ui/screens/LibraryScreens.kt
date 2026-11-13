@@ -109,9 +109,6 @@ fun HistoryScreen(
     val haptic = LocalHapticFeedback.current
 
     val columns = songColumns()
-    // 顶栏收起时高度会变小，列表留白若跟着变会让内容上移、顶到标题上；这里锁定展开态留白
-    var stableTopInset by remember { mutableStateOf(topInset) }
-    if (topInset > stableTopInset) stableTopInset = topInset
 
     var displayItems by remember { mutableStateOf(history) }
     var showEmpty by remember { mutableStateOf(history.isEmpty()) }
@@ -177,7 +174,7 @@ fun HistoryScreen(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .padding(top = stableTopInset, bottom = 72.dp)
+                .padding(top = topInset, bottom = 72.dp)
                 .graphicsLayer { alpha = emptyAlpha },
             contentAlignment = Alignment.Center,
         ) {
@@ -203,7 +200,7 @@ fun HistoryScreen(
                     scrollBehavior?.let { Modifier.nestedScroll(it.nestedScrollConnection) }
                         ?: Modifier
                 ),
-            contentPadding = PaddingValues(top = stableTopInset, bottom = ContentBottomReserve),
+            contentPadding = PaddingValues(top = topInset, bottom = ContentBottomReserve),
         ) {
 
             itemsIndexed(displayItems.chunked(columns), key = { _, group -> group.first().id }) { groupIndex, group ->
@@ -331,7 +328,7 @@ fun PlaylistScreen(
     }
 
     val gridState = rememberLazyGridState()
-    // 平板/大屏一行 6 个歌单，手机一行 3 个；卡片宽度由网格均分，随屏幕尺寸自适应
+    
     val wideScreen = isLargeScreen(rememberWindowSizeDp())
     val dragState = rememberDragReorderState { from, to ->
         MusicLibrary.reorderPlaylists(from, to)
@@ -346,15 +343,12 @@ fun PlaylistScreen(
         )
     }
     val insetModifier = modifier
-    // 同上：列表留白锁定展开态，避免顶栏收起时内容上移
-    var stableTopInset by remember { mutableStateOf(topInset) }
-    if (topInset > stableTopInset) stableTopInset = topInset
 
     if (playlists.isEmpty()) {
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .padding(top = stableTopInset, bottom = 72.dp),
+                .padding(top = topInset, bottom = 72.dp),
             contentAlignment = Alignment.Center,
         ) {
             LibraryEmptyState(
@@ -380,7 +374,7 @@ fun PlaylistScreen(
         contentPadding = PaddingValues(
             start = 16.dp,
             end = 16.dp,
-            top = stableTopInset,
+            top = topInset,
             bottom = androidx.compose.foundation.layout.WindowInsets.navigationBars
                 .asPaddingValues().calculateBottomPadding() + ContentBottomReserve,
         ),

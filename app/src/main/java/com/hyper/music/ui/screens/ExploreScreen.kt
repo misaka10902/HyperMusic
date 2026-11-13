@@ -65,7 +65,10 @@ import com.hyper.music.music.GdApi
 import com.hyper.music.music.MusicLibrary
 import com.hyper.music.music.Song
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
+import top.yukonga.miuix.kmp.glass.GlassShape
+import top.yukonga.miuix.kmp.glass.GlassShadows
 import top.yukonga.miuix.kmp.glass.GlassTabRow
+import top.yukonga.miuix.kmp.glass.glassShadow
 import top.yukonga.miuix.kmp.glass.GlassTabRowDefaults
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.hyper.music.ui.components.EmptyHint
@@ -268,7 +271,7 @@ fun ExploreScreen(
     }
 
     val wideScreen = isLargeScreen(rememberWindowSizeDp())
-    // 大屏下搜索框与分类 Tab 收缩到内容区宽度的 2/3 并保持居中
+    
     val fieldFraction = if (wideScreen) 2f / 3f else 1f
 
     val searchEngaged = searchMode || query.isNotBlank() || searchedKeyword.isNotBlank()
@@ -465,6 +468,7 @@ fun ExploreScreen(
                         Box(
                             modifier = Modifier
                                 .size(SearchFieldHeight)
+                                .glassShadow(GlassShape(SearchFieldHeight / 2, smoothing = 0f), GlassShadows.Float)
                                 .clip(CircleShape)
                                 .cardGlass(CircleShape),
                             contentAlignment = Alignment.Center,
@@ -696,21 +700,14 @@ private fun ArtistResultRow(artist: SearchArtist, onClick: () -> Unit) {
             maxSize = CoverSize.SMALL.decode,
         )
         Spacer(Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = artist.name,
-                color = scheme.onSurface,
-                fontSize = 16.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = "歌手",
-                color = scheme.onSurfaceSecondary,
-                fontSize = 12.sp,
-            )
-        }
+        Text(
+            text = artist.name,
+            color = scheme.onSurface,
+            fontSize = 18.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
@@ -801,6 +798,7 @@ private fun SearchField(
                     }
                 }
                 .height(height)
+                .glassShadow(GlassShape(height / 2, smoothing = 0f), GlassShadows.Float)
                 .clip(fieldShape)
                 .cardGlass(fieldShape)
                 .padding(horizontal = 16.dp),
