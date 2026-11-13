@@ -2,6 +2,7 @@ package com.hyper.music.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,16 +20,30 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -53,6 +68,7 @@ import top.yukonga.miuix.kmp.icon.extended.Favorites
 import top.yukonga.miuix.kmp.icon.extended.FavoritesFill
 import top.yukonga.miuix.kmp.icon.extended.Music
 import top.yukonga.miuix.kmp.icon.extended.Playlist
+import top.yukonga.miuix.kmp.icon.extended.ReplyAll
 import top.yukonga.miuix.kmp.icon.extended.Share
 import top.yukonga.miuix.kmp.glass.GlassBottomSheet
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -161,12 +177,33 @@ fun TrackMoreSheet(
     var lastSong by remember { mutableStateOf<Song?>(null) }
     if (song != null) lastSong = song
     val scheme = MiuixTheme.colorScheme
+    val context = LocalContext.current
     val quality = MusicLibrary.settings.value.quality
     val favorites by MusicLibrary.favorites.collectAsState()
+    var showComments by remember { mutableStateOf(false) }
+    LaunchedEffect(song) { if (song != null) showComments = false }
 
     HyperSheet(visible = song != null, onDismiss = onDismiss) {
         val target = lastSong ?: return@HyperSheet
         val isFavorite = favorites.any { it.id == target.id }
+        Column(modifier = Modifier.fillMaxWidth()) {
+        AnimatedContent(
+            targetState = showComments,
+            transitionSpec = {
+                ContentTransform(
+                    initialContentExit = fadeOut(animationSpec = tween(150)),
+                    targetContentEnter = fadeIn(animationSpec = tween(210)),
+                    sizeTransform = SizeTransform(
+                        clip = true,
+                        sizeAnimationSpec = { _, _ -> tween(240, easing = FastOutSlowInEasing) },
+                    ),
+                )
+            },
+            label = "trackMoreComments",
+        ) { inComments ->
+        if (inComments) {
+            CommentsContent(song = target, onBack = { showComments = false })
+        } else {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -176,6 +213,15 @@ fun TrackMoreSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(scheme.surfaceContainer, RoundedCornerShape(20.dp))
+                    .pointerInput(target.name) {
+                        detectTapGestures(
+                            onLongPress = {
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                clipboard.setPrimaryClip(ClipData.newPlainText("歌曲名称", target.name))
+                                Toast.makeText(context, "已复制歌曲名称", Toast.LENGTH_SHORT).show()
+                            },
+                        )
+                    }
                     .padding(16.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -230,6 +276,7 @@ fun TrackMoreSheet(
                     MenuEntry(MiuixIcons.Album, "专辑：${target.albumText}") { onDismiss(); onOpenAlbum(target) }
                     MenuEntry(MiuixIcons.Contacts, "艺术家：${target.artistText}") { onDismiss(); onOpenArtist(target) }
                     MenuEntry(MiuixIcons.Music, "音质：${quality.label} · ${quality.bitrateText}") { onDismiss(); onChangeQuality(target) }
+                    MenuEntry(MiuixIcons.ReplyAll, "查看评论") { showComments = true }
                     MenuEntry(MiuixIcons.Download, "下载到本地") { onDismiss(); onDownload(target) }
                     MenuEntry(MiuixIcons.Share, "分享") { onDismiss(); onShare(target) }
                 }
@@ -240,6 +287,9 @@ fun TrackMoreSheet(
                     }
                 }
             }
+        }
+        }
+        }
         }
     }
 }

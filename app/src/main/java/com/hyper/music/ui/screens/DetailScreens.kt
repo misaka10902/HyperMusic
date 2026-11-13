@@ -823,7 +823,7 @@ fun ArtistScreen(
         }
     }
     fun itemAlpha(index: Int): Float =
-        ((reveal.value - index * 0.015f) / 0.7f).coerceIn(0f, 1f)
+        ((reveal.value - (index * 0.015f).coerceAtMost(0.12f)) / 0.7f).coerceIn(0f, 1f)
     var artistPic by remember { mutableStateOf("") }
     val scheme = MiuixTheme.colorScheme
     val scope = rememberCoroutineScope()
@@ -1076,7 +1076,7 @@ fun AlbumScreen(
         }
     }
     fun itemAlpha(index: Int): Float =
-        ((reveal.value - index * 0.015f) / 0.7f).coerceIn(0f, 1f)
+        ((reveal.value - (index * 0.015f).coerceAtMost(0.12f)) / 0.7f).coerceIn(0f, 1f)
 
     LaunchedEffect(albumName) {
         loading = true

@@ -36,6 +36,33 @@ fun Modifier.horizontalEdgeFade(
         )
     }
 
+fun Modifier.verticalEdgeFade(
+    edgeHeight: Dp,
+    edgeAlpha: Float = 0.2f,
+): Modifier = this
+    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+    .drawWithContent {
+        drawContent()
+        val fadePx = edgeHeight.toPx().coerceAtMost(size.height / 2f)
+        if (fadePx <= 0f) return@drawWithContent
+        val fraction = (fadePx / size.height).coerceIn(0f, 0.49f)
+        drawRect(
+            brush = Brush.verticalGradient(
+                colorStops = arrayOf(
+                    0f to Color.Black.copy(alpha = edgeAlpha),
+                    fraction * 0.35f to Color.Black.copy(alpha = 0.35f + edgeAlpha * 0.65f),
+                    fraction * 0.7f to Color.Black.copy(alpha = 0.82f + edgeAlpha * 0.18f),
+                    fraction to Color.Black,
+                    1f - fraction to Color.Black,
+                    1f - fraction * 0.7f to Color.Black.copy(alpha = 0.82f + edgeAlpha * 0.18f),
+                    1f - fraction * 0.35f to Color.Black.copy(alpha = 0.35f + edgeAlpha * 0.65f),
+                    1f to Color.Black.copy(alpha = edgeAlpha),
+                ),
+            ),
+            blendMode = BlendMode.DstIn,
+        )
+    }
+
 fun Modifier.bottomContentFade(
     startFromBottom: Dp,
     bottomAlpha: Float = 0.12f,

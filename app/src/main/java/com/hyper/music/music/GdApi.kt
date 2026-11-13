@@ -116,6 +116,10 @@ object GdApi {
 
     fun shareUrl(song: Song): String = "https://music.163.com/song?id=${song.id}"
 
+    suspend fun comments(song: Song, cursor: Long, pageNo: Int, pageSize: Int): CommentPage =
+        if (song.isLocal || song.id.isBlank()) CommentPage()
+        else NeteaseApi.comments(song.id, cursor, pageNo, pageSize)
+
     internal fun parseSongsJson(body: String): List<Song> = runCatching {
         val arr = JSONArray(body)
         (0 until arr.length()).mapNotNull { i ->

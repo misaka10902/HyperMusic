@@ -360,6 +360,84 @@ object NeteaseApi {
         }.getOrNull()
     }
 
+    internal suspend fun comments(
+        songId: String,
+        cursor: Long,
+        pageNo: Int,
+        pageSize: Int,
+    ): CommentPage = withContext(Dispatchers.IO) {
+        if (songId.isBlank()) return@withContext CommentPage()
+        val rid = "R_SO_4_$songId"
+        val payload = JSONObject()
+            .put("cursor", cursor)
+            .put("offset", 0)
+            .put("orderType", 1)
+            .put("pageNo", pageNo)
+            .put("pageSize", pageSize)
+            .put("rid", rid)
+            .put("threadId", rid)
+        val raw = post("$BASE/weapi/comment/resource/comments/get", weapi(payload))
+            ?: return@withContext CommentPage()
+        runCatching {
+            val root = JSONObject(raw)
+            if (root.optInt("code") != 200) return@runCatching CommentPage()
+            val data = root.optJSONObject("data") ?: return@runCatching CommentPage()
+            val cursorRaw = data.opt("cursor")
+            val nextCursor = when (cursorRaw) {
+                is Number -> cursorRaw.toLong()
+                is String -> cursorRaw.toLongOrNull() ?: cursor
+                else -> cursor
+            }
+            val list = ArrayList<SongComment>()
+            if (pageNo == 1) {
+                data.optJSONArray("hotComments")?.let { arr ->
+                    for (i in 0 until arr.length()) {
+                        parseComment(arr.optJSONObject(i), true)?.let(list::add)
+                    }
+                }
+            }
+            data.optJSONArray("comments")?.let { arr ->
+                for (i in 0 until arr.length()) {
+                    parseComment(arr.optJSONObject(i), false)?.let(list::add)
+                }
+            }
+            CommentPage(
+                comments = list.distinctBy { commentKey(it) },
+                cursor = nextCursor,
+            )
+        }.getOrDefault(CommentPage())
+    }
+
+    private fun commentKey(c: SongComment): String =
+        if (c.commentId != 0L) "id:${c.commentId}" else "${c.userName}|${c.content}|${c.timeMs}"
+
+    private fun parseComment(c: JSONObject?, isHot: Boolean): SongComment? {
+        if (c == null) return null
+        val content = c.optString("content").ifBlank { return null }
+        val user = c.optJSONObject("user")
+        val name = user?.optString("nickname").orEmpty().ifBlank { "匿名用户" }
+        val time = c.optLong("time", 0L)
+        val date = c.optString("timeStr").takeIf { it.isNotBlank() }?.replace('-', '.')
+            ?: formatDate(time)
+        val location = c.optJSONObject("ipLocation")?.optString("location").orEmpty()
+        return SongComment(
+            userName = name,
+            content = content,
+            timeMs = time,
+            dateText = date,
+            likedCount = c.optInt("likedCount", 0),
+            commentId = c.optLong("commentId", 0L),
+            isHot = isHot,
+            location = location,
+        )
+    }
+
+    private fun formatDate(timeMs: Long): String =
+        if (timeMs <= 0L) "" else java.text.SimpleDateFormat(
+            "yyyy.MM.dd",
+            java.util.Locale.getDefault(),
+        ).format(java.util.Date(timeMs))
+
     internal suspend fun artistAvatar(name: String): String = withContext(Dispatchers.IO) {
         val kw = name.trim()
         if (kw.isBlank()) return@withContext ""

@@ -79,6 +79,7 @@ import com.hyper.music.music.LocalLyrics
 import com.hyper.music.music.LyricLine
 import com.hyper.music.music.MusicLibrary
 import com.hyper.music.music.NetCover
+import com.hyper.music.ui.utils.saveCoverOnLongPress
 import com.hyper.music.music.PlayMode
 import com.hyper.music.music.buildLyrics
 import com.hyper.music.music.currentLineIndex
@@ -490,7 +491,8 @@ fun HyperPlayerPageContent(
                                     track.hasSong -> Box(
                                         modifier = Modifier
                                             .fillMaxSize()
-                                            .scale(coverScale),
+                                            .scale(coverScale)
+                                            .saveCoverOnLongPress(track.coverUrl, track.title),
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Crossfade(
@@ -971,6 +973,7 @@ private fun TabletPlayerUi(
                             .size(coverSize)
                             .graphicsLayer { alpha = state.expandProgress.coerceIn(0f, 1f) }
                             .coverFrame(circular, pageCorner)
+                            .saveCoverOnLongPress(track.coverUrl, track.title)
                             .then(
                                 if (track.hasSong) {
                                     Modifier

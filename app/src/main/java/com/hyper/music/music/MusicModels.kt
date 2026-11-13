@@ -19,6 +19,22 @@ data class Song(
     val subtitle: String get() = "$artistText · $albumText"
 }
 
+data class SongComment(
+    val userName: String,
+    val content: String,
+    val timeMs: Long,
+    val dateText: String,
+    val likedCount: Int,
+    val commentId: Long = 0L,
+    val isHot: Boolean = false,
+    val location: String = "",
+)
+
+data class CommentPage(
+    val comments: List<SongComment> = emptyList(),
+    val cursor: Long = 0L,
+)
+
 data class StreamInfo(
     val url: String,
     val durationMs: Long = 0L,
