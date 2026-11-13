@@ -69,6 +69,19 @@
   </tr>  
 </table>
 
+### 大屏界面
+
+<table>  
+  <tr>  
+    <td><img src="./assets/19.png" width="400" alt="01"></td>  
+    <td><img src="./assets/20.png" width="400" alt="02"></td>  
+  </tr>  
+  <tr>  
+    <td><img src="./assets/21.png" width="400" alt="03"></td>  
+    <td><img src="./assets/22.png" width="400" alt="04"></td>  
+  </tr>  
+</table>
+
 ## 特性
 
 - 基于 GD Studio API，实现歌曲在线播放与下载功能
