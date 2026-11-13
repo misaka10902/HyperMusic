@@ -309,6 +309,16 @@ private fun PlaybackSection(
             }
         )
         SwitchPreference(
+            title = "音频焦点",
+            summary = "当其他应用播放音频时暂停播放，系统的多声音设置会影响此功能",
+            checked = musicSettings.audioFocus,
+            onCheckedChange = {
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                MusicLibrary.setAudioFocus(it)
+                PlaybackController.applyAudioFocus()
+            }
+        )
+        SwitchPreference(
             title = "实时歌词",
             summary = "在系统媒体控制器实时显示歌词",
             checked = musicSettings.liveLyric,

@@ -79,7 +79,7 @@ class PlaybackService : MediaSessionService() {
                     .setUsage(C.USAGE_MEDIA)
                     .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
                     .build(),
- MusicLibrary.settings.value.audioFocus,
+                false,
             )
             .setHandleAudioBecomingNoisy(true)
             .build()

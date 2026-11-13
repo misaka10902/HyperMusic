@@ -1,6 +1,7 @@
 package com.hyper.music.ui.player
 
 import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
@@ -26,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
@@ -38,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hyper.music.music.LyricLine
 import com.hyper.music.music.MusicLibrary
+import com.hyper.music.music.PlaybackController
 import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.gestures.animateScrollBy
@@ -58,11 +61,13 @@ fun HyperLyricsView(
     onDismiss: () -> Unit = {},
 ) {
     val settings by MusicLibrary.settings.collectAsState()
+    val playback by PlaybackController.state.collectAsState()
     val baseFontSize = settings.lyricFontSize
     val listState = rememberLazyListState(
         initialFirstVisibleItemIndex = currentIndex.coerceIn(0, lines.lastIndex.coerceAtLeast(0)),
     )
     var positioned by remember { mutableStateOf(false) }
+    var autoScrolling by remember { mutableStateOf(false) }
 
     LaunchedEffect(currentIndex, lines.size) {
         if (currentIndex < 0 || lines.isEmpty()) return@LaunchedEffect
@@ -87,25 +92,34 @@ fun HyperLyricsView(
         }
 
         val delta = centerDelta() ?: return@LaunchedEffect
-        if (!positioned) {
-            if (delta != 0f) listState.dispatchRawDelta(delta)
-            positioned = true
-        } else if (delta != 0f) {
+        autoScrolling = true
+        try {
+            if (!positioned) {
+                if (delta != 0f) listState.dispatchRawDelta(delta)
+                positioned = true
+            } else if (delta != 0f) {
 
-            listState.animateScrollBy(
-                delta,
-                animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing),
-            )
-
-            val settle = centerDelta()
-            if (settle != null && abs(settle) > 0.5f) {
                 listState.animateScrollBy(
-                    settle,
-                    animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
+                    delta,
+                    animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing),
                 )
+
+                val settle = centerDelta()
+                if (settle != null && abs(settle) > 0.5f) {
+                    listState.animateScrollBy(
+                        settle,
+                        animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
+                    )
+                }
             }
+        } finally {
+            autoScrolling = false
         }
     }
+
+    // 仅播放中、非手动滑动、且开启高级材质时模糊非当前歌词
+    val userDragging = listState.isScrollInProgress && !autoScrolling
+    val blurEnabled = playback.isPlaying && !userDragging && settings.advancedMaterial
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val half = maxHeight / 2 - 46.dp
@@ -160,6 +174,7 @@ fun HyperLyricsView(
                         showTranslation = showTranslation,
                         centered = centered,
                         baseFontSize = baseFontSize,
+                        blurEnabled = blurEnabled,
                         onSeek = onSeek,
                         onDismiss = onDismiss,
                     )
@@ -177,6 +192,7 @@ private fun LyricRow(
     showTranslation: Boolean,
     centered: Boolean,
     baseFontSize: Float,
+    blurEnabled: Boolean,
     onSeek: (Long) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -196,6 +212,16 @@ private fun LyricRow(
         targetValue = if (isCurrent) 1f else 0f,
         animationSpec = tween(durationMillis = 240, easing = LinearOutSlowInEasing),
         label = "lyricRowFocus",
+    )
+    val blurDp by animateDpAsState(
+        targetValue = when {
+            !blurEnabled || isCurrent -> 0.dp
+            distance == 1 -> 2.dp
+            distance == 2 -> 3.5.dp
+            else -> 5.dp
+        },
+        animationSpec = tween(durationMillis = 240, easing = LinearOutSlowInEasing),
+        label = "lyricRowBlur",
     )
 
     val align = if (centered) TextAlign.Center else TextAlign.Start
@@ -218,7 +244,8 @@ private fun LyricRow(
             ) {
                 if (isCurrent) onDismiss() else onSeek(line.timeMs)
             }
-            .padding(vertical = 12.dp),
+            .padding(vertical = 12.dp)
+            .then(if (blurDp > 0.dp) Modifier.blur(blurDp) else Modifier),
         horizontalAlignment = if (centered) {
             Alignment.CenterHorizontally
         } else {

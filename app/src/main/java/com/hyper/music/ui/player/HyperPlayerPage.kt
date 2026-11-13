@@ -336,6 +336,7 @@ fun HyperPlayerPageContent(
                 coverScale = coverScale,
                 showLyricsTranslation = settings.showLyricsTranslation,
                 lyricCentered = settings.lyricCentered,
+                titleCentered = settings.titleCentered,
             )
         } else if (isLandscape) {
             Box(
@@ -751,6 +752,7 @@ private fun PlayerRightControls(
     onMore: () -> Unit,
     onOpenSleepTimer: () -> Unit,
     haptic: HapticFeedback,
+    titleCentered: Boolean = true,
     modifier: Modifier = Modifier,
     cover: (@Composable () -> Unit)? = null,
 ) {
@@ -763,6 +765,7 @@ private fun PlayerRightControls(
                 track = track,
                 revealHeader = reveal.header,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
+                centered = titleCentered,
             )
             cover?.invoke()
 
@@ -911,6 +914,7 @@ private fun TabletPlayerUi(
     coverScale: Float,
     showLyricsTranslation: Boolean,
     lyricCentered: Boolean,
+    titleCentered: Boolean,
 ) {
     val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding().coerceAtLeast(26.dp)
     val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding().coerceAtLeast(16.dp)
@@ -958,6 +962,7 @@ private fun TabletPlayerUi(
                 onMore = onMore,
                 onOpenSleepTimer = onOpenSleepTimer,
                 haptic = haptic,
+                titleCentered = titleCentered,
                 modifier = Modifier.fillMaxSize(),
                 cover = {
                     Box(

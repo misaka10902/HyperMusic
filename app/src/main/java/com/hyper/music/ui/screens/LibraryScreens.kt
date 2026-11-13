@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -212,11 +211,6 @@ fun HistoryScreen(
                     pair = group,
                     startIndex = groupIndex * columns,
                     columns = columns,
-                    modifier = Modifier.animateItem(
-                        fadeInSpec = tween(200),
-                        placementSpec = spring(dampingRatio = 1f, stiffness = 320f),
-                        fadeOutSpec = tween(260),
-                    ),
                 ) { index, song ->
                     TrackRow(
                         song = song,

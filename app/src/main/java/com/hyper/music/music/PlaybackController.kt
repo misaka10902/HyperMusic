@@ -55,7 +55,12 @@ object PlaybackController {
     val state: StateFlow<PlaybackUiState> = _state
 
     private val listener = object : Player.Listener {
-        override fun onIsPlayingChanged(isPlaying: Boolean) = sync()
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            sync()
+        }
+        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            AudioFocusMonitor.onPlaybackIntentChanged(playWhenReady)
+        }
         override fun onPlaybackStateChanged(playbackState: Int) {
             if (playbackState == Player.STATE_ENDED) {
                 val p = player
@@ -93,11 +98,10 @@ object PlaybackController {
         player?.removeListener(listener)
         player = exo
         exo.addListener(listener)
+        AudioFocusMonitor.onPlaybackIntentChanged(exo.playWhenReady)
         exo.volume = MusicLibrary.settings.value.volume
-        (exo as? ExoPlayer)?.setAudioAttributes(
-            audioAttributes(),
-            MusicLibrary.settings.value.audioFocus,
-        )
+        // 音频焦点统一由 AudioFocusMonitor 托管，这里关闭 media3 自带焦点避免互相抢占
+        (exo as? ExoPlayer)?.setAudioAttributes(audioAttributes(), false)
         applyMode(exo, _state.value.mode)
         restoreSession(exo)
         sync()
@@ -106,6 +110,7 @@ object PlaybackController {
 
     fun detach() {
         saveSession()
+        AudioFocusMonitor.onPlaybackIntentChanged(false)
         player?.removeListener(listener)
         player = null
         ticker?.cancel()
@@ -234,6 +239,11 @@ object PlaybackController {
         .setUsage(C.USAGE_MEDIA)
         .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
         .build()
+
+    /** 设置页切换开关时即时生效。 */
+    fun applyAudioFocus() {
+        AudioFocusMonitor.setEnabled(MusicLibrary.settings.value.audioFocus)
+    }
 
     fun play() {
         val p = player ?: return

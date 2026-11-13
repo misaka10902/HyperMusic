@@ -265,8 +265,11 @@ fun HyperApp() {
     }
     fun popRoute() { if (navBackStack.size > 1) navBackStack.removeLastOrNull() }
 
+    val tablet = isLargeScreen(rememberWindowSizeDp())
+
+    // 平板导航条在顶部：进二级页面不再把播放条下移推出屏幕，恒定贴底
     val miniPlayerShift by animateDpAsState(
-        targetValue = if (route == null) 0.dp else MiniPlayerHeight + MiniPlayerToNavBarSpacing,
+        targetValue = if (tablet || route == null) 0.dp else MiniPlayerHeight + MiniPlayerToNavBarSpacing,
         animationSpec = tween(durationMillis = 300),
         label = "miniPlayerShift",
     )
@@ -455,8 +458,6 @@ fun HyperApp() {
     }
 
     val backgroundColor = MiuixTheme.colorScheme.surface
-
-    val tablet = isLargeScreen(rememberWindowSizeDp())
     val wallpaperActive by WallpaperManager.state.collectAsState()
     val backdrop = rememberLayerBackdrop {
         drawRect(backgroundColor)
@@ -965,7 +966,11 @@ fun HyperApp() {
             val dockFraction = BottomFloatingWidthFraction
 
             AnimatedVisibility(
-                visible = !selectionActive && route !is MusicRoute.Wallpaper && route !is MusicRoute.PlayerSettings,
+                visible = if (tablet) {
+                    !selectionActive
+                } else {
+                    !selectionActive && route !is MusicRoute.Wallpaper && route !is MusicRoute.PlayerSettings
+                },
                 modifier = Modifier.align(Alignment.BottomCenter),
                 enter = slideInVertically(tween(260)) { it / 2 } + fadeIn(tween(220)),
                 exit = slideOutVertically(tween(240)) { it / 2 } + fadeOut(tween(160)),

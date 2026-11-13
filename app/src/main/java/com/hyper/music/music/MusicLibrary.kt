@@ -163,6 +163,11 @@ object MusicLibrary {
         prefs.edit().putBoolean(KEY_LYRIC_TRANSLATION, show).apply()
     }
 
+    fun setAudioFocus(enabled: Boolean) {
+        _settings.value = _settings.value.copy(audioFocus = enabled)
+        prefs.edit().putBoolean(KEY_AUDIO_FOCUS, enabled).apply()
+    }
+
     fun setAdvancedMaterial(enabled: Boolean) {
         _settings.value = _settings.value.copy(advancedMaterial = enabled)
         prefs.edit().putBoolean(KEY_ADVANCED_MATERIAL, enabled).apply()
@@ -182,10 +187,12 @@ object MusicLibrary {
     }
 
     fun addHistory(song: Song) {
-        val list = _history.value.toMutableList()
-        list.removeAll { it.id == song.id }
-        list.add(0, song)
-        while (list.size > MAX_HISTORY) list.removeAt(list.lastIndex)
+        // 历史列表顺序写死：已在列表中的歌曲保持原位，只把新歌追加到尾部，不做任何重排
+        val current = _history.value
+        if (current.any { it.id == song.id }) return
+        val list = current.toMutableList()
+        list.add(song)
+        while (list.size > MAX_HISTORY) list.removeAt(0)
         _history.value = list
         prefs.edit().putString(KEY_HISTORY, encodeSongs(list)).apply()
     }
