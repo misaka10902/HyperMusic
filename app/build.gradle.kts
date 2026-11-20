@@ -15,8 +15,8 @@ android {
         applicationId = "com.hyper.music"
         minSdk = 33
         targetSdk = 37
-        versionCode = 10
-        versionName = "1.1.0"
+        versionCode = 11
+        versionName = "1.1.1"
         ndk {
             abiFilters += listOf("arm64-v8a")
         }
@@ -74,6 +74,10 @@ android {
             excludes += "**/*.kotlin_builtins"
 
             excludes += "DebugProbesKt.bin"
+
+            excludes += "META-INF/**/*.version"
+            excludes += "META-INF/version-control-info.textproto"
+            excludes += "META-INF/com/android/build/gradle/app-metadata.properties"
         }
     }
     compileOptions {

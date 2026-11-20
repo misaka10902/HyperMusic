@@ -6,6 +6,7 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.CoroutineScope
@@ -48,7 +49,7 @@ object PlaybackController {
 
     private var liveLyricLines: List<LyricLine> = emptyList()
 
-    /** 播放条显示的当前歌词行；空串表示当前没有可用歌词（迷你播放器回退显示歌名）。 */
+
     private val _playBarLyric = MutableStateFlow("")
     val playBarLyric: StateFlow<String> = _playBarLyric
     private var liveLyricSongId: String = ""
@@ -104,7 +105,8 @@ object PlaybackController {
         exo.addListener(listener)
         AudioFocusMonitor.onPlaybackIntentChanged(exo.playWhenReady)
         exo.volume = MusicLibrary.settings.value.volume
-        
+        exo.playbackParameters = PlaybackParameters(MusicLibrary.settings.value.playbackSpeed)
+
         (exo as? ExoPlayer)?.setAudioAttributes(audioAttributes(), false)
         applyMode(exo, _state.value.mode)
         restoreSession(exo)
@@ -244,7 +246,7 @@ object PlaybackController {
         .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
         .build()
 
-    
+
     fun applyAudioFocus() {
         AudioFocusMonitor.setEnabled(MusicLibrary.settings.value.audioFocus)
     }
@@ -357,6 +359,10 @@ object PlaybackController {
         _state.update { it.copy(volume = v) }
     }
 
+    fun setPlaybackSpeed(speed: Float) {
+        player?.playbackParameters = PlaybackParameters(speed)
+    }
+
     fun reloadCurrent() {
         val p = player ?: return
         val idx = p.currentMediaItemIndex
@@ -462,7 +468,7 @@ object PlaybackController {
             return
         }
         val settings = MusicLibrary.settings.value
-        // 通知栏实时歌词和播放条歌词共用同一份歌词数据，任一开启就要拉取。
+
         if (!settings.liveLyric && !settings.playBarLyrics) {
             publishTitle(song.name)
             return

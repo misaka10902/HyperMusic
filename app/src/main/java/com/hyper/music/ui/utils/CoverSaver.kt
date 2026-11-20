@@ -8,7 +8,9 @@ import android.provider.MediaStore
 import android.widget.Toast
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.input.pointer.pointerInput
@@ -48,10 +50,16 @@ object CoverSaver {
     }
 }
 
+
 @Composable
-fun Modifier.saveCoverOnLongPress(url: String?, name: String): Modifier {
+fun Modifier.saveCoverOnLongPress(
+    url: String?,
+    name: String,
+    onTap: (() -> Unit)? = null,
+): Modifier {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val currentTap by rememberUpdatedState(onTap)
     return this.pointerInput(url, name) {
         detectTapGestures(
             onLongPress = {
@@ -64,6 +72,7 @@ fun Modifier.saveCoverOnLongPress(url: String?, name: String): Modifier {
                     ).show()
                 }
             },
+            onTap = { currentTap?.invoke() },
         )
     }
 }

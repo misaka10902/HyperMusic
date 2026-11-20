@@ -51,7 +51,7 @@ data class WallpaperState(
     val version: Int = 0,
 )
 
-/** 一次渲染结果：换图（version）改变时 version 变，调节模糊时 version 不变。 */
+
 data class RenderedWallpaper(val version: Int, val image: ImageBitmap?)
 
 object WallpaperManager {
@@ -63,7 +63,7 @@ object WallpaperManager {
     private const val FILE_NAME = "wallpaper.jpg"
     private const val MAX_EDGE = 1024
 
-    /** 模糊计算用的基底长边：壁纸本来就是模糊的，在小图上卷积既快又平滑。 */
+
     private const val BLUR_BASE_EDGE = 360
 
     const val MAX_BLUR = 15f
@@ -74,21 +74,12 @@ object WallpaperManager {
     private val _state = MutableStateFlow(WallpaperState())
     val state: StateFlow<WallpaperState> = _state
 
-    /**
-     * 卡片只关心这三个值。单独拆出来是为了让「拖动壁纸模糊滑块」不会把每一张卡片
-     * 都重组一遍（卡片数量多，全量订阅 state 会明显掉帧）。
-     */
+
     val cardOpacityFlow = state.map { it.cardOpacity }.distinctUntilChanged()
     val cardBlurFlow = state.map { it.cardBlur }.distinctUntilChanged()
     val hasImageFlow = state.map { it.hasImage }.distinctUntilChanged()
 
-    /**
-     * 唯一的渲染结果流。
-     *
-     * 之前是每个 `WallpaperBackground` 各自 `produceState` 重算：根层一份、每个页面各一份，
-     * 拖模糊滑块时会有 2~3 个全图模糊同时抢 Default 线程，表现为一顿一顿。
-     * 现在全应用只有这一份，用 collectLatest 丢掉过期的中间值，滑块跟手。
-     */
+
     private val _render = MutableStateFlow<RenderedWallpaper?>(null)
     val render: StateFlow<RenderedWallpaper?> = _render
 
@@ -145,13 +136,7 @@ object WallpaperManager {
         _render.value = RenderedWallpaper(version, image)
     }
 
-    /**
-     * 上一次**真正画到屏幕上**的图与版本。
-     *
-     * `WallpaperBackground` 被销毁重建时（切页、从设置页返回、系统回收后恢复），
-     * 组合过程中的 `remember` 是全新的；如果只依赖渲染管线的 publish，会有一段时间
-     * 「没有版本可显示」，直接露出 surface 白底。这里留一份已上屏结果，重建时立刻恢复。
-     */
+
     @Volatile
     var shownImage: ImageBitmap? = null
         private set
@@ -165,10 +150,7 @@ object WallpaperManager {
         shownImage = image
     }
 
-    /**
-     * 写盘防抖：滑块每帧都会 set，直接每帧 apply() 会把主线程拖住，表现为一顿一顿。
-     * 松开手 260ms 后落盘一次即可。
-     */
+
     private var persistJob: Job? = null
 
     private fun persist(key: String, value: Float) {
@@ -221,7 +203,7 @@ object WallpaperManager {
             val target = file()
             target.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 90, it) }
             bitmap.recycle()
-            // 换图后基底缓存作废。
+
             blurBase = null
             blurBaseVersion = -1
             _state.value = _state.value.copy(
@@ -261,15 +243,7 @@ object WallpaperManager {
         bitmap
     }
 
-    /**
-     * 生成用于绘制的壁纸位图：固定基底降采样 + 三次 box blur（≈ 高斯）。
-     *
-     * 全部在 CPU 上完成，绘制层**不挂 RenderEffect**：壁纸层会被 `layerBackdrop`
-     * 录进 display list，`Modifier.blur` 在录制回放时会让部分 GPU 驱动崩在 native 层。
-     *
-     * 基底（长边 [BLUR_BASE_EDGE]）按版本缓存一次，调节滑块时只在已缩小的位图上卷积，
-     * 单帧成本降到毫秒级，拖动才连续。
-     */
+
     fun renderForDraw(src: ImageBitmap, radiusDp: Float, density: Float): ImageBitmap {
         if (radiusDp <= 0.5f) return src
         return runCatching {
@@ -277,13 +251,13 @@ object WallpaperManager {
             val base = blurBaseFor(srcBmp)
             val w = base.width
             val h = base.height
-            // 直接取像素做卷积再建位图：省掉一次整图 copy + setPixels，
-            // 拖动滑块时每帧的计算量能压到几毫秒。
+
+
             val pix = IntArray(w * h)
             base.getPixels(pix, 0, w, 0, 0, w, h)
             val scale = w.toFloat() / srcBmp.width.coerceAtLeast(1)
             val radiusPx = radiusDp * density
-            // 半径保留小数：取整会让 0~15dp 只剩七八个档位，拖动时一跳一跳。
+
             val r = (radiusPx * scale / 2f).coerceIn(0.02f, 64f)
             boxBlurFractional(pix, w, h, r, 3)
             Bitmap.createBitmap(pix, w, h, Bitmap.Config.ARGB_8888).asImageBitmap()
@@ -308,12 +282,7 @@ object WallpaperManager {
         return bmp
     }
 
-    /**
-     * 分数半径的盒式模糊（三次 ≈ 高斯），原地修改像素数组。
-     *
-     * 整数半径会让模糊强度只有「几个档」，拖动滑块时一跳一跳；这里把小数部分
-     * 作为窗口两端外侧像素的权重，强度因此连续变化，且成本与整数版相同。
-     */
+
     private fun boxBlurFractional(pix: IntArray, w: Int, h: Int, radius: Float, passes: Int) {
         if (radius <= 0.01f || w < 3 || h < 3) return
         val ri = radius.toInt()
@@ -322,7 +291,7 @@ object WallpaperManager {
         val div = 2 * ri + 1 + 2 * frac
 
         repeat(passes) {
-            // 横向：pix -> tmp
+
             for (y in 0 until h) {
                 val o = y * w
                 var a = 0; var r = 0; var g = 0; var b = 0
@@ -352,7 +321,7 @@ object WallpaperManager {
                     b += (pi and 0xFF) - (po and 0xFF)
                 }
             }
-            // 纵向：tmp -> pix
+
             for (x in 0 until w) {
                 var a = 0; var r = 0; var g = 0; var b = 0
                 for (i in -ri..ri) {
@@ -390,11 +359,7 @@ fun WallpaperBackground() {
     val state by WallpaperManager.state.collectAsState()
     val rendered by WallpaperManager.render.collectAsState()
 
-    // 双图层交叉淡化：front 永远是一张已经画满全屏的图，back 从 0 淡到 1 之后才顶替 front。
-    // 任何时刻都不会出现「两层都是空的」那一帧，所以换图、切页、组件重建都不会露白。
-    //
-    // front 的初值取自「上次真正上屏」的那一份：切换 Tab / 从设置页返回时组合会重建，
-    // 若只依赖渲染管线的 publish，重建后要等新结果出来才有图，这中间就是一片白。
+
     var front by remember {
         mutableStateOf(if (WallpaperManager.state.value.hasImage) WallpaperManager.shownImage else null)
     }
@@ -404,27 +369,26 @@ fun WallpaperBackground() {
     var back by remember { mutableStateOf<ImageBitmap?>(null) }
     val backAlpha = remember { Animatable(0f) }
 
-    // 整层不透明度：只负责「纯色 ↔ 壁纸」的过渡，换图不经过它。
-    // 换图时整层始终是 1，只让 back 层在新旧图之间淡化，所以连续换图也不会整体闪。
+
     val layerAlpha = remember {
         Animatable(
             if (WallpaperManager.state.value.hasImage && WallpaperManager.shownImage != null) 1f else 0f,
         )
     }
 
-    // 只有「渲染结果与当前 state 同版本」才算可用；换图后位图还没算好时不切换。
+
     val ready = rendered?.image?.takeIf { rendered?.version == state.version }
 
     LaunchedEffect(state.hasImage, state.version, ready) {
         if (!state.hasImage) {
-            // 这里不动 front：淡出还指望它，等整层淡到 0 之后再清（见下面那个 effect）。
+
             back = null
             backAlpha.snapTo(0f)
             return@LaunchedEffect
         }
         if (ready == null) {
-            // 渲染管线还没吐出结果（冷启动首帧 / 计算被后续操作取消）：
-            // 先同步取一张原图垫上，宁可短暂「不模糊」，也不要整片白。
+
+
             if (front == null) {
                 val fallback = kotlinx.coroutines.withContext(Dispatchers.IO) { WallpaperManager.loadBitmap() }
                 if (fallback != null && front == null) front = fallback
@@ -432,15 +396,15 @@ fun WallpaperBackground() {
             return@LaunchedEffect
         }
         if (front == null) {
-            // 从「没有壁纸」变成「有壁纸」：直接把图放上，整层淡入交给 layerAlpha，
-            // 这样纯色与壁纸是叠化关系，而不是先空一帧再跳出。
+
+
             front = ready
             frontVersion = state.version
             WallpaperManager.markShown(state.version, ready)
             return@LaunchedEffect
         }
         if (state.version == frontVersion) {
-            // 同一个版本只是模糊/压暗换了：直接替换，跟手，不播淡化。
+
             front = ready
             return@LaunchedEffect
         }
@@ -451,20 +415,20 @@ fun WallpaperBackground() {
         back = ready
         backAlpha.snapTo(0f)
         backAlpha.animateTo(1f, tween(220, easing = FastOutSlowInEasing))
-        // 淡入完成后才让新图成为前景；动画被取消（又换了图）时不会走到这里。
+
         front = ready
         frontVersion = state.version
         WallpaperManager.markShown(state.version, ready)
         back = null
     }
 
-    // 整层淡入 / 淡出。必须等真的有一张图可画再淡入，否则会先淡出一片空白。
+
     LaunchedEffect(state.hasImage, front) {
         if (state.hasImage) {
             if (front != null) {
                 layerAlpha.animateTo(1f, tween(320, easing = FastOutSlowInEasing))
             } else {
-                // 还没有图可画，保持透明，等 front 就位后由上面的分支淡入。
+
                 layerAlpha.snapTo(0f)
             }
         } else {
@@ -494,7 +458,7 @@ fun WallpaperBackground() {
     }
 }
 
-/** 单层壁纸：图 + 压暗遮罩。压暗跟着层一起淡入，避免淡化时亮度先跳一下。 */
+
 @Composable
 private fun WallpaperLayer(bitmap: ImageBitmap, dim: Float) {
     Box(modifier = Modifier.fillMaxSize()) {

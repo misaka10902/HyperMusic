@@ -342,6 +342,7 @@ fun HyperPlayerPageContent(
                 coverScale = coverScale,
                 showLyricsTranslation = settings.showLyricsTranslation,
                 lyricCentered = settings.lyricCentered,
+                lyricSwitchOnTap = settings.lyricSwitchOnTap,
             )
             }
         } else {
@@ -370,7 +371,7 @@ fun HyperPlayerPageContent(
                     .weight(1f)
                     .padding(top = coverZoneTopBias)
                     .then(
-                        if (track.hasSong) {
+                        if (track.hasSong && !settings.lyricSwitchOnTap) {
                             Modifier.pointerInput(showLyrics) {
                                 val threshold = size.width * 0.14f
                                 detectHorizontalDragGestures(
@@ -463,7 +464,11 @@ fun HyperPlayerPageContent(
                                         onDismiss = { showLyrics = false },
                                     )
                                 } else {
-                                    NoLyricsHint()
+                                    NoLyricsHint(
+                                        onBack = if (settings.lyricSwitchOnTap) {
+                                            { showLyrics = false }
+                                        } else null,
+                                    )
                                 }
                             } else {
                                 when {
@@ -471,7 +476,18 @@ fun HyperPlayerPageContent(
                                         modifier = Modifier
                                             .fillMaxSize()
                                             .scale(coverScale)
-                                            .saveCoverOnLongPress(track.coverUrl, track.title),
+                                            .saveCoverOnLongPress(
+                                                url = track.coverUrl,
+                                                name = track.title,
+                                                onTap = if (settings.lyricSwitchOnTap) {
+                                                    {
+                                                        haptic.performHapticFeedback(
+                                                            HapticFeedbackType.TextHandleMove
+                                                        )
+                                                        showLyrics = true
+                                                    }
+                                                } else null,
+                                            ),
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Crossfade(
@@ -897,6 +913,7 @@ private fun LandscapePlayerUi(
     coverScale: Float,
     showLyricsTranslation: Boolean,
     lyricCentered: Boolean,
+    lyricSwitchOnTap: Boolean,
 ) {
     val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding().coerceAtLeast(26.dp)
     val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding().coerceAtLeast(16.dp)
@@ -932,7 +949,7 @@ private fun LandscapePlayerUi(
                         }
                     )
                     .then(
-                        if (track.hasSong) {
+                        if (track.hasSong && !lyricSwitchOnTap) {
                             Modifier.pointerInput(showLyrics) {
                                 val threshold = size.width * 0.14f
                                 detectHorizontalDragGestures(
@@ -976,7 +993,16 @@ private fun LandscapePlayerUi(
                         )
 
                         isLyrics -> Column(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .then(
+                                    if (lyricSwitchOnTap) {
+                                        Modifier.clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null,
+                                        ) { onShowLyricsChange(false) }
+                                    } else Modifier
+                                ),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center,
                         ) {
@@ -998,7 +1024,19 @@ private fun LandscapePlayerUi(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .scale(coverScale)
-                                .coverFrame(circular, pageCorner),
+                                .coverFrame(circular, pageCorner)
+                                .saveCoverOnLongPress(
+                                    url = track.coverUrl,
+                                    name = track.title,
+                                    onTap = if (lyricSwitchOnTap) {
+                                        {
+                                            haptic.performHapticFeedback(
+                                                HapticFeedbackType.TextHandleMove
+                                            )
+                                            onShowLyricsChange(true)
+                                        }
+                                    } else null,
+                                ),
                             contentAlignment = Alignment.Center,
                         ) {
                             val url = track.coverUrl ?: ""
@@ -1206,7 +1244,7 @@ private fun FavoriteButton(
         ) { liked ->
             Image(
                 imageVector = if (liked) MiuixIcons.FavoritesFill else MiuixIcons.Favorites,
-                contentDescription = if (liked) "取消收藏" else "添加到收藏",
+                contentDescription = if (liked) "取消收藏" else "加入收藏",
                 modifier = Modifier.size(iconSize),
                 colorFilter = ColorFilter.tint(if (liked) ControlTint else ControlTintDim),
             )
@@ -1357,9 +1395,19 @@ private fun <S> androidx.compose.animation.AnimatedContentTransitionScope<S>.pla
     )
 
 @Composable
-private fun NoLyricsHint() {
+private fun NoLyricsHint(onBack: (() -> Unit)? = null) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .then(
+                if (onBack != null) {
+                    Modifier.clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onBack,
+                    )
+                } else Modifier
+            ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {

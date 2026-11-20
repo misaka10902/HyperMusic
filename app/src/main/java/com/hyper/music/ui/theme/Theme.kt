@@ -133,11 +133,7 @@ fun CourseHyperTheme(
 
     val targetColors = controller.currentColors()
 
-    // 主题/壁纸模式切换时，对 Colors 逐字段做平滑插值过渡（miuix 0.9.5 起 setter 为 internal，
-    // 这里用公开的 getter + copy() 逐帧构造中间配色），恢复此前的渐变动画特性。
-    // 关键：currentColors() 每次重组可能返回新实例，绝不能拿 ColorScheme 对象当 key——
-    // 否则动画每帧 setState→重组→新对象→协程无限重启→内存耗尽闪退。
-    // 改用「模式 + 主色的 argb 值」作 key：颜色不变则 key 稳定；颜色真变化（含系统深浅色切换）才触发过渡。
+
     val themeKey = "${themeMode.value}|${themeColor.value}|${targetColors.primary.toArgb()}"
     var displayColors by remember { mutableStateOf(targetColors) }
     LaunchedEffect(themeKey) {

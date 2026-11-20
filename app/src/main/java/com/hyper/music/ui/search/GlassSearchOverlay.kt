@@ -1,13 +1,5 @@
-// 移植自 miuix v0.9.5-beta01: example/shared/src/commonMain/kotlin/GlassSearchOverlay.kt
-// Copyright 2026, compose-miuix-ui contributors
-// SPDX-License-Identifier: Apache-2.0
-//
-// 适配说明：
-//  - 包名改为项目自有包，符号改为 internal（仅本项目使用）。
-//  - 移除 example 自有的 LocalAppPageInsets，顶部安全区改用 WindowInsets.statusBars.only(Top)。
-//  - 搜索框改用项目自研轻量 NativeTextField（Android EditText 包装），不再使用官方
-//    androidx.compose.foundation.text.BasicTextField：后者会带入 CoreTextField 整套
-//    selection / contextMenu / magnifier / drag 类簇（约 218 个类），R8 无法按调用路径裁剪。
+
+
 package com.hyper.music.ui.search
 
 import androidx.compose.animation.core.CubicBezierEasing
@@ -102,10 +94,7 @@ private val SearchModeEasing: Easing = run {
     }
 }
 
-/**
- * 全屏玻璃搜索覆盖层。整个搜索模式由 [expanded] 单一布尔状态驱动，退出动画期间保持组合，
- * 使 Cancel 能逆向播放进场动画。搜索框下方的 [content] 用于放置搜索历史 / 结果 / TabRow。
- */
+
 @Composable
 internal fun GlassSearchOverlay(
     onDismissRequest: () -> Unit,
@@ -130,14 +119,12 @@ internal fun GlassSearchOverlay(
     val topInsets = WindowInsets.statusBars.only(WindowInsetsSides.Top)
     val active = expanded || transition.currentState || transition.isRunning
     LaunchedEffect(expanded) {
-        // 只在「打开」时清空输入。关闭时保留 query，退场动画期间搜索内容不消失，
-        // 不会闪一下空的搜索结果（没有歌曲/歌手/专辑）。
+
+
         if (expanded) {
             query = ""
-            // NativeTextField 是 AndroidView：首帧组合时 EditText 还没 attach 到窗口，
-            // 此时 focus / showSoftInput 都会落空；而且 requestFocus 本身并不弹键盘，
-            // 必须显式 showSoftInput。两个一起做，并在 attach 完成前重试几次。
-            // 前 3 次无条件重试，覆盖「已拿到焦点但输入法还没起来」的情况。
+
+
             repeat(8) { attempt ->
                 fieldHandle.requestFocusAndShowIme()
                 delay(50)
@@ -173,12 +160,8 @@ internal fun GlassSearchOverlay(
                 .matchParentSize()
                 .clickable(interactionSource = null, indication = null) { keyboard?.hide() },
         )
-        // 内容层是整屏坐标（从屏幕 (0,0) 开始）：结果列表能一路滚到屏幕顶部、
-        // 钻到搜索框与 TabRow 背后，顶部的模糊带也从屏幕最顶端开始渐隐。
-        // alpha 跟随同一个 progress，退出时与搜索框一起淡出，不会滞留在首页上。
-        // 这里不挂 imePadding：键盘弹起时这一列不能被压缩。结果页的采样底面画着壁纸，
-        // 列一压缩壁纸的裁剪窗口就跟着变矮，看起来就像壁纸被键盘顶上去了。
-        // 键盘避让由各形态自己处理（列表挂 imePadding），壁纸因此始终钉在屏幕上。
+
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -200,14 +183,14 @@ internal fun GlassSearchOverlay(
                     .fillMaxWidth()
                     .padding(horizontal = GlassTopAppBarDefaults.HorizontalPadding, vertical = 4.dp)
                     .graphicsLayer { translationY = -topInsets.getTop(this) * (1f - progress.value) }
-                    // 搜索结果可以从屏幕顶端滚到搜索框背后，搜索框必须画在它上面。
+
                     .zIndex(2f),
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        // 给右侧独立的圆形关闭键让出位置（44dp 按钮 + 8dp 间隔），
-                        // 搜索框与关闭键因此是分离的两个圆角块，而不是连成一条。
+
+
                         .padding(end = 52.dp * progress.value)
                         .height(44.dp)
                         .background(colors.surfaceContainerHigh, CircleShape)
@@ -229,7 +212,7 @@ internal fun GlassSearchOverlay(
                         modifier = Modifier
                             .weight(1f)
                             .layout { measurable, constraints ->
-                                // 右侧 Cancel 按钮滑入时预留 54dp，避免文字钻到按钮底下
+
                                 val endSpace = (54.dp.toPx() * progress.value).toInt()
                                 val width = (constraints.maxWidth - endSpace).coerceAtLeast(0)
                                 val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
@@ -276,7 +259,7 @@ internal fun GlassSearchOverlay(
     }
 }
 
-/** 页面整体透明度：与顶栏采样背景保持同步。 */
+
 @Composable
 internal fun rememberGlassSearchBarAlpha(expanded: Boolean): State<Float> {
     val transition = updateTransition(expanded, label = "glassSearchTopBarOpacity")
@@ -288,7 +271,7 @@ internal fun rememberGlassSearchBarAlpha(expanded: Boolean): State<Float> {
     ) { if (it) 0f else 1f }
 }
 
-/** 顶栏内容退场：淡出 + 缩到 0.9 + 高斯模糊。 */
+
 @Composable
 internal fun Modifier.glassSearchBarTransition(expanded: Boolean, barAlpha: () -> Float): Modifier {
     val density = LocalDensity.current

@@ -21,7 +21,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -46,11 +45,14 @@ import com.hyper.music.ui.player.MiniPlayerHeight
 import com.hyper.music.ui.player.MiniPlayerToNavBarSpacing
 import com.hyper.music.ui.utils.horizontalContentPadding
 import top.yukonga.miuix.kmp.utils.overScrollVertical
+import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.BasicComponentColors
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.DropdownColors
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.basic.TabRowWithContour
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -75,8 +77,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.hyper.music.music.MediaCache
 import com.hyper.music.ui.components.ConfirmDialog
-import top.yukonga.miuix.kmp.basic.Button
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
 
 private const val THEME_PREFS = "app_theme_prefs"
 private const val THEME_MODE = "theme_mode"
@@ -190,32 +190,17 @@ fun SettingsScreen(
                 dropdownColors = dropdownColors,
                 hyperBackdrop = hyperBackdrop,
                 onPickFolder = { folderLauncher.launch(Unit) },
+                cacheBytes = cacheBytes,
+                onClearCache = {
+                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                    showClearCacheDialog = true
+                },
             )
         }
         item {
             AboutSection(
                 onOpenAbout = onOpenAbout,
             )
-        }
-        item {
-            val mb = String.format(Locale.US, "%.1f", cacheBytes / 1024.0 / 1024.0)
-            Button(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                    showClearCacheDialog = true
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp)
-                    .cardGlass(RoundedCornerShape(16.dp)),
-                colors = ButtonDefaults.buttonColors(color = Color.Transparent),
-            ) {
-                Text(
-                    text = "清理缓存 ${mb}MB",
-                    fontSize = 15.sp,
-                    color = MiuixTheme.colorScheme.onSurface,
-                )
-            }
         }
     }
 
@@ -292,6 +277,24 @@ private fun PlaybackSection(
             valueText = "${(musicSettings.volume * 100).toInt()}%",
             valueRange = 0f..1f,
             steps = 99,
+        )
+        BasicComponent(
+            title = "倍速播放",
+            summary = "调节歌曲播放的速率",
+            bottomAction = {
+                TabRowWithContour(
+                    tabs = MusicSettings.PLAYBACK_SPEED_LABELS,
+                    selectedTabIndex = MusicSettings.PLAYBACK_SPEEDS.indexOf(musicSettings.playbackSpeed)
+                        .coerceAtLeast(0),
+                    onTabSelected = { index ->
+                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                        val speed = MusicSettings.PLAYBACK_SPEEDS[index]
+                        MusicLibrary.setPlaybackSpeed(speed)
+                        PlaybackController.setPlaybackSpeed(speed)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            },
         )
         OverlayDropdownMenu(
             title = "播放音质",
@@ -436,11 +439,12 @@ private fun DownloadSection(
     dropdownColors: DropdownColors,
     hyperBackdrop: Backdrop?,
     onPickFolder: () -> Unit,
+    cacheBytes: Long,
+    onClearCache: () -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
     SettingsSection(
-        title = "下载设置",
-        footnote = "应用会列出所有在下载文件夹中保存的音乐文件",
+        title = "下载与数据",
     ) {
         ArrowPreference(
             title = "下载位置",
@@ -461,6 +465,21 @@ private fun DownloadSection(
                 haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                 MusicLibrary.setDownloadMetadata(it)
             }
+        )
+        ArrowPreference(
+            title = "清理缓存",
+            titleColor = BasicComponentColors(
+                color = MiuixTheme.colorScheme.error,
+                disabledColor = MiuixTheme.colorScheme.error.copy(alpha = 0.5f),
+            ),
+            endActions = {
+                Text(
+                    text = String.format(Locale.US, "%.2f MB", cacheBytes / 1024.0 / 1024.0),
+                    fontSize = 13.sp,
+                    color = MiuixTheme.colorScheme.onSurfaceSecondary,
+                )
+            },
+            onClick = onClearCache,
         )
     }
 }

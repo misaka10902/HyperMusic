@@ -22,10 +22,7 @@ fun rememberWindowSizeDp(): WindowSizeDp {
 fun isCompactWindow(size: WindowSizeDp): Boolean =
     size.width > size.height || size.height < 600.dp
 
-/**
- * 应用仅面向手机：不再对平板/大屏做专门适配，统一按手机单列布局。
- * 保留这些函数以兼容调用点，固定返回手机值。
- */
+
 @ReadOnlyComposable
 fun isLargeScreen(size: WindowSizeDp): Boolean = false
 

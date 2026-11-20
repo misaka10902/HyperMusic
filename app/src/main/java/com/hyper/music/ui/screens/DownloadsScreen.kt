@@ -103,11 +103,11 @@ fun DownloadsScreen(
                     count = picked.size,
                     actions = listOf(
                         SelectionAction(
-                            label = "添加到歌单",
+                            label = "加入歌单",
                             icon = MiuixIcons.Playlist,
                         ) { onBatchAddToPlaylist(picked) },
                         SelectionAction(
-                            label = "添加到队列",
+                            label = "加入队列",
                             icon = MiuixIcons.ListView,
                         ) {
                             onBatchAddToQueue(picked)
@@ -154,8 +154,8 @@ fun DownloadsScreen(
         header = {
 
         },
-        // 下拉刷新交给 DetailPage 内部：它知道顶栏高度，刷新头才会出现在顶栏下方，
-        // 而不是从屏幕最顶端（状态栏）往下拉。
+
+
         pullRefresh = PullRefreshSpec(
             isRefreshing = refreshing,
             onRefresh = {

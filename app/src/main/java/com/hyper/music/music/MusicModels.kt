@@ -58,16 +58,19 @@ data class MusicSettings(
     val apiBase: String = DEFAULT_API_BASE,
     val quality: AudioQuality = AudioQuality.HIGH,
     val volume: Float = 1f,
+    val playbackSpeed: Float = 1f,
     val coverCornerRadius: Float = 12f,
 
     val coverCircular: Boolean = true,
     val lyricCentered: Boolean = true,
+
+    val lyricSwitchOnTap: Boolean = false,
     val lyricFontSize: Float = 20f,
 
     val lyricFontWeight: Int = 500,
     val titleCentered: Boolean = true,
     val showLyricsTranslation: Boolean = true,
-    /** 播放条（迷你播放器）的标题改为滚动显示当前歌词。 */
+
     val playBarLyrics: Boolean = false,
     val advancedMaterial: Boolean = true,
     val audioFade: Boolean = true,
@@ -81,5 +84,7 @@ data class MusicSettings(
     companion object {
         const val DEFAULT_API_BASE = "https://music-api.gdstudio.xyz/api.php"
         const val DEFAULT_DOWNLOAD_PATH = "/storage/emulated/0/Music/"
+        val PLAYBACK_SPEEDS = listOf(0.5f, 0.75f, 1f, 1.5f, 2f)
+        val PLAYBACK_SPEED_LABELS = listOf("0.5×", "0.75×", "1×", "1.5×", "2×")
     }
 }

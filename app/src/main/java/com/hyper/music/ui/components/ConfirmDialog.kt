@@ -26,8 +26,8 @@ fun ConfirmDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     confirmText: String = "删除",
-    // 默认就取「当前页面内容层」：调用方不传 backdrop 时也能拿到毛玻璃底，
-    // 不会退化成一块没有背景的透明面板。传了则优先用传入的层。
+
+
     backdrop: Backdrop? = rememberPopupBackdrop(),
 ) {
     val scheme = MiuixTheme.colorScheme

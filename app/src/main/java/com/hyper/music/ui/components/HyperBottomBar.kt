@@ -4,10 +4,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
+import com.hyper.music.ui.effects.miuix.LocalAdvancedMaterialEnabled
 import com.hyper.music.ui.utils.BottomFloatingHeight
 import com.hyper.music.ui.utils.BottomFloatingWidthFraction
 import top.yukonga.miuix.kmp.blur.Backdrop
@@ -18,16 +21,9 @@ import top.yukonga.miuix.kmp.icon.extended.Recording
 import top.yukonga.miuix.kmp.icon.extended.WorldClock
 import top.yukonga.miuix.kmp.icon.glass.Item
 import top.yukonga.miuix.kmp.icon.glass.SettingsFill
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 底部导航条。
- *
- * 直接使用 miuix 官方的 [GlassNavigationBar]：
- * - 选中胶囊用左右两个独立弹簧（`navIndicator` / `navIndicatorTrail`）驱动，跟手且能拉伸；
- * - 尾部动作（搜索按钮）的宽度、间距、缩放、透明度由 [GlassNavigationBar] 的布局统一动画，
- *   不需要在外面再手搓 `animateDpAsState`，因此不会有一帧延迟；
- * - 胶囊体与阴影走 `glassPanel`，阴影沿轮廓绘制，不会出现方形切边。
- */
+
 @Composable
 internal fun HyperBottomBar(
     selectedTab: Int,
@@ -38,6 +34,9 @@ internal fun HyperBottomBar(
 ) {
     if (hyperBackdrop == null) return
 
+    val advancedMaterial = LocalAdvancedMaterialEnabled.current
+    val barBackdrop = if (advancedMaterial) hyperBackdrop else null
+
     val items = remember {
         listOf(
             GlassNavigationItem(icon = MiuixIcons.Recording, label = "探索", contentDescription = "探索"),
@@ -47,21 +46,28 @@ internal fun HyperBottomBar(
         )
     }
 
+    val colors = MiuixTheme.colorScheme
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 21.dp),
         contentAlignment = Alignment.Center,
     ) {
-        GlassNavigationBar(
-            items = items,
-            selectedIndex = selectedTab,
-            onSelect = onTabSelected,
-            backdrop = hyperBackdrop,
-            modifier = Modifier.fillMaxWidth(widthFraction),
-            defaultWindowInsetsPadding = false,
-            height = BottomFloatingHeight,
-            trailingAction = trailingAction,
-        )
+        key(
+            colors.onBackground.toArgb(),
+            colors.primary.toArgb(),
+            colors.background.toArgb(),
+        ) {
+            GlassNavigationBar(
+                items = items,
+                selectedIndex = selectedTab,
+                onSelect = onTabSelected,
+                backdrop = barBackdrop,
+                modifier = Modifier.fillMaxWidth(widthFraction),
+                defaultWindowInsetsPadding = false,
+                height = BottomFloatingHeight,
+                trailingAction = trailingAction,
+            )
+        }
     }
 }

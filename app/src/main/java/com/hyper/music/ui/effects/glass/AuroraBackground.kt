@@ -36,21 +36,11 @@ import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
 
-/**
- * 关于页的「流光」背景，移植自 miuix demo 的 `AboutPage` / `BgEffectBackground`。
- *
- * 与原版的差别只有两点：
- *  1. 去掉手机 / 平板、OS2 / OS3 的分支，固定用 OS3 的手机预设（两套 AGSL 的 main() 完全一致）；
- *  2. 不依赖 demo 的 LocalAppState：深浅色读 app 的主题设置，并按全局配色过渡
- *     的同一时长/曲线在亮、暗两套配色之间插值（不是阈值切换）。
- *
- * 注意：这一层会**先铺一层不透明 surface** 再画流光，所以它天然把壁纸挡住——
- * 关于页靠这一点做到「无论有没有壁纸，永远是流光背景」。
- */
+
 @Composable
 fun AuroraBackground(
     modifier: Modifier = Modifier,
-    // 挂在流光这一层上的修饰符（例如 layerBackdrop，供卡片/顶栏采样）。
+
     bgModifier: Modifier = Modifier,
     animated: Boolean = true,
     alpha: () -> Float = { 1f },
@@ -58,17 +48,12 @@ fun AuroraBackground(
     val surface = MiuixTheme.colorScheme.surface
     val supported = remember { isRuntimeShaderSupported() }
     if (!supported) {
-        // 不支持 AGSL 的机器：退化成纯色，不显示半成品。
+
         Box(modifier = modifier.fillMaxSize().background(surface))
         return
     }
 
-    // 深/浅色不是二选一，而是一条 0..1 的连续量。
-    // 之前是拿 surface 亮度去和 0.5 比：卡片从第 0ms 就开始渐变，阈值却要等
-    // 亮度过半（≈ 一半时长）才翻，于是「卡片先变、背景后变」，翻的那一下还是突变。
-    // 这里用和全局配色过渡完全相同的时长与曲线（420ms / FastOutSlowIn），
-    // 起点也是同一帧（都源于同一次深浅色状态变化），两层就落在同一拍上。
-    // 只读不写全局主题：配色过渡逻辑本身一点没动。
+
     val darkTarget = if (isAppDarkTheme()) 1f else 0f
     val darkFraction by animateFloatAsState(
         targetValue = darkTarget,
@@ -79,7 +64,7 @@ fun AuroraBackground(
     val painter = remember { AuroraPainter() }
     val colorStage = remember { Animatable(0f) }
 
-    // 颜色循环周期：亮/暗两套不一样（暗色更慢），按当前进度插值。
+
     LaunchedEffect(animated) {
         if (!animated) return@LaunchedEffect
         var target = floor(colorStage.value) + 1f
@@ -112,9 +97,6 @@ fun AuroraBackground(
     }
 }
 
-// ---------------------------------------------------------------------------------------------
-// 预设（数值取自 miuix demo 的 BgEffectConfig，OS3 手机 亮/暗两套）
-// ---------------------------------------------------------------------------------------------
 
 internal class AuroraPreset(
     val points: FloatArray,
@@ -163,9 +145,6 @@ internal object AuroraPresets {
     )
 }
 
-// ---------------------------------------------------------------------------------------------
-// 画笔：RuntimeShader + uniform 缓存
-// ---------------------------------------------------------------------------------------------
 
 private class AuroraPainter {
     val runtimeShader by lazy {
@@ -187,8 +166,7 @@ private class AuroraPainter {
     private var animTime = Float.NaN
     private var cachedBound = FloatArray(4)
 
-    // 三组 uniform 各自记缓存：不能共用一个 mix 值，否则先跑的那次把缓存写上，
-    // 后跑的就会误判「没变」而跳过更新。
+
     private var offsetMix = Float.NaN
     private var colorStageCache = Float.NaN
     private var colorMix = Float.NaN
@@ -208,7 +186,7 @@ private class AuroraPainter {
         runtimeShader.setFloatUniform("uAnimTime", time)
     }
 
-    /** 点位两套预设完全一致，只有三个偏移量随深浅色插值。 */
+
     fun updatePreset(mix: Float) {
         if (offsetMix == mix) return
         offsetMix = mix
@@ -219,7 +197,7 @@ private class AuroraPainter {
         runtimeShader.setFloatUniform("uSaturateOffset", lerp(light.saturateOffset, dark.saturateOffset, mix))
     }
 
-    /** 光点随时间游走：x += sin(t + y)，y += cos(t + x)。 */
+
     fun updatePoints(time: Float, mix: Float) {
         if (pointsTime == time && pointsMix == mix) return
         pointsTime = time
@@ -239,10 +217,7 @@ private class AuroraPainter {
         runtimeShader.setFloatUniform("uPointsAnim", pointsBuffer)
     }
 
-    /**
-     * 先按 stage 在「同色系内的两组色」之间插值，再按 mix 在亮/暗两套之间插值。
-     * 于是换主题和换色系都会是连续的，不会出现「先不动、过半再突变」。
-     */
+
     fun updateColors(stage: Float, mix: Float) {
         if (colorStageCache == stage && colorMix == mix) return
         colorStageCache = stage
@@ -267,7 +242,7 @@ private class AuroraPainter {
         else -> preset.colors2
     }
 
-    /** 流光的绘制范围：整屏宽、80% 高（与 demo 的 isFullSize 一致）。 */
+
     fun updateBound(width: Float, height: Float) {
         val drawHeight = height * 0.8f
         val heightRatio = drawHeight / height
@@ -281,9 +256,6 @@ private class AuroraPainter {
     }
 }
 
-// ---------------------------------------------------------------------------------------------
-// 绘制节点
-// ---------------------------------------------------------------------------------------------
 
 private fun Modifier.auroraDraw(
     painter: AuroraPainter,
@@ -357,7 +329,7 @@ private class AuroraNode(
         job?.cancel()
         startOffset = animTime
         job = coroutineScope.launch {
-            // 限到 60fps：屏幕刷新率再高也不多跑一遍全屏着色器。
+
             val minDelta = 1_000_000_000L / 60L
             val origin = withFrameNanos { it }
             var last = origin
@@ -372,7 +344,7 @@ private class AuroraNode(
     }
 
     override fun ContentDrawScope.draw() {
-        // 1) 不透明底色：这是「流光盖住壁纸」的那一行，与 demo 的 drawRect(surface) 等价。
+
         drawRect(surface)
         val a = alpha()
         if (a > 0f) {
@@ -385,7 +357,7 @@ private class AuroraNode(
             painter.updatePoints(animTime, mix)
             drawRect(brush = painter.brush, alpha = a)
         } else if (job != null) {
-            // 淡到 0（滚出视野）就停，别空转。
+
             job?.cancel()
             job = null
         }
@@ -393,9 +365,6 @@ private class AuroraNode(
     }
 }
 
-// ---------------------------------------------------------------------------------------------
-// AGSL：与 miuix demo 的 OS3_BG_FRAG 完全一致
-// ---------------------------------------------------------------------------------------------
 
 private const val AURORA_FRAG = """
     uniform vec2 uResolution;

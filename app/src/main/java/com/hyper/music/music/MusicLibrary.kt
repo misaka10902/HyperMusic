@@ -18,9 +18,11 @@ object MusicLibrary {
     private const val KEY_API = "api_base"
     private const val KEY_QUALITY = "quality"
     private const val KEY_VOLUME = "volume"
+    private const val KEY_PLAYBACK_SPEED = "playback_speed"
     private const val KEY_COVER_RADIUS = "cover_corner_radius"
     private const val KEY_COVER_CIRCLE = "cover_circle"
     private const val KEY_LYRIC_CENTERED = "lyric_centered"
+    private const val KEY_LYRIC_SWITCH_TAP = "lyric_switch_tap"
     private const val KEY_LYRIC_FONT_SIZE = "lyric_font_size"
     private const val KEY_LYRIC_FONT_WEIGHT = "lyric_font_weight"
     private const val KEY_TITLE_CENTERED = "title_centered"
@@ -68,9 +70,13 @@ object MusicLibrary {
             quality = AudioQuality.entries.firstOrNull { it.br == prefs.getInt(KEY_QUALITY, 192) }
                 ?: AudioQuality.HIGH,
             volume = prefs.getFloat(KEY_VOLUME, 1f),
+            playbackSpeed = prefs.getFloat(KEY_PLAYBACK_SPEED, 1f).let { saved ->
+                MusicSettings.PLAYBACK_SPEEDS.firstOrNull { it == saved } ?: 1f
+            },
             coverCornerRadius = prefs.getFloat(KEY_COVER_RADIUS, 12f),
             coverCircular = prefs.getBoolean(KEY_COVER_CIRCLE, true),
             lyricCentered = prefs.getBoolean(KEY_LYRIC_CENTERED, true),
+            lyricSwitchOnTap = prefs.getBoolean(KEY_LYRIC_SWITCH_TAP, false),
             lyricFontSize = prefs.getFloat(KEY_LYRIC_FONT_SIZE, 20f).coerceIn(14f, 36f),
             lyricFontWeight = prefs.getInt(KEY_LYRIC_FONT_WEIGHT, 500).coerceIn(300, 900),
             titleCentered = prefs.getBoolean(KEY_TITLE_CENTERED, true),
@@ -99,6 +105,12 @@ object MusicLibrary {
         val v = volume.coerceIn(0f, 1f)
         _settings.value = _settings.value.copy(volume = v)
         prefs.edit().putFloat(KEY_VOLUME, v).apply()
+    }
+
+    fun setPlaybackSpeed(speed: Float) {
+        val v = MusicSettings.PLAYBACK_SPEEDS.firstOrNull { it == speed } ?: 1f
+        _settings.value = _settings.value.copy(playbackSpeed = v)
+        prefs.edit().putFloat(KEY_PLAYBACK_SPEED, v).apply()
     }
 
     fun setCoverCircular(circular: Boolean) {
@@ -135,6 +147,11 @@ object MusicLibrary {
             .putString(KEY_DOWNLOAD_TREE_URI, uri)
             .putString(KEY_DOWNLOAD_PATH, normalized)
             .apply()
+    }
+
+    fun setLyricSwitchOnTap(onTap: Boolean) {
+        _settings.value = _settings.value.copy(lyricSwitchOnTap = onTap)
+        prefs.edit().putBoolean(KEY_LYRIC_SWITCH_TAP, onTap).apply()
     }
 
     fun setLyricCentered(centered: Boolean) {
@@ -194,7 +211,7 @@ object MusicLibrary {
     }
 
     fun addHistory(song: Song) {
-        
+
         val current = _history.value
         if (current.any { it.id == song.id }) return
         val list = current.toMutableList()
@@ -318,7 +335,7 @@ object MusicLibrary {
         val added = toggleFavorite(song)
         Toast.makeText(
             context,
-            if (added) "已添加到收藏，可在歌单页查看" else "已取消收藏",
+            if (added) "已添加到收藏" else "已取消收藏",
             Toast.LENGTH_SHORT,
         ).show()
     }

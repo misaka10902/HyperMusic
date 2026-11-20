@@ -8,10 +8,11 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,27 +50,18 @@ class DragReorderState internal constructor(
     var targetIndex by mutableIntStateOf(-1)
         private set
 
-    /**
-     * 拖动中的条目相对**当前布局位置**的位移。
-     *
-     * 不用「累计手指位移」是因为列表会自动滚动：布局位置一变，累计位移就会让卡片
-     * 从手指底下滑走。这里每帧按「指针位置 - 条目当前中心」重算，滚动时天然补偿。
-     */
+
     var dragOffset by mutableStateOf(Offset.Zero)
         private set
 
-    /** 指针在**列表视口坐标系**里的位置（与 [ReorderGeom] 同一套坐标）。 */
+
     var pointer by mutableStateOf(Offset.Zero)
         private set
 
     var settling by mutableStateOf(false)
         private set
 
-    /**
-     * 刚刚完成一次拖拽排序。列表用它临时关掉 `animateItem` 的位移动画：
-     * 拖拽期间条目是靠 graphicsLayer 平移的，数据一换位置，`animateItem` 会把条目
-     * 从旧布局位置再滑一遍，看起来就是「先弹回去、再滑过来」。等布局稳定后恢复。
-     */
+
     var suppressPlacement by mutableStateOf(false)
         private set
 
@@ -81,24 +73,53 @@ class DragReorderState internal constructor(
     private var pendingFrom = -1
     private var pendingTo = -1
 
+
+    private var armedIndex = -1
+    fun arm(index: Int) { armedIndex = index }
+
     val isDragging: Boolean get() = draggingIndex >= 0
 
-    /**
-     * @param snapshot 每次调用都返回**当前**可见条目的几何（视口坐标）。
-     *   拖动过程中列表可能滚动，必须每帧重新取，不能只在按下时抓一次快照。
-     */
-    fun start(index: Int, snapshot: () -> List<ReorderGeom>) {
-        if (settling) return
+
+    fun start(index: Int, snapshot: () -> List<ReorderGeom>): Boolean {
+        if (settling) return false
         snapshotProvider = snapshot
         val initial = snapshot()
-        if (initial.isEmpty()) return
+        if (initial.isEmpty()) return false
         geoms = initial.sortedBy { it.index }
-        val origin = geoms.firstOrNull { it.index == index } ?: return
+        val origin = geoms.firstOrNull { it.index == index } ?: return false
         draggingIndex = index
         targetIndex = index
         pointer = Offset(origin.centerX, origin.centerY)
         dragOffset = Offset.Zero
         settling = false
+        return true
+    }
+
+
+    fun startArmed(snapshot: () -> List<ReorderGeom>): Boolean {
+        if (settling) return false
+        val idx = armedIndex
+        armedIndex = -1
+        if (idx >= 0 && start(idx, snapshot)) return true
+        return false
+    }
+
+
+    fun startFromPoint(position: Offset, snapshot: () -> List<ReorderGeom>): Boolean {
+        if (settling) return false
+        val snap = snapshot()
+        if (snap.isEmpty()) return false
+        geoms = snap.sortedBy { it.index }
+
+
+        val exact = geoms.firstOrNull { g ->
+            val inX = g.width <= 0f || position.x in g.left..(g.left + g.width)
+            inX && position.y in g.top..(g.top + g.height)
+        }
+        val hit = exact ?: geoms.minByOrNull { g -> kotlin.math.abs(position.y - g.centerY) }
+            ?: return false
+
+        return start(hit.index, snapshot)
     }
 
     fun drag(delta: Offset) {
@@ -107,7 +128,7 @@ class DragReorderState internal constructor(
         refresh()
     }
 
-    /** 自动滚动之后调用：手指没动但布局动了，需要重算位移与目标位。 */
+
     fun onViewportScrolled() {
         if (!isDragging || settling) return
         refresh()
@@ -116,26 +137,26 @@ class DragReorderState internal constructor(
     private fun refresh() {
         val snap = snapshotProvider()
         if (snap.isNotEmpty()) geoms = snap.sortedBy { it.index }
-        val origin = geoms.firstOrNull { it.index == draggingIndex } ?: return
-        dragOffset = Offset(pointer.x - origin.centerX, pointer.y - origin.centerY)
 
-        val adx = if (dragOffset.x < 0) -dragOffset.x else dragOffset.x
-        val ady = if (dragOffset.y < 0) -dragOffset.y else dragOffset.y
-        val useY = ady >= adx
-        val originC = if (useY) origin.centerY else origin.centerX
-        val draggedC = if (useY) pointer.y else pointer.x
-        var passed = 0
+
+        val origin = geoms.firstOrNull { it.index == draggingIndex }
+        if (origin != null) {
+            dragOffset = Offset(pointer.x - origin.centerX, pointer.y - origin.centerY)
+        }
+
+
+        var best = draggingIndex
+        var bestDist = Float.MAX_VALUE
         for (g in geoms) {
-            if (g.index == draggingIndex) continue
-            val c = if (useY) g.centerY else g.centerX
-            if (draggedC >= originC) {
-                if (c > originC && c <= draggedC) passed++
-            } else {
-                if (c < originC && c >= draggedC) passed--
+            val dx = if (g.width > 0f) pointer.x - g.centerX else 0f
+            val dy = pointer.y - g.centerY
+            val dist = dx * dx + dy * dy
+            if (dist < bestDist) {
+                bestDist = dist
+                best = g.index
             }
         }
-        val last = geoms.maxOfOrNull { it.index } ?: draggingIndex
-        targetIndex = (draggingIndex + passed).coerceIn(0, last)
+        targetIndex = best
     }
 
     fun end() {
@@ -145,14 +166,17 @@ class DragReorderState internal constructor(
         val origin = geoms.firstOrNull { it.index == from }
         val dest = geoms.firstOrNull { it.index == to }
         pendingFrom = from
+
+
+        pendingTo = to
         val targetX: Float
         val targetY: Float
         if (origin != null && dest != null) {
-            pendingTo = to
             targetX = dest.centerX - origin.centerX
             targetY = dest.centerY - origin.centerY
         } else {
-            pendingTo = from
+
+
             targetX = 0f
             targetY = 0f
         }
@@ -232,8 +256,7 @@ fun Modifier.dragReorderItem(
     val dragging = state.isDragging
     val shift = state.offsetFor(index)
 
-    // 让位动画：离拖动点越远的卡片越晚起步，让出一格时是一串依次挪动，
-    // 而不是整片同时抽一下。延迟上限压得比较小，连续跨格时不会显得迟钝。
+
     val shiftSpec = remember(index, state.draggingIndex) {
         val distance = kotlin.math.abs(index - state.draggingIndex)
         tween<Float>(
@@ -260,26 +283,17 @@ fun Modifier.dragReorderItem(
         label = "reorderLift",
     )
 
-    val currentIndex = rememberUpdatedState(index)
-    val currentSnapshot = rememberUpdatedState(snapshot)
 
-    val gestureModifier = if (enabled) {
-        Modifier.pointerInput(id) {
-            detectDragGesturesAfterLongPress(
-                onDragStart = { state.start(currentIndex.value, currentSnapshot.value) },
-                onDrag = { change, dragAmount ->
-                    change.consume()
-                    state.drag(dragAmount)
-                },
-                onDragEnd = { state.end() },
-                onDragCancel = { state.end() },
-            )
+    val currentIndex by rememberUpdatedState(index)
+    val reportIndex = if (enabled) Modifier.pointerInput(id) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false)
+            state.arm(currentIndex)
         }
-    } else {
-        Modifier
-    }
+    } else Modifier
 
     return this
+        .then(reportIndex)
         .zIndex(if (dragged) 1f else 0f)
         .graphicsLayer {
 
@@ -298,7 +312,32 @@ fun Modifier.dragReorderItem(
             scaleY = s
             alpha = 1f
         }
-        .then(gestureModifier)
+}
+
+
+@Composable
+fun Modifier.dragReorderSurface(
+    state: DragReorderState,
+    enabled: Boolean,
+    snapshot: () -> List<ReorderGeom>,
+): Modifier {
+    val currentSnapshot = rememberUpdatedState(snapshot)
+    if (!enabled) return this
+    return this.pointerInput(state) {
+        detectDragGesturesAfterLongPress(
+            onDragStart = { startPos ->
+                if (!state.startArmed(currentSnapshot.value)) {
+                    state.startFromPoint(startPos, currentSnapshot.value)
+                }
+            },
+            onDrag = { change, delta ->
+                change.consume()
+                state.drag(delta)
+            },
+            onDragEnd = { state.end() },
+            onDragCancel = { state.end() },
+        )
+    }
 }
 
 class ReorderGeometryRegistry {

@@ -55,20 +55,17 @@ import com.hyper.music.music.CoverSize
 import com.hyper.music.music.MusicLibrary
 import com.hyper.music.music.PlaybackController
 import com.hyper.music.music.NetCover
-import com.hyper.music.ui.components.hyperSurfaceColor
+import com.hyper.music.ui.components.floatingBarGlass
 import com.hyper.music.ui.effects.edgelight.edgeLight
 import com.hyper.music.ui.effects.edgelight.rememberDefaultEdgeLight
 import com.hyper.music.ui.effects.miuix.LocalAdvancedMaterialEnabled
 import com.hyper.music.ui.utils.BottomFloatingHeight
 import com.hyper.music.ui.utils.BottomFloatingWidthFraction
-import com.hyper.music.ui.utils.isAppDarkTheme
 import com.hyper.music.ui.GlassCapsule
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.Backdrop
-import top.yukonga.miuix.kmp.blur.blur
-import top.yukonga.miuix.kmp.blur.drawBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Pause
 import top.yukonga.miuix.kmp.icon.extended.Play
@@ -102,16 +99,12 @@ fun HyperMiniPlayer(
     val scope = rememberCoroutineScope()
     val settings by MusicLibrary.settings.collectAsState()
     val barLyric by PlaybackController.playBarLyric.collectAsState()
-    // 播放条歌词：没有可用歌词行时回退显示歌名。
+
     val showBarLyric = settings.playBarLyrics && track.hasSong && barLyric.isNotBlank()
 
     val miniSize = MiniPlayerHeight - 16.dp
 
     val offsetX = remember { Animatable(0f) }
-    val solidColor = hyperSurfaceColor().copy(alpha = 1f)
-    val frostedSurface = MiuixTheme.colorScheme.surfaceContainer.copy(
-        alpha = if (isAppDarkTheme()) 0.8f else 0.72f
-    )
     val edgeLight = rememberDefaultEdgeLight()
     val advancedMaterial = LocalAdvancedMaterialEnabled.current
 
@@ -137,21 +130,10 @@ fun HyperMiniPlayer(
                 val p = state.expandProgress.coerceIn(0f, 1f)
                 alpha = (1f - p).coerceIn(0f, 1f)
             }
-            .then(
-                if (advancedMaterial) {
-                    Modifier.drawBackdrop(
-                        backdrop = backdrop,
-                        shape = { GlassCapsule() },
-                        effects = { blur(20f.dp.toPx()) },
-                        layerBlock = {},
-                        onDrawSurface = { drawRect(frostedSurface) },
-                    )
-                } else {
-                    Modifier.background(
-                        color = solidColor,
-                        shape = GlassCapsule(),
-                    )
-                }
+            .floatingBarGlass(
+                backdrop = backdrop,
+                shape = GlassCapsule(),
+                enabled = advancedMaterial,
             )
             .edgeLight(shape = GlassCapsule(), edgeLight = edgeLight)
             .clip(GlassCapsule())
@@ -259,7 +241,7 @@ fun HyperMiniPlayer(
                         )
                     }
                 } else {
-                    // 没有歌曲（队列为空 / 刚启动）：灰色底 + 音乐图标占位。
+
                     Icon(
                         imageVector = MiuixIcons.Glass.OverseasMusic,
                         contentDescription = null,
@@ -284,7 +266,7 @@ fun HyperMiniPlayer(
                         .onGloballyPositioned { coords -> textWpx = coords.size.width.toFloat() }
                         .graphicsLayer { translationX = offsetX.value },
                 ) {
-                    // 开关打开时标题换成当前歌词，换行时上下滚动。
+
                     AnimatedContent(
                         targetState = if (showBarLyric) barLyric else track.title,
                         transitionSpec = {

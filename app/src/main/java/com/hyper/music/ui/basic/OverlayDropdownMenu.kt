@@ -20,6 +20,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
@@ -37,17 +38,12 @@ import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.glass.GlassDropdownPopup
 import top.yukonga.miuix.kmp.glass.GlassPopupItem
 import top.yukonga.miuix.kmp.glass.GlassPopupSizing
+import top.yukonga.miuix.kmp.glass.glassPopupAnchorValue
+import top.yukonga.miuix.kmp.glass.rememberGlassPopupAnchor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.MiuixPopupUtils.Companion.PopupLayout
 
-/**
- * 兼容既有调用点的下拉 preference 包装。
- *
- * miuix 0.9.5 的官方 [top.yukonga.miuix.kmp.glass.GlassDropdownPreference] 只接受
- * `List<String>`，选项的副标题（如音质的 128Kbps）会被丢掉。这里改用官方公开的
- * [GlassDropdownPopup] + [GlassPopupItem] 自己渲染选项，从而支持 [DropdownEntry]
- * 里每项的 `summary`，同时保留官方玻璃弹窗的锚点定位与进出场。
- */
+
 @Composable
 @Suppress("UNUSED_PARAMETER")
 fun OverlayDropdownMenu(
@@ -108,18 +104,33 @@ fun OverlayDropdownMenu(
     onExpandedChange: ((Boolean) -> Unit)? = null,
     hyperBackdrop: Backdrop? = null,
 ) {
-    // 现有调用均为单分组；多分组时展平为单一选项列表。
+
     val items = remember(entries) { entries.filter { it.enabled }.flatMap { it.items } }
     val selectedIndex = remember(items) { items.indexOfFirst { it.selected } }
     val sizing = remember(maxHeight) {
-        if (maxHeight != null) GlassPopupSizing(maxHeight = maxHeight) else GlassPopupSizing()
+        if (maxHeight != null) GlassPopupSizing(maxHeight = maxHeight)
+        else GlassPopupSizing()
     }
     val haptic = LocalHapticFeedback.current
     val currentOnExpandedChange by rememberUpdatedState(onExpandedChange)
 
     var expanded by remember { mutableStateOf(false) }
     val mounted = remember { mutableStateOf(false) }
+    val glassAnchor = rememberGlassPopupAnchor()
     var rowBounds by remember { mutableStateOf(Rect.Zero) }
+    val density = LocalDensity.current
+    val popupAnchor = remember(rowBounds, density) {
+        with(density) {
+            val insetHorizontal = 12.dp.toPx()
+            val insetVertical = 8.dp.toPx()
+            Rect(
+                left = rowBounds.left + insetHorizontal,
+                top = rowBounds.top + insetVertical,
+                right = rowBounds.right - insetHorizontal,
+                bottom = rowBounds.bottom - insetVertical,
+            )
+        }
+    }
     val actualEnabled = enabled && items.isNotEmpty()
     val actionColor = if (actualEnabled) {
         MiuixTheme.colorScheme.onSurfaceVariantActions
@@ -143,10 +154,13 @@ fun OverlayDropdownMenu(
         modifier = modifier.onGloballyPositioned { rowBounds = it.boundsInWindow() },
         startAction = startAction,
         endActions = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.glassPopupAnchorValue(glassAnchor),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 val value = items.getOrNull(selectedIndex)?.text
-                // 展开时隐藏当前值，避免与弹窗里的选中项重复。
-                if (!expanded && !value.isNullOrEmpty()) {
+
+                if (!value.isNullOrEmpty()) {
                     Text(
                         text = value,
                         modifier = Modifier.padding(end = 8.dp).weight(1f, fill = false),
@@ -185,8 +199,9 @@ fun OverlayDropdownMenu(
             GlassDropdownPopup(
                 show = expanded,
                 onDismissRequest = { setExpanded(false) },
-                anchorBounds = rowBounds,
+                anchorBounds = popupAnchor,
                 backdrop = hyperBackdrop,
+                anchor = glassAnchor,
                 sizing = sizing,
             ) {
                 items.forEachIndexed { index, item ->
@@ -206,7 +221,7 @@ fun OverlayDropdownMenu(
         }
     }
 
-    // 退出动画结束后再卸载宿主，避免弹窗在收起过程中被直接移除。
+
     LaunchedEffect(expanded) {
         if (!expanded && mounted.value) {
             delay(260)

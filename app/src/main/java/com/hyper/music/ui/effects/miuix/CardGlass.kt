@@ -26,14 +26,14 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun cardGlassEnabled(): Boolean {
-    // 只订阅 hasImage：拖动壁纸模糊滑块时卡片不参与重组。
+
     val hasImage by WallpaperManager.hasImageFlow.collectAsState(
         initial = WallpaperManager.state.value.hasImage,
     )
     return hasImage
 }
 
-/** 卡片背景不透明度：只由「卡片不透明度」设置项决定，与模糊度无关。 */
+
 @Composable
 fun cardGlassAlpha(): Float {
     val opacity by WallpaperManager.cardOpacityFlow.collectAsState(
@@ -43,7 +43,7 @@ fun cardGlassAlpha(): Float {
     return opacity.coerceIn(WallpaperManager.MIN_CARD_OPACITY, 1f)
 }
 
-/** 卡片模糊半径（px）：由「卡片模糊」设置项决定。 */
+
 @Composable
 private fun cardBlurPx(): Float {
     val blur by WallpaperManager.cardBlurFlow.collectAsState(
@@ -53,14 +53,7 @@ private fun cardBlurPx(): Float {
     return blur.coerceIn(0f, WallpaperManager.MAX_CARD_BLUR)
 }
 
-/**
- * 与 miuix 的 [squircleClip]/[squircleSurface] 完全同一条轮廓的 [Shape]。
- *
- * 卡片本身的底色是 `squircleSurface` 画的，而毛玻璃层（`drawBackdrop` / `background`）
- * 只接受 [Shape]。若这里传 `RoundedCornerShape`，两种曲率不同的轮廓会叠在一起，
- * 圆角处就会出现「外圈圆弧、内圈超椭圆」的双弧线。用同一个 squircle 路径后，
- * 玻璃层与卡片底完全重合，圆角是真正的连续曲率。
- */
+
 private class SquircleOutlineShape(
     private val cornerRadius: Dp,
     private val squircleEnabled: Boolean,
@@ -84,20 +77,14 @@ private class SquircleOutlineShape(
     }
 }
 
-/**
- * 取一个与 miuix squircle 组件同轮廓的 [Shape]；设备不支持 RuntimeShader 时自动退化为
- * 同半径的圆角矩形，与 [squircleSurface] 的回退保持一致。
- */
+
 @Composable
 fun rememberSquircleShape(cornerRadius: Dp): Shape {
     val enabled = isSquircleEnabled()
     return remember(cornerRadius, enabled) { SquircleOutlineShape(cornerRadius, enabled) }
 }
 
-/**
- * 卡片毛玻璃：壁纸启用、高级材质开启且模糊度 > 0 时，对卡片区域做真实 backdrop 模糊；
- * 否则回退为纯色半透明背景。模糊度由「卡片模糊」设置项调节。
- */
+
 @Composable
 fun Modifier.cardGlass(shape: Shape): Modifier {
     val alpha = cardGlassAlpha()

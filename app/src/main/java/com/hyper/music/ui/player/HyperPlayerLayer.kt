@@ -15,7 +15,7 @@ import top.yukonga.miuix.kmp.blur.layerBackdrop
 fun HyperPlayerLayer(
     state: HyperPlayerState,
     modifier: Modifier = Modifier,
-    // 播放页内容层：供播放页上的 sheet / dialog 采样（不带任何弹层自身）。
+
     contentBackdrop: LayerBackdrop? = null,
     onOpenQueue: () -> Unit = {},
     onMore: () -> Unit = {},

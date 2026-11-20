@@ -1,7 +1,6 @@
 package com.hyper.music.ui.components
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -26,13 +25,10 @@ import com.hyper.music.ui.effects.edgelight.edgeLight
 import com.hyper.music.ui.effects.edgelight.rememberDefaultEdgeLight
 import com.hyper.music.ui.effects.miuix.LocalAdvancedMaterialEnabled
 import com.hyper.music.ui.utils.BottomFloatingHeight
-import com.hyper.music.ui.utils.isAppDarkTheme
 import com.hyper.music.ui.utils.BottomFloatingWidthFraction
 import top.yukonga.miuix.kmp.basic.Text
 import com.hyper.music.ui.GlassCapsule
 import top.yukonga.miuix.kmp.blur.Backdrop
-import top.yukonga.miuix.kmp.blur.blur
-import top.yukonga.miuix.kmp.blur.drawBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import com.hyper.music.ui.utils.BottomFloatingPadding
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -75,7 +71,7 @@ fun SelectionActionBar(
     ) {
         val maxBarWidth = maxWidth * widthFraction
         val pitch = (maxBarWidth - BottomFloatingPadding * 2) / 4
-        // 取消按钮已移至顶栏左上角，操作条只保留各页的操作项。
+
         val buttonCount = state.actions.size
         val targetWidth = (pitch * buttonCount)
             .coerceIn(BottomFloatingHeight, maxBarWidth)
@@ -122,28 +118,14 @@ fun SelectionActionBar(
 @Composable
 private fun selectionBarSurface(backdrop: Backdrop?): Modifier {
     val advanced = LocalAdvancedMaterialEnabled.current
-    val useBlur = advanced && backdrop != null && Build.VERSION.SDK_INT >= 33
-    val surfaceColor = if (useBlur) {
-        MiuixTheme.colorScheme.surfaceContainer.copy(
-            alpha = if (isAppDarkTheme()) 0.8f else 0.72f,
-        )
-    } else {
-        hyperSurfaceColor().copy(alpha = 1f)
-    }
-
     val edgeLight = rememberDefaultEdgeLight()
-    if (useBlur) {
-        return Modifier.drawBackdrop(
+    return Modifier
+        .floatingBarGlass(
             backdrop = backdrop,
-            shape = { GlassCapsule() },
-            effects = { blur(20.dp.toPx()) },
-            onDrawSurface = { drawRect(color = surfaceColor) },
-        ).edgeLight(shape = GlassCapsule(), edgeLight = edgeLight)
-    }
-    return Modifier.background(
-        color = surfaceColor,
-        shape = GlassCapsule(),
-    ).edgeLight(shape = GlassCapsule(), edgeLight = edgeLight)
+            shape = GlassCapsule(),
+            enabled = advanced && Build.VERSION.SDK_INT >= 33,
+        )
+        .edgeLight(shape = GlassCapsule(), edgeLight = edgeLight)
 }
 
 @Composable

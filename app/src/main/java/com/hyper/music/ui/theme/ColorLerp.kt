@@ -3,11 +3,7 @@ package com.hyper.music.ui.theme
 import androidx.compose.ui.graphics.lerp
 import top.yukonga.miuix.kmp.theme.Colors
 
-/**
- * 在两套 miuix Colors 之间逐字段插值，返回新实例。
- * 0.9.5 起 Colors 字段 setter 为 internal，无法就地写入；但所有 getter 与 data class
- * 的 copy() 均为 public，因此用 copy 逐字段 lerp 实现主题/壁纸切换的平滑过渡。
- */
+
 internal fun lerpColors(from: Colors, to: Colors, fraction: Float): Colors {
     val f = fraction.coerceIn(0f, 1f)
     fun c(a: androidx.compose.ui.graphics.Color, b: androidx.compose.ui.graphics.Color) = lerp(a, b, f)

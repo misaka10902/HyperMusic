@@ -48,12 +48,7 @@ import top.yukonga.miuix.kmp.icon.glass.Link
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.MiuixPopupUtils.Companion.PopupLayout
 
-/**
- * 歌单页右上角「+」弹出的添加菜单。
- *
- * 锚点就是那个「+」按钮在窗口里的 bounds；面板走官方的 [GlassDropdownPopup]，
- * 因此进出场、玻璃底、点击外部收起都与其它下拉菜单一致。
- */
+
 @Composable
 internal fun PlaylistAddMenuPopup(
     expanded: Boolean,
@@ -70,7 +65,7 @@ internal fun PlaylistAddMenuPopup(
     LaunchedEffect(expanded) {
         if (expanded) mounted.value = true
     }
-    // 收起动画放完再卸载宿主，避免面板在退场途中被直接移除。
+
     LaunchedEffect(expanded) {
         if (!expanded && mounted.value) {
             delay(260)
@@ -92,7 +87,7 @@ internal fun PlaylistAddMenuPopup(
                 show = expanded,
                 onDismissRequest = onDismiss,
                 anchorBounds = anchorBounds,
-                backdrop = backdrop,
+                backdrop = backdrop?.takeIf { LocalAdvancedMaterialEnabled.current },
             ) {
                 GlassPopupItem(
                     text = "链接导入",
@@ -126,11 +121,7 @@ internal fun PlaylistAddMenuPopup(
     }
 }
 
-/**
- * 链接导入对话框。
- *
- * 布局自上而下：标题（由 [GlassDialog] 绘制）→ 状态/警告（居中）→ 输入框 → 导入/取消。
- */
+
 @Composable
 internal fun PlaylistLinkImportDialog(
     show: Boolean,
@@ -196,7 +187,7 @@ internal fun PlaylistLinkImportDialog(
                     text = "取消",
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                        // 导入过程中也可以点：由调用方中断在跑的导入任务并关闭对话框。
+
                         dismiss()
                     },
                     modifier = Modifier.weight(1f),
@@ -217,9 +208,7 @@ internal fun PlaylistLinkImportDialog(
     }
 }
 
-/**
- * JSON 导入进度对话框：选题文件之后、结果回来之前显示，成功即自动关闭。
- */
+
 @Composable
 internal fun PlaylistJsonImportDialog(
     show: Boolean,
@@ -255,7 +244,7 @@ internal fun PlaylistJsonImportDialog(
     }
 }
 
-/** 状态 / 警告行：居中显示在标题与输入框之间；没有内容时不占高度。 */
+
 @Composable
 private fun ImportStatusLine(
     status: String?,

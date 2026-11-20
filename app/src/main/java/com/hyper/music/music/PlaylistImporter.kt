@@ -195,7 +195,7 @@ object PlaylistImporter {
         val out = LinkedHashMap<String, Song>()
         var skipped = 0
         refs.forEachIndexed { index, ref ->
-            // 逐首匹配，允许在进度对话框里取消：每首开始前检查一次取消状态。
+
             coroutineContext.ensureActive()
             val song = matchOne(ref)
             if (song != null) out.putIfAbsent(song.id, song) else skipped++

@@ -179,9 +179,8 @@ fun CommentsContent(song: Song, onBack: () -> Unit) {
                         Text(text = "没有评论", color = scheme.onSurfaceSecondary, fontSize = 17.sp)
                     }
                 }
-                // 卡片内不再留内边距：列表本身铺满整张卡片，上下滑动时内容贯穿左右边缘，
-                // 不会在卡片里侧出现一圈「内容被裁在里面的边距」。
-                // 文字起始位置由每一行的水平内边距补回来（12 + 4 + 10 = 26dp）。
+
+
                 else -> Column(
                     modifier = Modifier
                         .fillMaxWidth()

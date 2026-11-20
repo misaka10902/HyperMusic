@@ -62,16 +62,7 @@ private fun openUrl(context: Context, url: String) {
     }
 }
 
-/**
- * 关于页：版面照 miuix demo 的 AboutPage —— 上方留白 + 大字号标题 + 两张卡片；
- * 背景固定是流光（[AuroraBackground]），与全局壁纸无关。
- *
- * 三层关系要注意：
- *  - 流光层自己铺不透明底色，所以 `hideWallpaper = true`，不再画壁纸，也不会双重采样；
- *  - 卡片/顶栏的采样对象换成 `auroraBackdrop`（只录流光），否则会去糊一张不存在的壁纸；
- *  - 全局底部的渐隐由 NavDisplay 施加，会把页面连同背景一起淡掉；关于页改用
- *    `listModifier` 只对内容做同一条渐隐，流光背景保持完整（见 MainActivity 的路由判断）。
- */
+
 @Composable
 fun AboutAppScreen(onBack: () -> Unit, backdrop: LayerBackdrop) {
     val context = LocalContext.current
@@ -86,13 +77,13 @@ fun AboutAppScreen(onBack: () -> Unit, backdrop: LayerBackdrop) {
         title = "关于",
         onBack = onBack,
         backdrop = backdrop,
-        // 顶栏只保留小标题，不再展开大标题（大标题就是下面那块 hero）；
-        // 小标题默认隐藏，等 hero（图标 + 名字 + 版本）滚上去之后再淡入。
+
+
         compactTitle = true,
         autoHideTitle = true,
         hideWallpaper = true,
         activeBackdrop = auroraBackdrop,
-        // 只渐变内容，不渐变流光背景。
+
         listModifier = Modifier.bottomContentFade(
             startFromBottom = MiniPlayerToNavBarSpacing + BottomBarAreaHeight + 16.dp,
             bottomAlpha = 0.12f,
@@ -113,9 +104,8 @@ fun AboutAppScreen(onBack: () -> Unit, backdrop: LayerBackdrop) {
                     .padding(top = 36.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                // 应用图标位：miuix 的 Recording，渲染方式和下面的「澎湃音乐」完全一致 ——
-                // 同样的 textureBlur + DstIn，拿字形当遮罩，透出来的是被调过色的流光。
-                // 不再走 disabled / secondary 之类的主题色，也不是纯灰压透明。
+
+
                 AboutLogoIcon(
                     modifier = Modifier.size(96.dp),
                     backdrop = auroraBackdrop,
@@ -132,7 +122,7 @@ fun AboutAppScreen(onBack: () -> Unit, backdrop: LayerBackdrop) {
             }
         },
         list = {
-            // 与 demo 一样在标题和卡片之间留一大段空白，卡片不要贴着标题。
+
             item { Spacer(Modifier.height(96.dp)) }
             item {
                 Box(Modifier.padding(horizontal = horizontalPadding)) {
@@ -206,11 +196,7 @@ fun AboutAppScreen(onBack: () -> Unit, backdrop: LayerBackdrop) {
     )
 }
 
-/**
- * 图标和标题共用的一套「透视」混合色：照 miuix demo AboutPage 里 logo 的三层配色
- * （ColorBurn / LinearLight / Lab，暗色下换成 ColorDodge 一组）。
- * 图标和文字必须是同一套，否则两者透出来的流光会一个偏暖一个偏冷。
- */
+
 @Composable
 private fun rememberLogoBlend(): List<BlendColorEntry> {
     val isDark = MiuixTheme.colorScheme.surface.luminance() < 0.5f
@@ -231,13 +217,7 @@ private fun rememberLogoBlend(): List<BlendColorEntry> {
     }
 }
 
-/**
- * 应用图标位：和 `AboutLogoTitle` 同一套渲染。
- *
- * 用 `textureBlur` 把背后的流光糊一遍、按同一组混合色调色，再用 `DstIn` 拿图标
- * 字形本身当遮罩 —— 图标等于一块挖成 Recording 形状的玻璃，本身没有固有色。
- * 关掉高级材质 / 不支持运行时着色器时退回实色灰 + 0.4 透明。
- */
+
 @Composable
 private fun AboutLogoIcon(
     backdrop: LayerBackdrop,
@@ -267,14 +247,7 @@ private fun AboutLogoIcon(
     }
 }
 
-/**
- * 「澎湃音乐」四个字：照 miuix demo AboutPage 里 logo 的处理做「透视」。
- *
- * 具体是用 `textureBlur` 把背后的流光先糊一遍、按 demo 的三层混合色（ColorBurn /
- * LinearLight / Lab）调色，再用 `DstIn` 拿字形当遮罩 —— 于是文字本身没有固有色，
- * 看到的是「透过字形看到的那块被调过色的流光」，也就是那种玻璃字的效果。
- * 不支持运行时着色器 / 关掉高级材质时，退回普通实色字。
- */
+
 @Composable
 private fun AboutLogoTitle(text: String, backdrop: LayerBackdrop) {
     val advanced = LocalAdvancedMaterialEnabled.current
@@ -309,7 +282,7 @@ private fun AboutSection(
     val scheme = MiuixTheme.colorScheme
     val advanced = LocalAdvancedMaterialEnabled.current
     val shape = rememberSquircleShape(20.dp)
-    // 卡面只给一点点底色：太重会把流光的颜色压死。
+
     val tint = scheme.surfaceContainer.copy(alpha = 0.55f)
 
     Column(modifier = Modifier.fillMaxWidth()) {

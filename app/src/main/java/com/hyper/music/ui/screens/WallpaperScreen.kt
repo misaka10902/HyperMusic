@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.hyper.music.music.WallpaperManager
+import com.hyper.music.ui.effects.miuix.LocalAdvancedMaterialEnabled
 import com.hyper.music.ui.effects.miuix.cardGlass
 import com.hyper.music.ui.effects.miuix.cardGlassColors
 import kotlinx.coroutines.launch
@@ -100,7 +101,7 @@ fun WallpaperScreen(
                             title = "壁纸模糊",
                             valueText = "%.1f".format(state.blur) + "dp",
                             valueRange = 0f..WallpaperManager.MAX_BLUR,
-                            // 连续无台阶：0~10dp 分 25 档时每档 0.4dp，拖动会一跳一跳。
+
                             steps = 0,
                         )
                         SliderPreference(
@@ -127,6 +128,7 @@ fun WallpaperScreen(
                             valueText = "${state.cardBlur.toInt()}dp",
                             valueRange = 0f..WallpaperManager.MAX_CARD_BLUR,
                             steps = 24,
+                            enabled = LocalAdvancedMaterialEnabled.current,
                         )
                     }
                 }

@@ -263,12 +263,12 @@ fun TrackMoreSheet(
                     .padding(horizontal = 12.dp, vertical = 6.dp),
             ) {
                 MenuEntry(MiuixIcons.Add, "下一首播放") { onDismiss(); onPlayNext(target) }
-                MenuEntry(MiuixIcons.Playlist, "添加到队列") { onDismiss(); onAddToQueue(target) }
-                MenuEntry(MiuixIcons.AddCircle, "添加到歌单") { onDismiss(); onAddToPlaylist(target) }
+                MenuEntry(MiuixIcons.Playlist, "加入队列") { onDismiss(); onAddToQueue(target) }
+                MenuEntry(MiuixIcons.AddCircle, "加入歌单") { onDismiss(); onAddToPlaylist(target) }
                 if (showFavoriteOption) {
                     MenuEntry(
                         icon = if (isFavorite) MiuixIcons.FavoritesFill else MiuixIcons.Favorites,
-                        text = if (isFavorite) "取消收藏" else "添加到收藏",
+                        text = if (isFavorite) "取消收藏" else "加入收藏",
                     ) { onDismiss(); onAddToFavorite(target) }
                 }
 
@@ -346,7 +346,7 @@ fun PlaylistPickerSheet(
     HyperSheet(visible = songs.isNotEmpty(), onDismiss = onDismiss) {
         val target = lastSongs
         Column(modifier = Modifier.fillMaxWidth()) {
-            SheetHeader("添加到歌单")
+            SheetHeader("加入歌单")
             SheetCard {
                 MenuEntry(MiuixIcons.Add, "新建歌单", fontSize = 17.sp) {
                     onDismiss(); onCreateNew(target)

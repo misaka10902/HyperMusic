@@ -83,8 +83,7 @@ fun HyperLyricsView(
         initialFirstVisibleItemIndex = currentIndex.coerceIn(0, lines.lastIndex.coerceAtLeast(0)),
     )
 
-    
-    
+
     var isUserBrowsing by remember(lines) { mutableStateOf(false) }
     var positioned by remember(lines) { mutableStateOf(false) }
     var followResumeKey by remember(lines) { mutableStateOf(0) }
@@ -105,7 +104,7 @@ fun HyperLyricsView(
                 if (change.changedToUpIgnoreConsumed()) break
                 movement += change.position - change.previousPosition
                 if (!browsingStarted) {
-                    
+
                     if (abs(movement.x) > viewConfiguration.touchSlop &&
                         abs(movement.x) >= abs(movement.y)
                     ) break
@@ -120,10 +119,7 @@ fun HyperLyricsView(
         }
     }
 
-    
-    
 
-    
     LaunchedEffect(isManualScrolling, isUserBrowsing, playback.isPlaying) {
         if (!playback.isPlaying || isManualScrolling || !isUserBrowsing) return@LaunchedEffect
         delay(FOLLOW_RESUME_DELAY_MS)
@@ -133,8 +129,7 @@ fun HyperLyricsView(
         }
     }
 
-    
-    
+
     LaunchedEffect(currentIndex, lines, followResumeKey) {
         if (currentIndex < 0 || lines.isEmpty()) return@LaunchedEffect
         snapshotFlow { listState.layoutInfo.visibleItemsInfo.isNotEmpty() }.first { it }
@@ -146,7 +141,7 @@ fun HyperLyricsView(
         val info = listState.layoutInfo
         val target = info.visibleItemsInfo.firstOrNull { it.index == currentIndex }
 
-        
+
         if (!positioned) {
             scrollInCode.value = true
             try {
@@ -167,7 +162,7 @@ fun HyperLyricsView(
 
         scrollInCode.value = true
         try {
-            
+
             if (target == null) {
                 listState.animateScrollToItem(currentIndex.coerceAtMost(lines.lastIndex))
             }
@@ -182,7 +177,7 @@ fun HyperLyricsView(
         }
     }
 
-    
+
     val blurEnabled = playback.isPlaying && settings.advancedMaterial && !isUserBrowsing
 
     BoxWithConstraints(modifier = modifier.fillMaxSize().then(browsingModifier)) {

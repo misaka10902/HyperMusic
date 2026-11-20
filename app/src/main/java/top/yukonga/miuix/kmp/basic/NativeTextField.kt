@@ -23,24 +23,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.viewinterop.AndroidView
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/**
- * 轻量输入框句柄：用于在 Compose 侧主动索要焦点（例如全屏搜索浮层展开时自动聚焦）。
- * 只暴露 EditText 的焦点操作，不引入 Compose 文本栈。
- */
+
 @Stable
 class NativeTextFieldHandle {
     internal var editText: EditText? = null
     fun requestFocus() { editText?.requestFocus() }
     fun clearFocus() { editText?.clearFocus() }
 
-    /**
-     * 索要焦点并主动拉起软键盘。
-     *
-     * Android 里 `requestFocus()` 只改焦点，不会弹输入法（只有触摸、或显式
-     * `showSoftInput` 才会）。所以这里拿到焦点后再调一次 `showSoftInput`；
-     * 用 `post` 是因为 AndroidView 刚组合时 EditText 可能还没 attach 到窗口，
-     * 此时直接 show 会被系统忽略。
-     */
+
     fun requestFocusAndShowIme() {
         val view = editText ?: return
         view.requestFocus()

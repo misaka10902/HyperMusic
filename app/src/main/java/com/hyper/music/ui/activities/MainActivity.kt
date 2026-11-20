@@ -88,7 +88,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -191,8 +190,6 @@ import top.yukonga.miuix.kmp.nav.core.navBackStackOf
 
 private val TAB_TITLES = listOf("探索", "历史", "歌单", "设置")
 
-/** bottomsheet 收起动画的大致时长；跳二级页前先等它走完，避免三层叠加。 */
-
 
 private sealed interface MusicRoute : NavKey {
     val navId: Long
@@ -247,13 +244,8 @@ fun HyperApp() {
     val scope = rememberCoroutineScope()
 
     var selectedTab by remember { mutableIntStateOf(0) }
-    // 主 Tab 横滑：pager 与 selectedTab 双向同步，点击导航与横滑共用 miuix 官方弹簧动画。
-    //
-    // 这里对齐 miuix demo 的 MainPagerState 语义：**点击时立即把 selectedTab 设为目标值**，
-    // 让导航条的指示器弹簧立刻从当前位置跑起来；随后用 isNavigating 屏蔽
-    // pager.currentPage 在动画途中反复取整造成的回写。
-    // 之前只在 LaunchedEffect(currentPage) 里同步，而 currentPage 是取整值，弹簧跑过一半
-    // 才跳一次，滑块于是「先卡住、再突然弹过去」，看起来就是一顿一顿。
+
+
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { 4 })
     val pagerFlingBehavior = PagerDefaults.flingBehavior(
         state = pagerState,
@@ -261,7 +253,7 @@ fun HyperApp() {
     )
     var navJob by remember { mutableStateOf<Job?>(null) }
     var isNavigating by remember { mutableStateOf(false) }
-    // 手指横滑 / 惯性停靠时（非点击导航），才把 pager 的取整页号回写给 selectedTab。
+
     LaunchedEffect(pagerState.currentPage, isNavigating) {
         if (!isNavigating && selectedTab != pagerState.currentPage) {
             selectedTab = pagerState.currentPage
@@ -285,7 +277,7 @@ fun HyperApp() {
             }
         }
     }
-    // 全屏玻璃搜索：单一布尔状态驱动，enter/exit 转场由 GlassSearchOverlay 与下方联动负责。
+
     var searchExpanded by remember { mutableStateOf(false) }
     val searchBarAlpha = rememberGlassSearchBarAlpha(searchExpanded)
     val scrollBehavior = MiuixScrollBehavior()
@@ -339,7 +331,7 @@ fun HyperApp() {
     var pickerSongs by remember { mutableStateOf<List<Song>>(emptyList()) }
     var exportJson by remember { mutableStateOf<String?>(null) }
 
-    // 「添加歌单」：右上角 + 号弹出菜单（链接 / JSON / 手动创建）。
+
     var addMenuExpanded by remember { mutableStateOf(false) }
     var addMenuAnchor by remember { mutableStateOf(Rect.Zero) }
     var showLinkImport by remember { mutableStateOf(false) }
@@ -482,7 +474,7 @@ fun HyperApp() {
         }
     }
 
-    // JSON 导入：选完文件直接接着跑，进度/报错都在对话框里显示。
+
     val jsonLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument(),
     ) { uri ->
@@ -551,27 +543,19 @@ fun HyperApp() {
     val backgroundColor = MiuixTheme.colorScheme.surface
     val wallpaperActive by WallpaperManager.state.collectAsState()
 
-    // 页面内容层：录制范围是 Scaffold 的内容区（壁纸 + 各页面列表），
-    // 顶栏 / 底栏 / 迷你播放器 / 多选栏都在这个范围之外采样，因此不存在
-    //「采样者处在自己采样的图层里」的自引用（自引用会让显示列表引用自身，
-    // 渲染线程回放时无限递归，最终 native 崩溃，且拿不到 Java 堆栈）。
+
     val backdrop = rememberLayerBackdrop {
         drawRect(backgroundColor)
         drawContent()
     }
 
-    // 壁纸层：只录壁纸，永远不含任何玻璃组件。卡片毛玻璃（cardGlass）、弹层（BottomSheet / Dropdown）
-    // 一律采样这一层，而不是采样页面自己所在的图层。
-    // 必须补一层不透明底色：没有设置壁纸时这里若为空，采样方（尤其是弹层）会拿到全透明内容，
-    // 高级材质就会表现为「面板直接透明、模糊消失」。
+
     val wallpaperBackdrop = rememberLayerBackdrop {
         drawRect(backgroundColor)
         drawContent()
     }
 
-    // 浮层（迷你播放器 / 底栏 / 多选栏）采样这一层：录制的是「当前整页的渲染结果」，
-    // 包含页面转场与底部淡出，因此二级页面滚动、切页时模糊跟着变，不会变成静态采样。
-    // 挂载点是 NavDisplay 外面的那个 Box，浮层都在它之外，故不会自引用。
+
     val navDisplayBackdrop = rememberLayerBackdrop {
         drawRect(backgroundColor)
         drawContent()
@@ -588,22 +572,17 @@ fun HyperApp() {
     BackHandler(enabled = selectionActive) { exitSelection() }
     BackHandler(enabled = navBackStack.size > 1 && !selectionActive) { popRoute() }
 
-    // 搜索展开时返回键关闭搜索（GlassSearchOverlay 内部另有一条 NavigationBackHandler，
-    // 但项目禁用了预测式返回，故以这里为准）。
+
     BackHandler(enabled = searchExpanded && !selectionActive) {
         searchExpanded = false
     }
 
     val advancedMaterial = rememberAdvancedMaterialEnabled()
 
-    // 当前可见页面的内容层，由各页面的 NavPage 发布（见下）。
-    // popup / bottomSheet / dialog 走 LocalPageBackdrop，采样到的是「当前这一页」的
-    // 真实内容；它们画在页面录制范围之外，不会自引用。
+
     val activePageLayer = remember { mutableStateOf<Backdrop?>(backdrop) }
 
-    // 播放页自己的内容层。播放页上的队列 / 音质 / 定时 sheet 由 popupHost 承载，
-    // 采样的是 LocalPageBackdrop；播放页展开时把这一层切成播放页自身，
-    // 否则 sheet 会糊到当前 Tab 页（首页）的内容。
+
     val playerPageLayer = rememberLayerBackdrop { drawContent() }
     var pageLayerBeforePlayer by remember { mutableStateOf<Backdrop?>(null) }
     LaunchedEffect(playerState.isExpanded) {
@@ -622,10 +601,8 @@ fun HyperApp() {
     ) {
     @Composable
     fun NavPage(content: @Composable (LayerBackdrop) -> Unit) {
-        // 每个二级页面一份独立的内容层（照 miuix demo 的 GlassPage）。
-        // 层必须由「页面自己」挂到 Scaffold 的 content Box 上：
-        // 顶栏在 topBar（content 之外），是这一层的兄弟，采样它才不会自引用；
-        // 壁纸层同理挂在 content 内部、只录壁纸，卡片采样它也不会自引用。
+
+
         val pageSurface = MiuixTheme.colorScheme.surface
         val pageLayer = rememberLayerBackdrop {
             drawRect(pageSurface)
@@ -634,18 +611,15 @@ fun HyperApp() {
         DisposableEffect(pageLayer) {
             activePageLayer.value = pageLayer
             onDispose {
-                // 二级页销毁后回到根页面（内容层就是 `backdrop`），
-                // 之后从根页面弹弹层仍然采得到实时内容。
+
+
                 if (activePageLayer.value === pageLayer) activePageLayer.value = backdrop
             }
         }
         content(pageLayer)
     }
 
-    // 最外层 Scaffold：miuix 的 dialog / dropdown 都由 Scaffold 的 popupHost 承载，
-    // 而 popup 是在 content（迷你播放器、导航条、多选栏）之后绘制的。套这一层，
-    // 所有弹窗就稳定压在底部浮层之上，不需要手搓 zIndex 也不怕层级反了。
-    // 无 topBar / bottomBar、insets 置零，布局与原来完全一致。
+
     Scaffold(
         containerColor = Color.Transparent,
         contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
@@ -664,12 +638,8 @@ fun HyperApp() {
                 .fillMaxSize()
                 .layerBackdrop(navDisplayBackdrop),
         ) {
-        // 根层壁纸：页面内的壁纸跟着页面转场/缩放，底部内容淡出（bottomContentFade）
-        // 与页面转场时露出来的是这一层。没有它，淡出区域露出的就是 surface 底色，
-        // 看起来就成了「一块白色遮罩」。
-        // 放进采样层内部：navDisplayBackdrop 因此录到「壁纸 + 页面」，搜索展开、
-        // 页面整体 alpha 归零之后，迷你播放器/底栏采样到的仍是壁纸（有细节可糊），
-        // 不会退化成一块纯色。
+
+
         WallpaperBackground()
         CompositionLocalProvider(LocalNavigationEventDispatcherOwner provides noPredictiveBackOwner) {
         NavDisplay(
@@ -677,11 +647,11 @@ fun HyperApp() {
 
             modifier = Modifier
                 .fillMaxSize()
-                // 搜索展开时整条页面栈一起淡出（不只是 Root 页）：
-                // 从搜索结果直接进艺术家/专辑页时，新页不会从搜索层底下「透出来」。
+
+
                 .graphicsLayer { alpha = searchBarAlpha.value }
-                // 关于页的底部渐隐只作用在内容上（由页面内部的 listModifier 施加）：
-                // 这里如果照常整页渐隐，会把流光背景一起淡掉、露出根层壁纸。
+
+
                 .then(
                     if (route is MusicRoute.AboutApp) {
                         Modifier
@@ -692,7 +662,11 @@ fun HyperApp() {
                         )
                     }
                 ),
-            onBack = { popRoute() },
+
+
+            onBack = {
+                if (selectionActive) exitSelection() else popRoute()
+            },
             transition = NavTransitions.MiuixDefault,
             effects = NavDisplayEffects(
                 enableCornerClip = true,
@@ -703,8 +677,7 @@ fun HyperApp() {
         ) {
             entry<RootRoute> {
 
-    
-    // 顶栏标题：进入/退出多选时淡出 → 换字 → 淡入；切 Tab 直接换，不额外加动画。
+
     val barTitle = if (selectionActive) {
         "已选择 ${selectionBar?.count ?: 0} 项"
     } else {
@@ -722,20 +695,18 @@ fun HyperApp() {
             shownTitle = barTitle
             titleSwapAlpha.animateTo(1f, tween(180, easing = FastOutSlowInEasing))
         } else {
-            // 计数变化 / 切 Tab：直接替换，不闪。
+
             shownTitle = barTitle
         }
     }
 
-    // 退出多选时 selectionBar 会立刻置空，但顶栏图标的淡出动画还要再跑 140ms。
-    // 这里留一份最后的状态快照，让淡出阶段仍能看到原来的按钮（而不是先变空再淡出）。
+
     var actionsSnapshot by remember { mutableStateOf<SelectionBarState?>(null) }
     LaunchedEffect(selectionBar) {
         if (selectionBar != null) actionsSnapshot = selectionBar
     }
 
-    // 顶栏右上角动作：多选态放全选/批量动作，普通态按 Tab 放清空历史或「添加歌单」。
-    // 只有进入/退出多选才做淡入淡出；切 Tab 时 targetState 不变，图标直接换、没有动画。
+
     val topActionsContent: (@Composable () -> Unit) = {
         AnimatedContent(
             targetState = selectionActive,
@@ -750,7 +721,7 @@ fun HyperApp() {
             label = "topActions",
         ) { selecting ->
             if (selecting) {
-                // 进入时 selectionBar 已在；退出时它先被置空，取快照让淡出阶段仍有按钮。
+
                 val bar = selectionBar ?: actionsSnapshot
                 val extra = bar?.singleAction
                 val selectAll = bar?.selectAllAction
@@ -769,11 +740,11 @@ fun HyperApp() {
                                 tint = (selectAll.tint).takeOrElse { MiuixTheme.colorScheme.onSurface },
                             )
                         }
-                        // 右侧还有按钮时才留间距；否则这 10dp 会把「全选」整体往左推，
-                        // 与普通态的「+」对不齐。
+
+
                         if (extra != null) Spacer(Modifier.width(10.dp))
                     }
-                    // 取消/退出多选已移至顶栏左上角；右上角仅保留 singleAction（如添加到歌单）。
+
                     if (extra != null) {
                         GlassIconButton(
                             onClick = {
@@ -792,7 +763,7 @@ fun HyperApp() {
                 }
             } else {
                 when (selectedTab) {
-                    // 探索页右上角不再放置下载按钮（入口下沉到探索页"已下载的歌曲"卡片）。
+
                     0 -> {}
 
                     1 -> GlassIconButton(
@@ -815,7 +786,7 @@ fun HyperApp() {
                             haptic.performHapticFeedback(HapticFeedbackType.Confirm)
                             addMenuExpanded = true
                         },
-                        // 记录按钮位置，作为「添加歌单」菜单的锚点。
+
                         modifier = Modifier.onGloballyPositioned { addMenuAnchor = it.boundsInWindow() },
                     ) {
                         Icon(
@@ -886,15 +857,14 @@ fun HyperApp() {
                             .fillMaxSize()
                             .layerBackdrop(backdrop),
                     ) {
-                        // 不透明底色：壁纸淡入期间页面不能是透明的，否则会透出下层页面。
+
                         Box(
                             modifier = Modifier
                                 .matchParentSize()
                                 .background(backgroundColor),
                         )
-                        // 壁纸层嵌在内容层里（与 demo 一致）：内容层因此录得到壁纸，
-                        // 顶栏 progressiveBlur 采样内容层时才有东西可模糊；
-                        // 而壁纸层自身只含壁纸，卡片采样它不会自引用。
+
+
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -905,10 +875,10 @@ fun HyperApp() {
                         HorizontalPager(
                             state = pagerState,
                             modifier = Modifier.fillMaxSize(),
-                            // 与 miuix demo 一致：停靠用官方的导航弹簧，而不是 Pager 默认的 tween，
-                            // 手指松开到吸附这一段才有连续的减速感，不会「先停一下再弹过去」。
+
+
                             flingBehavior = pagerFlingBehavior,
-                            // 4 页全部预组合，避免第一次滑到某页时才组合造成的掉帧。
+
                             beyondViewportPageCount = 3,
                         ) { tab ->
                             Box(modifier = Modifier.fillMaxSize()) {
@@ -1125,12 +1095,7 @@ fun HyperApp() {
         }
         }
 
-        // 全屏玻璃搜索层：位于页面层之上、迷你播放器/底栏之下。
-        // 层级顺序因此是：NavDisplay → 搜索层 → 播放条/底栏 → 播放页 → popupHost。
-        //  - 搜索结果不会再压住播放条（图3）；
-        //  - 播放条照常采样 navDisplayBackdrop，模糊效果与其他页面一致；
-        //  - 内容走同一条 bottomContentFade，底部和其他界面一样渐隐到壁纸；
-        //  - 搜索展开时整条页面栈 alpha 归零，从结果进二级页不会透出重叠内容（图2）。
+
         GlassSearchOverlay(
             expanded = searchExpanded,
             onDismissRequest = { searchExpanded = false },
@@ -1197,13 +1162,12 @@ fun HyperApp() {
             ) {
                 AnimatedVisibility(
                     visible = route == null && !selectionActive && !searchExpanded,
-                    // 恢复导航条上下移动隐藏/出现的动画；位置高度不变，仅纵向位移+淡入淡出。
+
                     enter = slideInVertically(tween(280, easing = FastOutSlowInEasing)) { it / 2 } + fadeIn(tween(220)),
                     exit = slideOutVertically(tween(240, easing = FastOutSlowInEasing)) { it / 2 } + fadeOut(tween(160)),
                 ) {
-                    // 搜索按钮的收缩/展开交给 GlassNavigationBar 内部统一处理：
-                    // 它会同时动画按钮宽度、间距、缩放与透明度，tab 区域随之重算，
-                    // 不再需要在这里手搓 animateDpAsState + 手写 alpha/scale（那会慢一帧）。
+
+
                     val showSearchButton = selectedTab == 0
                     HyperBottomBar(
                         selectedTab = selectedTab,
@@ -1306,9 +1270,8 @@ fun HyperApp() {
                     MusicLibrary.toggleFavoriteWithToast(context, song)
                 },
                 onOpenAlbum = { song ->
-                    // 菜单项点击时 TrackMoreSheet 已经调过 onDismiss（弹层自己在回收），
-                    // 这里不再额外等待，直接关搜索层并跳转：跳转与弹层回收同时进行，
-                    // 少掉那 0.3s 的死等。
+
+
                     playerState.collapse()
                     searchExpanded = false
                     pushRoute(MusicRoute.Album(song.albumText, song.artists.firstOrNull() ?: ""))
@@ -1369,7 +1332,7 @@ fun HyperApp() {
                 },
             )
 
-            // 「添加歌单」菜单：链接导入 / JSON 导入 / 手动创建
+
             PlaylistAddMenuPopup(
                 expanded = addMenuExpanded,
                 anchorBounds = addMenuAnchor,
@@ -1404,7 +1367,7 @@ fun HyperApp() {
                 error = linkImportError,
                 backdrop = activeBackdrop,
                 onDismiss = {
-                    // 「取消」在导入途中也可点：先中断在跑的任务，再清状态关窗。
+
                     linkImportJob?.cancel()
                     linkImportJob = null
                     linkImportBusy = false
@@ -1480,7 +1443,18 @@ fun HyperApp() {
                 onConfirm = {
                     val targets = confirmDeletePlaylists
                     confirmDeletePlaylists = emptyList()
-                    targets.forEach { MusicLibrary.deletePlaylist(it.id) }
+                    if (targets.size <= 1) {
+                        targets.firstOrNull()?.let { MusicLibrary.deletePlaylist(it.id) }
+                    } else {
+
+
+                        scope.launch {
+                            targets.forEachIndexed { i, playlist ->
+                                if (i > 0) delay(90)
+                                MusicLibrary.deletePlaylist(playlist.id)
+                            }
+                        }
+                    }
                     Toast.makeText(
                         context,
                         if (targets.size == 1) "已删除「${targets.first().name}」"

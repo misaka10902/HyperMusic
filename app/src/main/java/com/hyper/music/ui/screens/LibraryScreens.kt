@@ -78,6 +78,7 @@ import com.hyper.music.ui.components.SongPairRow
 import com.hyper.music.ui.components.ConfirmDialog
 import com.hyper.music.ui.components.TrackRow
 import com.hyper.music.ui.components.dragReorderItem
+import com.hyper.music.ui.components.dragReorderSurface
 import com.hyper.music.ui.components.rememberDragReorderState
 import com.hyper.music.ui.utils.isAppDarkTheme
 import com.hyper.music.ui.utils.isLargeScreen
@@ -158,11 +159,11 @@ fun HistoryScreen(
                     count = picked.size,
                     actions = listOf(
                         SelectionAction(
-                            label = "添加到歌单",
+                            label = "加入歌单",
                             icon = MiuixIcons.Playlist,
                         ) { onBatchAddToPlaylist(picked) },
                         SelectionAction(
-                            label = "添加到队列",
+                            label = "加入队列",
                             icon = MiuixIcons.ListView,
                         ) {
                             onBatchAddToQueue(picked)
@@ -184,7 +185,7 @@ fun HistoryScreen(
     }
 
     if (showEmpty) {
-        // 真正的垂直居中：此前用 top = topInset + 180.dp 硬顶，位置既不受屏高影响也不居中。
+
         Box(
             modifier = modifier
                 .fillMaxSize()
@@ -221,7 +222,7 @@ fun HistoryScreen(
                     pair = group,
                     startIndex = groupIndex * columns,
                     columns = columns,
-                    // 删除历史：被删条目淡出，其余条目同帧平移补位。
+
                     modifier = Modifier.animateItem(
                         fadeInSpec = tween(200),
                         placementSpec = spring<IntOffset>(
@@ -295,8 +296,7 @@ fun PlaylistScreen(
 
     var selectedIds by remember { mutableStateOf<Set<String>>(emptySet()) }
 
-    // 删除时记下「被删掉的第一个位置」：补位动画按条目离它的距离依次延迟，
-    // 于是后面的一列卡片是一节一节挪上来（火车式），而不是整片同时抽一下。
+
     var deleteAnchor by remember { mutableIntStateOf(-1) }
     val motionScope = rememberCoroutineScope()
 
@@ -305,14 +305,16 @@ fun PlaylistScreen(
     fun exitEdit() {
         editing = false
         selectedIds = emptySet()
+
+
+        onSelectionChange(null)
     }
     BackHandler(enabled = multiSelect) { exitEdit() }
 
     LaunchedEffect(selectedIds, playlists, editing) {
-        if (!editing) {
-            onSelectionChange(null)
-            return@LaunchedEffect
-        }
+
+
+        if (!editing) return@LaunchedEffect
         val picked = playlists.filter { it.id in selectedIds }
         val allSelected = playlists.isNotEmpty() && picked.size == playlists.size
         onSelectionChange(
@@ -339,7 +341,7 @@ fun PlaylistScreen(
                         deleteAnchor = if (anchor >= 0) anchor else 0
                         onBatchDelete(picked)
                         exitEdit()
-                        // 动画跑完就恢复默认补位，之后的排序/新增不受影响。
+
                         motionScope.launch {
                             delay(600)
                             deleteAnchor = -1
@@ -363,7 +365,7 @@ fun PlaylistScreen(
     }
 
     val gridState = rememberLazyGridState()
-    
+
     val wideScreen = isLargeScreen(rememberWindowSizeDp())
     val dragState = rememberDragReorderState { from, to ->
         MusicLibrary.reorderPlaylists(from, to)
@@ -378,9 +380,7 @@ fun PlaylistScreen(
         )
     }
 
-    // 拖到列表上下边缘时自动滚动。没有这段，歌单只能拖到当前可见的那几行，
-    // 想把它放到滚动区外面根本够不到（就是「拖不出页面」的那个问题）。
-    // 速度按「离边缘还有多远」线性加大，靠近边缘时不会像匀速滚动那样拖不动。
+
     val density = LocalDensity.current
     LaunchedEffect(dragState.isDragging) {
         if (!dragState.isDragging) return@LaunchedEffect
@@ -419,7 +419,13 @@ fun PlaylistScreen(
         return
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+
+
+            .dragReorderSurface(dragState, multiSelect) { gridGeoms() },
+    ) {
     LazyVerticalGrid(
         state = gridState,
         columns = GridCells.Fixed(if (wideScreen) 4 else 2),
@@ -450,8 +456,8 @@ fun PlaylistScreen(
 
                     .animateItem(
                         fadeInSpec = tween(200),
-                        // 拖动排序期间不能用布局补位动画（条目是靠 graphicsLayer 平移的，
-                        // 数据一换位置再叠布局动画会先弹回原位）；其余时候都补位。
+
+
                         placementSpec = if (dragState.isDragging || dragState.settling || dragState.suppressPlacement) {
                             null
                         } else if (deleteAnchor >= 0) {
@@ -604,7 +610,7 @@ private fun PlaylistCard(
 
 @Composable
 private fun PlaylistCoverPlaceholder(corner: Dp) {
-    // 无歌曲时专辑图区固定为中性灰（不跟随卡片的玻璃/壁纸色），与外围明确区分。
+
     val placeholderGray = if (!isAppDarkTheme()) Color(0xFFE3E3E6) else Color(0xFF33353A)
     Box(
         modifier = Modifier
