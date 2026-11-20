@@ -5,6 +5,7 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.glass.GlassIconButton
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -13,6 +14,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
@@ -40,12 +42,17 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -66,11 +73,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.hyper.music.R
-import top.yukonga.miuix.kmp.icon.extended.RecordingTape
-import androidx.compose.ui.res.painterResource
+import kotlin.math.floor
 import com.hyper.music.music.CoverSize
 import com.hyper.music.music.GdApi
 import com.hyper.music.music.MusicLibrary
@@ -78,11 +84,11 @@ import com.hyper.music.music.NetCover
 import com.hyper.music.music.Song
 import com.hyper.music.music.WallpaperManager
 import com.hyper.music.music.WallpaperBackground
-import com.hyper.music.ui.basic.RightAlignedTooltipPositionProvider
 import com.hyper.music.ui.basic.chipBounce
 import com.hyper.music.ui.basic.rememberChipBounce
 import com.hyper.music.ui.components.ConfirmDialog
 import com.hyper.music.ui.effects.miuix.LocalActiveBackdrop
+import com.hyper.music.ui.effects.miuix.rememberPopupBackdrop
 import com.hyper.music.ui.effects.miuix.LocalAdvancedMaterialEnabled
 import com.hyper.music.ui.effects.miuix.cardGlassAlpha
 import com.hyper.music.ui.components.EmptyHint
@@ -93,6 +99,7 @@ import com.hyper.music.ui.components.SelectionAction
 import com.hyper.music.ui.components.SelectionBarState
 import com.hyper.music.ui.components.SongPairRow
 import com.hyper.music.ui.components.TrackRow
+import com.hyper.music.ui.components.DragReorderState
 import com.hyper.music.ui.components.dragReorderItem
 import com.hyper.music.ui.components.rememberDragReorderState
 import com.hyper.music.ui.components.reorderGeometry
@@ -104,9 +111,11 @@ import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.RichTooltipBox
 import top.yukonga.miuix.kmp.glass.GlassTopAppBar
+import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TooltipAnchorPosition
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.glass.Item
+import top.yukonga.miuix.kmp.icon.glass.Music1
 import top.yukonga.miuix.kmp.icon.extended.Close
 import top.yukonga.miuix.kmp.icon.glass.ChevronBackward
 import top.yukonga.miuix.kmp.icon.extended.Delete
@@ -123,12 +132,60 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.ui.draw.alpha
 import androidx.compose.animation.core.animateTo
+import androidx.compose.animation.core.spring
 import androidx.compose.ui.graphics.graphicsLayer
 
 private val DetailBottomReserve = 76.dp
 
+/** 详情页可选的下拉刷新配置；为 null 时页面不挂刷新。 */
+internal class PullRefreshSpec(
+    val isRefreshing: Boolean,
+    val onRefresh: () -> Unit,
+    val texts: List<String> = listOf("下拉刷新", "松手刷新", "正在刷新", "刷新成功"),
+)
+
 private const val EXPORT_TIP =
     "点击即可将该歌单以JSON格式导出，导出的歌单和 Otter Music 等支持从JSON文件导入歌单的应用互通"
+
+/**
+ * 列表删除条目时的补位动画。
+ *
+ * 被删的条目按 `fadeOutSpec` 淡出，其余条目按这个 spec 平移补位，两者同一帧起步，
+ * 因此是「消失 + 平移」的联动，而不是先空一块再跳上来。
+ * 拖拽排序期间返回 null：那段时间条目是靠 graphicsLayer 平移的，
+ * 数据一换位置再叠一层布局动画就会先弹回原位再滑过去。
+ */
+private fun DragReorderState.placementSpec() =
+    if (isDragging || settling || suppressPlacement) {
+        null
+    } else {
+        spring<IntOffset>(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMediumLow,
+        )
+    }
+
+/**
+ * 按 pager 的连续页码在 `[0, lastIndex]` 之间插值。
+ *
+ * `currentPage + currentPageOffsetFraction` 在翻页过程中是连续的（0 → 1 → 2 …），
+ * 用它插值可以让「跟随列表滚动量」的东西（表头位移、标题透明度）在横滑时平滑过渡；
+ * 只读 `settledPage` 的话，手指松开、页面停稳的那一帧数值会突然跳到新页，看着就是一次突变。
+ */
+private inline fun interpolateOverPages(
+    pagerState: PagerState,
+    lastIndex: Int,
+    valueAt: (Int) -> Float,
+): Float {
+    if (lastIndex <= 0) return valueAt(0)
+    val p = (pagerState.currentPage + pagerState.currentPageOffsetFraction)
+        .coerceIn(0f, lastIndex.toFloat())
+    val lo = floor(p).toInt().coerceIn(0, lastIndex)
+    val hi = (lo + 1).coerceAtMost(lastIndex)
+    val t = (p - lo).coerceIn(0f, 1f)
+    val start = valueAt(lo)
+    return if (t <= 0f) start else start + (valueAt(hi) - start) * t
+}
 
 @Composable
 internal fun DetailPage(
@@ -139,20 +196,139 @@ internal fun DetailPage(
     background: @Composable () -> Unit = {},
     modifier: Modifier = Modifier,
     compactTitle: Boolean = false,
+    // 默认隐藏顶栏小标题，页面滚过头图后才淡入（专辑 / 艺术家 / 歌单 / 喜欢页在用）。
+    autoHideTitle: Boolean = false,
     subtitle: String? = null,
     listState: LazyListState = rememberLazyListState(),
+    // 分页模式：给「艺术家页」这类需要左右横滑切 Tab 的页面用。
+    // 每个 page 自己一份 LazyListState，表头随页面一起横移（整页平移，而不是只换内容）。
+    pagerState: PagerState? = null,
+    pagerStates: List<LazyListState> = emptyList(),
+    pagerList: (LazyListScope.(Int) -> Unit)? = null,
+    // 关于页用：背景完全交给 background()（流光），不画壁纸，卡片/顶栏的采样对象
+    // 也换成调用方给的这一层，否则流光页的毛玻璃会去糊一张不存在的壁纸。
+    hideWallpaper: Boolean = false,
+    activeBackdrop: LayerBackdrop? = null,
+    // 挂在滚动内容外面的修饰符。关于页用它做「只渐变内容、不渐变流光背景」。
+    listModifier: Modifier = Modifier,
     endAction: (@Composable () -> Unit)? = null,
     endActionKey: Any? = null,
+    multiSelect: Boolean = false,
+    // 多选时的选中数量：> 0 时标题显示「已选择 N 项」，与歌单详情页保持一致。
+    selectionCount: Int = 0,
+    onExitMultiSelect: (() -> Unit)? = null,
     overlay: @Composable BoxScope.() -> Unit = {},
-    list: LazyListScope.() -> Unit,
+    pullRefresh: PullRefreshSpec? = null,
+    list: LazyListScope.() -> Unit = {},
 ) {
     val haptic = LocalHapticFeedback.current
     val advancedMaterial = LocalAdvancedMaterialEnabled.current
     val scrollBehavior = MiuixScrollBehavior()
     val density = LocalDensity.current
 
+    // 本页自己的壁纸层：只录壁纸，嵌在内容层内部（与 miuix demo 一致）。
+    // 之前用的是全局根层那一份，页面转场后坐标还是旧的，采样会错位、
+    // 并把上一页的内容带出来。
+    val wallpaperBackdrop = rememberLayerBackdrop()
+
     var headerHeightPx by remember { mutableIntStateOf(0) }
     val headerHeightDp = with(density) { headerHeightPx.toDp() }
+
+    // 分页模式（艺术家页）下，表头位移直接读「表头占位 item」在视口里的偏移：
+    // 占位 item 就是给表头留的那块高度（顶栏 + 表头），它跟歌曲在同一个列表里，
+    // 所以这块偏移就是列表真实的滚动量，1:1、连续、没有第二个坐标系。
+    //
+    // 不用 firstVisibleItemScrollOffset：它相对 contentPadding / 占位 item 的语义
+    // 在各版本里不一致，之前「一上滑表头就整个消失」就是这里读错了值（一上来就
+    // 被 coerce 到满高度）。这里直接拿布局偏移，没有歧义。
+    val pagerHeaderScroll = remember(pagerState, pagerStates) {
+        if (pagerState == null || pagerStates.isEmpty()) {
+            null
+        } else {
+            derivedStateOf {
+                val height = headerHeightPx.toFloat()
+                interpolateOverPages(pagerState, pagerStates.lastIndex) { index ->
+                    val state = pagerStates.getOrNull(index) ?: return@interpolateOverPages 0f
+                    val first = state.layoutInfo.visibleItemsInfo.firstOrNull()
+                    val raw = if (first == null || first.index > 0) {
+                        height
+                    } else {
+                        -first.offset.toFloat()
+                    }
+                    raw.coerceIn(0f, height)
+                }
+            }
+        }
+    }
+
+    // 小标题透明度：没滚动时隐藏，头图滚走约七成后完全显示；多选态始终显示
+    // （标题此时是「已选择 N 项」，必须可见）。在绘制阶段读，不引起重组。
+    //
+    // 分页模式（艺术家页）下两页的滚动量可能不同，横滑时要按连续页码插值，
+    // 否则停稳那一帧会从 0 直接跳到 1，小标题闪一下。
+    val collapsedTitleAlpha = remember(listState, autoHideTitle, multiSelect, pagerState, pagerStates, pagerHeaderScroll) {
+        derivedStateOf {
+            val total = headerHeightPx.coerceAtLeast(1).toFloat()
+            fun progressOf(state: LazyListState?): Float {
+                if (state == null) return 0f
+                val scrolled = if (state.firstVisibleItemIndex > 0) {
+                    total
+                } else {
+                    state.firstVisibleItemScrollOffset.toFloat()
+                }
+                return (scrolled / (total * 0.7f)).coerceIn(0f, 1f)
+            }
+            when {
+                !autoHideTitle || multiSelect -> 1f
+                pagerHeaderScroll != null ->
+                    (pagerHeaderScroll.value / (total * 0.8f)).coerceIn(0f, 1f)
+                else -> progressOf(listState)
+            }
+        }
+    }
+
+    // 表头滚到快贴住顶栏时淡出。顶栏是半透明玻璃，如果让 Tab 胶囊一直往上穿，
+    // 就会跟小标题叠成一团（之前那张截图）。这里只用最后三成行程做淡化：
+    // 表头依旧是跟着列表连续往上卷的，没有一个刀切式的边界。
+    val pagerHeaderAlpha = remember(pagerHeaderScroll) {
+        if (pagerHeaderScroll == null) {
+            null
+        } else {
+            derivedStateOf {
+                val total = headerHeightPx.coerceAtLeast(1).toFloat()
+                val t = (pagerHeaderScroll.value / total - 0.62f) / 0.24f
+                (1f - t).coerceIn(0f, 1f)
+            }
+        }
+    }
+
+    // 多选时标题换成「已选择 N 项」；切换用淡出 → 换字 → 淡入，而不是硬切。
+    val barTitle = if (multiSelect && selectionCount > 0) {
+        "已选择 $selectionCount 项"
+    } else {
+        title
+    }
+    var shownTitle by remember { mutableStateOf(barTitle) }
+    val titleSwap = remember { Animatable(1f) }
+    var prevSelecting by remember { mutableStateOf(multiSelect) }
+    LaunchedEffect(barTitle, multiSelect) {
+        val selectionChanged = multiSelect != prevSelecting
+        prevSelecting = multiSelect
+        if (shownTitle == barTitle) return@LaunchedEffect
+        if (selectionChanged && multiSelect) {
+            // 进入多选：collapsedTitleAlpha 此时才放开显示，从 0 淡入，
+            // 避免「闪一下 → 淡出 → 再淡入」。
+            titleSwap.snapTo(0f)
+            shownTitle = barTitle
+            titleSwap.animateTo(1f, tween(200, easing = FastOutSlowInEasing))
+        } else if (selectionChanged) {
+            titleSwap.animateTo(0f, tween(90, easing = FastOutSlowInEasing))
+            shownTitle = barTitle
+            titleSwap.animateTo(1f, tween(180, easing = FastOutSlowInEasing))
+        } else {
+            shownTitle = barTitle
+        }
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -163,33 +339,48 @@ internal fun DetailPage(
         },
         topBar = {
             GlassTopAppBar(
-                title = title,
-                largeTitle = title,
+                title = shownTitle,
+                largeTitle = shownTitle,
                 subtitle = subtitle.orEmpty(),
-                showLargeTitle = !compactTitle,
+                expandable = !compactTitle,
                 backdrop = backdrop,
                 progressiveBlur = advancedMaterial,
                 scrollBehavior = scrollBehavior,
+                titleAlpha = { collapsedTitleAlpha.value * titleSwap.value },
                 navigationIcon = {
-                    GlassIconButton(
-                        onClick = onBack,
-                    ) {
-                        Icon(
-                            imageVector = MiuixIcons.Glass.ChevronBackward,
-                            contentDescription = "返回",
-                            modifier = Modifier.size(25.dp).offset(x = 1.5.dp, y = 0.dp),
-                            tint = MiuixTheme.colorScheme.onSurface,
-                        )
+                    // 多选时左上角 X 覆盖返回键位置；否则显示返回箭头。
+                    androidx.compose.animation.AnimatedContent(
+                        targetState = multiSelect,
+                        transitionSpec = {
+                            fadeIn(animationSpec = tween(150)) togetherWith fadeOut(animationSpec = tween(120))
+                        },
+                        label = "detailNavIcon",
+                    ) { selecting ->
+                        GlassIconButton(
+                            onClick = {
+                                if (selecting && onExitMultiSelect != null) onExitMultiSelect() else onBack()
+                            },
+                        ) {
+                            Icon(
+                                imageVector = if (selecting) MiuixIcons.Close else MiuixIcons.Glass.ChevronBackward,
+                                contentDescription = if (selecting) "退出多选" else "返回",
+                                modifier = Modifier.size(if (selecting) 22.dp else 25.dp).offset(x = 1.5.dp, y = 0.dp),
+                                tint = MiuixTheme.colorScheme.onSurface,
+                            )
+                        }
                     }
                 },
                 actions = {
-                    
+                    // 固定 44dp 容器并居中：切换多选/普通状态时，动作按钮的
+                    // 触控区与图标中心都保持在同一个位置，不会因为内容变化而左右移动。
+                    val hasAction = endAction != null
                     AnimatedContent(
                         targetState = endActionKey ?: title,
+                        modifier = if (hasAction) Modifier.width(44.dp) else Modifier,
                         transitionSpec = {
                             fadeIn(animationSpec = tween(190)) togetherWith fadeOut(animationSpec = tween(140))
                         },
-                        contentAlignment = Alignment.CenterEnd,
+                        contentAlignment = Alignment.Center,
                         label = "detailEndAction",
                     ) { endAction?.invoke() }
                 },
@@ -197,39 +388,143 @@ internal fun DetailPage(
         },
     ) { contentPadding ->
         val topBarHeightDp = contentPadding.calculateTopPadding()
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .layerBackdrop(backdrop),
-        ) {
-            WallpaperBackground()
-            Box(Modifier.matchParentSize()) { background() }
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .overScrollVertical()
-                    .nestedScroll(scrollBehavior.nestedScrollConnection)
-                    .scrollEndHaptic(hapticFeedbackType = HapticFeedbackType.TextHandleMove),
-                contentPadding = PaddingValues(
-                    top = topBarHeightDp,
-                    bottom = androidx.compose.foundation.layout.WindowInsets.navigationBars
-                        .asPaddingValues().calculateBottomPadding() + DetailBottomReserve,
-                ),
-            ) {
-                item {
-                    Box(Modifier.fillMaxWidth().onSizeChanged { headerHeightPx = it.height }) {
-                        header()
-                    }
-                }
-                list()
-            }
+        CompositionLocalProvider(LocalActiveBackdrop provides (activeBackdrop ?: wallpaperBackdrop)) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = topBarHeightDp + headerHeightDp, bottom = 96.dp),
+                    // 内容层（= 顶栏采样对象）。顶栏在 Scaffold 的 topBar，
+                    // 不在这个 Box 里，所以这里是「兄弟采样」，不会自引用。
+                    .layerBackdrop(backdrop),
             ) {
-                overlay()
+                // 不透明底色：换壁纸时壁纸是淡入的，页面若全透明，过渡期间会透出
+                // NavDisplay 下面那一页（上一页的列表/头图），看起来像「透图」。
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(MiuixTheme.colorScheme.surface),
+                )
+                // 壁纸层：只录壁纸。嵌在内容层内部，内容层因此录得到壁纸，
+                // 顶栏 progressiveBlur 才有可模糊的内容；壁纸层自身不含采样者。
+                // 关于页（hideWallpaper）整层不画：那里由流光自己铺满不透明底色。
+                if (!hideWallpaper) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .layerBackdrop(wallpaperBackdrop),
+                    ) {
+                        WallpaperBackground()
+                    }
+                }
+                Box(Modifier.matchParentSize()) { background() }
+            val listBody: @Composable () -> Unit = {
+                val pg = pagerState
+                val pages = pagerList
+                if (pg != null && pages != null) {
+                    // 一整条连续滚动：表头不是画在另一块画布上，而是列表里第一个
+                    // 真实的占位 item，跟歌曲在同一条滚动线上，1:1 一起走。
+                    // 表头只是「照着这条滚动线的偏移再画一遍」的覆盖层：
+                    //  - 竖向：位移读的就是占位 item 的布局偏移（pagerHeaderScroll），
+                    //    没有第二个坐标系，所以不会有停住、跳变、刀切；
+                    //  - 横向：它在 pager 外面，左右滑只换 Tab 下面的列表，表头原地不动；
+                    //  - 手势：这一层不挂任何 pointerInput，所以从表头上起手上下滑
+                    //    直接落到下面的列表；左右滑落到 pager 的识别区（内容区）。
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        HorizontalPager(
+                            state = pg,
+                            modifier = Modifier.fillMaxSize(),
+                            // 两页都预组合：滑动时列表已经画好，不会滑到一半才出现内容。
+                            beyondViewportPageCount = 1,
+                        ) { page ->
+                            val pageState = pagerStates.getOrNull(page) ?: listState
+                            LazyColumn(
+                                state = pageState,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .overScrollVertical(onOffsetChanged = { offset -> scrollBehavior.state.overscrollOffset = offset })
+                                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                                    .scrollEndHaptic(hapticFeedbackType = HapticFeedbackType.TextHandleMove),
+                                contentPadding = PaddingValues(
+                                    bottom = androidx.compose.foundation.layout.WindowInsets.navigationBars
+                                        .asPaddingValues().calculateBottomPadding() + DetailBottomReserve,
+                                ),
+                            ) {
+                                // 顶栏让位 + 表头高度，一块真实占位。它跟歌曲在同一个
+                                // LazyColumn 里，所以上滑时是一整屏内容连续往上走。
+                                item(key = "detail-header-space") {
+                                    Spacer(Modifier.height(topBarHeightDp + headerHeightDp))
+                                }
+                                pages(this, page)
+                            }
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = topBarHeightDp)
+                                .graphicsLayer {
+                                    translationY = -(pagerHeaderScroll?.value ?: 0f)
+                                    alpha = pagerHeaderAlpha?.value ?: 1f
+                                },
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .onSizeChanged { headerHeightPx = it.height },
+                            ) {
+                                header()
+                            }
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .overScrollVertical(onOffsetChanged = { offset -> scrollBehavior.state.overscrollOffset = offset })
+                            .nestedScroll(scrollBehavior.nestedScrollConnection)
+                            .scrollEndHaptic(hapticFeedbackType = HapticFeedbackType.TextHandleMove),
+                        contentPadding = PaddingValues(
+                            top = topBarHeightDp,
+                            bottom = androidx.compose.foundation.layout.WindowInsets.navigationBars
+                                .asPaddingValues().calculateBottomPadding() + DetailBottomReserve,
+                        ),
+                    ) {
+                        item {
+                            Box(Modifier.fillMaxWidth().onSizeChanged { headerHeightPx = it.height }) {
+                                header()
+                            }
+                        }
+                        list()
+                    }
+                }
+            }
+
+            val refresh = pullRefresh
+            if (refresh != null) {
+                // 刷新头按 contentPadding.top 下移，正好出现在顶栏下方，
+                // 而不是从屏幕最顶端（状态栏）往下拉——与 miuix demo 的用法一致。
+                PullToRefresh(
+                    isRefreshing = refresh.isRefreshing,
+                    onRefresh = refresh.onRefresh,
+                    contentPadding = PaddingValues(top = topBarHeightDp),
+                    refreshTexts = refresh.texts,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    Box(Modifier.fillMaxSize().then(listModifier)) {
+                        listBody()
+                    }
+                }
+            } else {
+                Box(Modifier.fillMaxSize().then(listModifier)) {
+                    listBody()
+                }
+            }
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = topBarHeightDp + headerHeightDp, bottom = 96.dp),
+                ) {
+                    overlay()
+                }
             }
         }
     }
@@ -406,10 +701,6 @@ fun PlaylistDetailScreen(
                 text = EXPORT_TIP,
                 title = "提示",
                 actionText = "我知道了",
-                positioning = TooltipAnchorPosition.Below,
-                positionProvider = remember {
-                    RightAlignedTooltipPositionProvider(spacing = 8)
-                },
             ) {
                 GlassIconButton(
                     onClick = onExport,
@@ -427,28 +718,18 @@ fun PlaylistDetailScreen(
 
     val topEndAction: (@Composable () -> Unit)? = if (multiSelect) {
         {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                GlassIconButton(
-                    onClick = { toggleSelectAll() },
-                ) {
-                    Icon(
-                        imageVector = MiuixIcons.SelectAll,
-                        contentDescription = if (allSelected) "取消全选" else "全选",
-                        modifier = Modifier.size(22.dp),
-                        tint = (if (allSelected) scheme.primary else Color.Unspecified).takeOrElse { MiuixTheme.colorScheme.onSurface },
-                    )
-                }
-                Spacer(Modifier.width(10.dp))
-                GlassIconButton(
-                    onClick = { exitEdit() },
-                ) {
-                    Icon(
-                        imageVector = MiuixIcons.Close,
-                        contentDescription = "退出多选",
-                        modifier = Modifier.size(22.dp),
-                        tint = MiuixTheme.colorScheme.onSurface,
-                    )
-                }
+            GlassIconButton(
+                onClick = { toggleSelectAll() },
+                // 顶栏 actions 的右内边距是 12dp，全选框比页面右上角的「+」略靠里；
+                // 右移 4dp 与其他顶栏按钮的视觉位置对齐。
+                modifier = Modifier.offset(x = 4.dp),
+            ) {
+                Icon(
+                    imageVector = MiuixIcons.SelectAll,
+                    contentDescription = if (allSelected) "取消全选" else "全选",
+                    modifier = Modifier.size(22.dp),
+                    tint = (if (allSelected) scheme.primary else Color.Unspecified).takeOrElse { MiuixTheme.colorScheme.onSurface },
+                )
             }
         }
     } else exportAction
@@ -458,9 +739,13 @@ fun PlaylistDetailScreen(
         onBack = onBack,
         backdrop = backdrop,
         compactTitle = true,
+        autoHideTitle = true,
         listState = listState,
         endAction = topEndAction,
         endActionKey = multiSelect,
+        multiSelect = multiSelect,
+        selectionCount = selectedIds.size,
+        onExitMultiSelect = { exitEdit() },
         header = {
             Column(
                 modifier = Modifier
@@ -477,7 +762,7 @@ fun PlaylistDetailScreen(
                         contentAlignment = Alignment.Center,
                     ) {
                         androidx.compose.foundation.Image(
-                            painter = painterResource(id = R.drawable.ic_playlist_placeholder),
+                            imageVector = MiuixIcons.Glass.Item,
                             contentDescription = null,
                             modifier = Modifier.size(46.dp),
                             colorFilter = ColorFilter.tint(
@@ -518,25 +803,15 @@ fun PlaylistDetailScreen(
     ) {
         if (songs.isEmpty()) {
             item {
-                Column(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 100.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                    contentAlignment = Alignment.Center,
                 ) {
-                    androidx.compose.foundation.Image(
-                        imageVector = MiuixIcons.RecordingTape,
-                        contentDescription = null,
-                        modifier = Modifier.size(52.dp),
-                        colorFilter = ColorFilter.tint(
-                            scheme.onSurfaceSecondary.copy(alpha = 0.55f)
-                        ),
-                    )
-                    Spacer(Modifier.height(14.dp))
-                    Text(
+                    LibraryEmptyState(
+                        icon = MiuixIcons.Glass.Music1,
                         text = "歌单还没有歌曲",
-                        color = scheme.onSurfaceSecondary.copy(alpha = 0.7f),
-                        fontSize = 13.sp,
                     )
                 }
             }
@@ -548,7 +823,7 @@ fun PlaylistDetailScreen(
                     columns = columns,
                     modifier = Modifier.animateItem(
                         fadeInSpec = tween(200),
-                        placementSpec = null,
+                        placementSpec = dragState.placementSpec(),
                         fadeOutSpec = tween(260),
                     ),
                 ) { index, song ->
@@ -606,7 +881,7 @@ fun PlaylistDetailScreen(
             exitEdit()
         },
         onDismiss = { confirmDelete = false },
-        backdrop = LocalActiveBackdrop.current,
+        backdrop = rememberPopupBackdrop(),
     )
 }
 
@@ -671,6 +946,10 @@ fun FavoritesScreen(
         onBack = onBack,
         backdrop = backdrop,
         compactTitle = true,
+        autoHideTitle = true,
+        multiSelect = multiSelect,
+        selectionCount = selectedIds.size,
+        onExitMultiSelect = { selectedIds = emptySet() },
         listState = listState,
         header = {
             Column(
@@ -719,25 +998,15 @@ fun FavoritesScreen(
     ) {
         if (songs.isEmpty()) {
             item {
-                Column(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 100.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                    contentAlignment = Alignment.Center,
                 ) {
-                    androidx.compose.foundation.Image(
-                        imageVector = MiuixIcons.FavoritesFill,
-                        contentDescription = null,
-                        modifier = Modifier.size(52.dp),
-                        colorFilter = ColorFilter.tint(
-                            scheme.onSurfaceSecondary.copy(alpha = 0.55f)
-                        ),
-                    )
-                    Spacer(Modifier.height(14.dp))
-                    Text(
+                    LibraryEmptyState(
+                        icon = MiuixIcons.FavoritesFill,
                         text = "暂无收藏的歌曲",
-                        color = scheme.onSurfaceSecondary.copy(alpha = 0.7f),
-                        fontSize = 13.sp,
                     )
                 }
             }
@@ -749,7 +1018,7 @@ fun FavoritesScreen(
 
                         .animateItem(
                             fadeInSpec = tween(200),
-                            placementSpec = null,
+                            placementSpec = dragState.placementSpec(),
                             fadeOutSpec = tween(260),
                         )
                         .dragReorderItem(
@@ -796,7 +1065,7 @@ fun FavoritesScreen(
             selectedIds = emptySet()
         },
         onDismiss = { confirmUnfavorite = false },
-        backdrop = LocalActiveBackdrop.current,
+        backdrop = rememberPopupBackdrop(),
     )
 }
 
@@ -812,11 +1081,17 @@ fun ArtistScreen(
     val columns = songColumns()
     var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
-    var tab by remember { mutableIntStateOf(0) }
-    val slidePx = with(LocalDensity.current) { 12.dp.toPx() }
+    // 歌曲 / 专辑各一页：点 chip 与左右横滑共用同一个 pager，切 Tab 是整页横移，
+    // 不再重播「淡入 + 上移」的入场动画。
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val songListState = rememberLazyListState()
+    val albumListState = rememberLazyListState()
+    val pageStates = remember(songListState, albumListState) {
+        listOf(songListState, albumListState)
+    }
 
     val reveal = remember { Animatable(0f) }
-    LaunchedEffect(loading, tab) {
+    LaunchedEffect(loading) {
         if (!loading) {
             reveal.snapTo(0f)
             reveal.animateTo(1f, tween(380, easing = FastOutSlowInEasing))
@@ -876,6 +1151,7 @@ fun ArtistScreen(
         onBack = onBack,
         backdrop = backdrop,
         compactTitle = true,
+        autoHideTitle = true,
         header = {
             Column(
                 modifier = Modifier
@@ -908,8 +1184,12 @@ fun ArtistScreen(
                 )
                 Spacer(Modifier.height(16.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    TabChip("歌曲", selected = tab == 0) { tab = 0 }
-                    TabChip("专辑", selected = tab == 1) { tab = 1 }
+                    TabChip("歌曲", selected = pagerState.currentPage == 0) {
+                        scope.launch { pagerState.animateScrollToPage(0) }
+                    }
+                    TabChip("专辑", selected = pagerState.currentPage == 1) {
+                        scope.launch { pagerState.animateScrollToPage(1) }
+                    }
                 }
                 Spacer(Modifier.height(10.dp))
             }
@@ -925,9 +1205,12 @@ fun ArtistScreen(
                 RefreshIndicator(text = "正在刷新")
             }
         },
-    ) {
-        if (!loading) when {
-            tab == 0 -> {
+        listState = pageStates[pagerState.currentPage],
+        pagerState = pagerState,
+        pagerStates = pageStates,
+        pagerList = { tabPage ->
+            if (!loading) when {
+                tabPage == 0 -> {
                 if (songs.isEmpty()) item {
                     val a = itemAlpha(0)
                     Box(
@@ -935,7 +1218,6 @@ fun ArtistScreen(
                             .fillMaxWidth()
                             .graphicsLayer {
                                 alpha = a
-                                translationY = (1f - a) * slidePx
                             },
                     ) {
                         EmptyHint("暂无歌曲")
@@ -959,7 +1241,6 @@ fun ArtistScreen(
                             },
                             modifier = Modifier.graphicsLayer {
                                 alpha = a
-                                translationY = (1f - a) * slidePx
                             },
                         )
                     }
@@ -971,7 +1252,6 @@ fun ArtistScreen(
                         onClick = { loadMore() },
                         modifier = Modifier.graphicsLayer {
                             alpha = a
-                            translationY = (1f - a) * slidePx
                         },
                     )
                 }
@@ -984,7 +1264,6 @@ fun ArtistScreen(
                             .fillMaxWidth()
                             .graphicsLayer {
                                 alpha = a
-                                translationY = (1f - a) * slidePx
                             },
                     ) {
                         EmptyHint("暂无专辑")
@@ -1005,7 +1284,6 @@ fun ArtistScreen(
                                 .padding(start = 28.dp, top = 8.dp, end = 52.dp, bottom = 8.dp)
                                 .graphicsLayer {
                                     alpha = a
-                                    translationY = (1f - a) * slidePx
                                 },
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
@@ -1044,15 +1322,14 @@ fun ArtistScreen(
                         onClick = { loadMore() },
                         modifier = Modifier.graphicsLayer {
                             alpha = a
-                            translationY = (1f - a) * slidePx
                         },
                     )
                 }
             }
-        }
-    }
+            }
+        },
+    )
 }
-
 @Composable
 fun AlbumScreen(
     albumName: String,
@@ -1066,7 +1343,6 @@ fun AlbumScreen(
     var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     val scheme = MiuixTheme.colorScheme
-    val slidePx = with(LocalDensity.current) { 12.dp.toPx() }
 
     val reveal = remember { Animatable(0f) }
     LaunchedEffect(loading) {
@@ -1105,6 +1381,7 @@ fun AlbumScreen(
         onBack = onBack,
         backdrop = backdrop,
         compactTitle = true,
+        autoHideTitle = true,
         header = {
             Column(
                 modifier = Modifier
@@ -1181,7 +1458,6 @@ fun AlbumScreen(
                         },
                         modifier = Modifier.graphicsLayer {
                             alpha = a
-                            translationY = (1f - a) * slidePx
                         },
                     )
                 }

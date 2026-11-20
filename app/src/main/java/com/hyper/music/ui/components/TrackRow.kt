@@ -68,7 +68,7 @@ fun TrackRow(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                color = if (selected) scheme.primary.copy(alpha = 0.10f) else Color.Transparent,
+                color = if (selected) scheme.onSurface.copy(alpha = 0.10f) else Color.Transparent,
             )
             .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -195,12 +195,12 @@ private fun EmptyHintContent(text: String, icon: ImageVector?) {
             androidx.compose.foundation.Image(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(46.dp),
+                modifier = Modifier.size(56.dp),
                 colorFilter = ColorFilter.tint(
-                    MiuixTheme.colorScheme.onSurfaceSecondary.copy(alpha = 0.55f)
+                    MiuixTheme.colorScheme.disabledOnSecondaryVariant
                 ),
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(14.dp))
         }
         EmptyHintText(text)
     }
@@ -211,6 +211,6 @@ private fun EmptyHintText(text: String) {
     Text(
         text = text,
         color = MiuixTheme.colorScheme.onSurfaceSecondary.copy(alpha = 0.7f),
-        fontSize = 13.sp,
+        fontSize = 17.sp,
     )
 }

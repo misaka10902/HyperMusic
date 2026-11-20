@@ -8,16 +8,18 @@ import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.Colors
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 import top.yukonga.miuix.kmp.theme.darkColorScheme
-import top.yukonga.miuix.kmp.theme.lerpColors
 import top.yukonga.miuix.kmp.theme.lightColorScheme
 
 private const val THEME_COLOR_KEY = "theme_color"
@@ -131,24 +133,24 @@ fun CourseHyperTheme(
 
     val targetColors = controller.currentColors()
 
-    val animatedColors = remember { targetColors.copy() }
-
-    LaunchedEffect(targetColors) {
-        val from = animatedColors.copy()
-        val progress = Animatable(0f)
-        progress.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(
-                durationMillis = 320,
-                easing = FastOutSlowInEasing,
-            ),
-        ) {
-            animatedColors.lerpColors(from, targetColors, value)
+    // 主题/壁纸模式切换时，对 Colors 逐字段做平滑插值过渡（miuix 0.9.5 起 setter 为 internal，
+    // 这里用公开的 getter + copy() 逐帧构造中间配色），恢复此前的渐变动画特性。
+    // 关键：currentColors() 每次重组可能返回新实例，绝不能拿 ColorScheme 对象当 key——
+    // 否则动画每帧 setState→重组→新对象→协程无限重启→内存耗尽闪退。
+    // 改用「模式 + 主色的 argb 值」作 key：颜色不变则 key 稳定；颜色真变化（含系统深浅色切换）才触发过渡。
+    val themeKey = "${themeMode.value}|${themeColor.value}|${targetColors.primary.toArgb()}"
+    var displayColors by remember { mutableStateOf(targetColors) }
+    LaunchedEffect(themeKey) {
+        val start = displayColors
+        val target = targetColors
+        val anim = Animatable(0f)
+        anim.animateTo(1f, tween(420, easing = FastOutSlowInEasing)) {
+            displayColors = lerpColors(start, target, value)
         }
     }
 
     MiuixTheme(
-        colors = animatedColors,
+        colors = displayColors,
         content = content
     )
 }

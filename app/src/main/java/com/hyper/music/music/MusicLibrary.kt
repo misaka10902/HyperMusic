@@ -25,6 +25,7 @@ object MusicLibrary {
     private const val KEY_LYRIC_FONT_WEIGHT = "lyric_font_weight"
     private const val KEY_TITLE_CENTERED = "title_centered"
     private const val KEY_LYRIC_TRANSLATION = "lyric_translation"
+    private const val KEY_PLAY_BAR_LYRICS = "play_bar_lyrics"
     private const val KEY_ADVANCED_MATERIAL = "advanced_material"
     private const val KEY_ADVANCED_MATERIAL_MODE = "advanced_material_mode"
     private const val KEY_AUDIO_FADE = "audio_fade"
@@ -74,6 +75,7 @@ object MusicLibrary {
             lyricFontWeight = prefs.getInt(KEY_LYRIC_FONT_WEIGHT, 500).coerceIn(300, 900),
             titleCentered = prefs.getBoolean(KEY_TITLE_CENTERED, true),
             showLyricsTranslation = prefs.getBoolean(KEY_LYRIC_TRANSLATION, true),
+            playBarLyrics = prefs.getBoolean(KEY_PLAY_BAR_LYRICS, false),
             advancedMaterial = readAdvancedMaterial(),
             audioFade = prefs.getBoolean(KEY_AUDIO_FADE, true),
             liveLyric = prefs.getBoolean(KEY_LIVE_LYRIC, false),
@@ -160,6 +162,12 @@ object MusicLibrary {
     fun setShowLyricsTranslation(show: Boolean) {
         _settings.value = _settings.value.copy(showLyricsTranslation = show)
         prefs.edit().putBoolean(KEY_LYRIC_TRANSLATION, show).apply()
+    }
+
+    fun setPlayBarLyrics(enabled: Boolean) {
+        _settings.value = _settings.value.copy(playBarLyrics = enabled)
+        prefs.edit().putBoolean(KEY_PLAY_BAR_LYRICS, enabled).apply()
+        PlaybackController.refreshLiveLyric()
     }
 
     fun setAudioFocus(enabled: Boolean) {

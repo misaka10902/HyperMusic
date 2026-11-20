@@ -196,7 +196,7 @@ fun HyperLyricsView(
                 Text(
                     text = "暂无歌词",
                     color = Color.White.copy(alpha = 0.6f),
-                    fontSize = 14.sp,
+                    fontSize = 17.sp,
                     textAlign = TextAlign.Center,
                 )
             }

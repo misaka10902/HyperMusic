@@ -47,6 +47,10 @@ object PlaybackController {
     private var queue: List<Song> = emptyList()
 
     private var liveLyricLines: List<LyricLine> = emptyList()
+
+    /** 播放条显示的当前歌词行；空串表示当前没有可用歌词（迷你播放器回退显示歌名）。 */
+    private val _playBarLyric = MutableStateFlow("")
+    val playBarLyric: StateFlow<String> = _playBarLyric
     private var liveLyricSongId: String = ""
     private var lastPublishedTitle: String? = null
     private var lyricLoadJob: Job? = null
@@ -448,6 +452,7 @@ object PlaybackController {
     private fun loadLiveLyrics(song: Song?) {
         lyricLoadJob?.cancel()
         liveLyricLines = emptyList()
+        _playBarLyric.value = ""
         lastPublishedTitle = null
         liveLyricSongId = song?.id.orEmpty()
         if (song == null) return
@@ -456,7 +461,9 @@ object PlaybackController {
             publishTitle(song.name)
             return
         }
-        if (!MusicLibrary.settings.value.liveLyric) {
+        val settings = MusicLibrary.settings.value
+        // 通知栏实时歌词和播放条歌词共用同一份歌词数据，任一开启就要拉取。
+        if (!settings.liveLyric && !settings.playBarLyrics) {
             publishTitle(song.name)
             return
         }
@@ -470,10 +477,11 @@ object PlaybackController {
     private fun publishCurrentLyric() {
         val p = player ?: return
         val song = _state.value.song ?: return
-        if (!MusicLibrary.settings.value.liveLyric) return
         val index = currentLineIndex(liveLyricLines, p.currentPosition)
-        val text = liveLyricLines.getOrNull(index)?.text?.takeIf { it.isNotBlank() } ?: song.name
-        publishTitle(text)
+        val line = liveLyricLines.getOrNull(index)?.text.orEmpty()
+        if (_playBarLyric.value != line) _playBarLyric.value = line
+        if (!MusicLibrary.settings.value.liveLyric) return
+        publishTitle(line.takeIf { it.isNotBlank() } ?: song.name)
     }
 
     private fun publishTitle(title: String?) {

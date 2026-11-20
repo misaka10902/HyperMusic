@@ -98,9 +98,10 @@ fun WallpaperScreen(
                             value = state.blur,
                             onValueChange = { WallpaperManager.setBlur(it) },
                             title = "壁纸模糊",
-                            valueText = "${state.blur.toInt()}dp",
+                            valueText = "%.1f".format(state.blur) + "dp",
                             valueRange = 0f..WallpaperManager.MAX_BLUR,
-                            steps = 24,
+                            // 连续无台阶：0~10dp 分 25 档时每档 0.4dp，拖动会一跳一跳。
+                            steps = 0,
                         )
                         SliderPreference(
                             value = state.dim,
@@ -117,6 +118,15 @@ fun WallpaperScreen(
                             valueText = "${(state.cardOpacity * 100).toInt()}%",
                             valueRange = WallpaperManager.MIN_CARD_OPACITY..1f,
                             steps = 0,
+                        )
+                        SliderPreference(
+                            value = state.cardBlur,
+                            onValueChange = { WallpaperManager.setCardBlur(it) },
+                            title = "卡片模糊",
+                            summary = "调节卡片模糊可能会降低性能",
+                            valueText = "${state.cardBlur.toInt()}dp",
+                            valueRange = 0f..WallpaperManager.MAX_CARD_BLUR,
+                            steps = 24,
                         )
                     }
                 }

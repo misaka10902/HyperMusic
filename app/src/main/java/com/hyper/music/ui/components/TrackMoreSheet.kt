@@ -54,7 +54,7 @@ import com.hyper.music.music.MusicLibrary
 import com.hyper.music.music.NetCover
 import com.hyper.music.music.Playlist
 import com.hyper.music.music.Song
-import com.hyper.music.ui.effects.miuix.LocalActiveBackdrop
+import com.hyper.music.ui.effects.miuix.rememberPopupBackdrop
 import com.hyper.music.ui.effects.miuix.LocalAdvancedMaterialEnabled
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.icon.MiuixIcons
@@ -92,7 +92,7 @@ fun HyperSheet(
         .asPaddingValues()
         .calculateBottomPadding()
 
-    val hyperBackdrop = LocalActiveBackdrop.current
+    val hyperBackdrop = rememberPopupBackdrop()
 
     val advancedMaterial = LocalAdvancedMaterialEnabled.current
 

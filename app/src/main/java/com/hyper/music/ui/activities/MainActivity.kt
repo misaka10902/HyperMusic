@@ -5,8 +5,6 @@ import top.yukonga.miuix.kmp.glass.GlassIconButton
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 
 import android.Manifest
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -28,7 +26,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.IntentSenderRequest
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -39,6 +38,9 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerDefaults
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -48,18 +50,14 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -67,7 +65,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -76,7 +73,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -84,10 +85,14 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -101,7 +106,6 @@ import com.hyper.music.music.Playlist
 import com.hyper.music.music.PlaylistImporter
 import com.hyper.music.music.Song
 import com.hyper.music.music.WallpaperBackground
-import com.hyper.music.music.WallpaperPageBox
 import com.hyper.music.music.WallpaperManager
 import com.hyper.music.music.CoverLoader
 import com.hyper.music.music.LocalSongs
@@ -111,14 +115,16 @@ import com.hyper.music.ui.components.ConfirmDialog
 import com.hyper.music.ui.components.HyperSheet
 import com.hyper.music.ui.components.PlaybackQueueSheet
 import com.hyper.music.ui.components.PlaylistPickerSheet
-import com.hyper.music.ui.components.PlaylistImportSheet
+import com.hyper.music.ui.components.PlaylistAddMenuPopup
+import com.hyper.music.ui.components.PlaylistJsonImportDialog
+import com.hyper.music.ui.components.PlaylistLinkImportDialog
 import com.hyper.music.ui.components.HyperBottomBar
-import com.hyper.music.ui.components.TabletTopBar
 import com.hyper.music.ui.components.SelectionActionBar
 import com.hyper.music.ui.components.SelectionBarState
 import com.hyper.music.ui.components.SleepTimerSheet
 import com.hyper.music.ui.components.TrackMoreSheet
 import com.hyper.music.ui.effects.miuix.LocalActiveBackdrop
+import com.hyper.music.ui.effects.miuix.LocalPageBackdrop
 import com.hyper.music.ui.effects.miuix.LocalAdvancedMaterialEnabled
 import com.hyper.music.ui.effects.miuix.rememberAdvancedMaterialEnabled
 import com.hyper.music.ui.player.BottomBarAreaHeight
@@ -135,18 +141,21 @@ import com.hyper.music.ui.screens.DownloadsScreen
 import com.hyper.music.ui.screens.ExploreScreen
 import com.hyper.music.ui.screens.FavoritesScreen
 import com.hyper.music.ui.screens.HistoryScreen
+import com.hyper.music.ui.screens.HyperSearchScreen
 import com.hyper.music.ui.screens.PlaylistDetailScreen
+import com.hyper.music.ui.search.GlassSearchOverlay
+import com.hyper.music.ui.search.rememberGlassSearchBarAlpha
+import com.hyper.music.ui.search.glassSearchBarTransition
 import com.hyper.music.ui.screens.PlaylistScreen
 import com.hyper.music.ui.screens.PlayerSettingsScreen
 import com.hyper.music.ui.screens.SettingsScreen
 import com.hyper.music.ui.screens.WallpaperScreen
 import com.hyper.music.ui.theme.CourseHyperTheme
+import com.hyper.music.ui.utils.BottomFloatingHeight
 import com.hyper.music.ui.utils.BottomFloatingWidthFraction
 import com.hyper.music.ui.utils.applyThemeAwareSystemBars
 import com.hyper.music.ui.utils.bottomContentFade
-import com.hyper.music.ui.utils.isLargeScreen
-import com.hyper.music.ui.utils.rememberWindowSizeDp
-import com.hyper.music.util.CrashLogger
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.NativeTextField
@@ -158,19 +167,16 @@ import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.glass.Search
 import top.yukonga.miuix.kmp.icon.extended.Add
 import top.yukonga.miuix.kmp.icon.extended.Close
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.Favorites
-import top.yukonga.miuix.kmp.icon.extended.FileDownloads
 import top.yukonga.miuix.kmp.glass.GlassDialog
 import top.yukonga.miuix.kmp.glass.GlassTopAppBar
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.LocalDialogStates
-import top.yukonga.miuix.kmp.utils.LocalPopupStates
-import top.yukonga.miuix.kmp.utils.LocalRootDialogStates
-import top.yukonga.miuix.kmp.utils.LocalRootPopupStates
-import top.yukonga.miuix.kmp.utils.MiuixPopupUtils
+import top.yukonga.miuix.kmp.utils.PagerNavigationSpringSpec
+import top.yukonga.miuix.kmp.utils.springAnimateToPage
 import androidx.navigationevent.NavigationEventDispatcher
 import androidx.navigationevent.NavigationEventDispatcherOwner
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
@@ -183,9 +189,10 @@ import com.hyper.music.ui.components.SheetCard
 import com.hyper.music.ui.components.SheetHeader
 import top.yukonga.miuix.kmp.nav.core.navBackStackOf
 
-private val TAB_TITLES = listOf("探索", "历史", "歌单", "定制")
+private val TAB_TITLES = listOf("探索", "历史", "歌单", "设置")
 
-private const val TabletBarWidthFraction = 1f / 3f
+/** bottomsheet 收起动画的大致时长；跳二级页前先等它走完，避免三层叠加。 */
+
 
 private sealed interface MusicRoute : NavKey {
     val navId: Long
@@ -240,6 +247,47 @@ fun HyperApp() {
     val scope = rememberCoroutineScope()
 
     var selectedTab by remember { mutableIntStateOf(0) }
+    // 主 Tab 横滑：pager 与 selectedTab 双向同步，点击导航与横滑共用 miuix 官方弹簧动画。
+    //
+    // 这里对齐 miuix demo 的 MainPagerState 语义：**点击时立即把 selectedTab 设为目标值**，
+    // 让导航条的指示器弹簧立刻从当前位置跑起来；随后用 isNavigating 屏蔽
+    // pager.currentPage 在动画途中反复取整造成的回写。
+    // 之前只在 LaunchedEffect(currentPage) 里同步，而 currentPage 是取整值，弹簧跑过一半
+    // 才跳一次，滑块于是「先卡住、再突然弹过去」，看起来就是一顿一顿。
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { 4 })
+    val pagerFlingBehavior = PagerDefaults.flingBehavior(
+        state = pagerState,
+        snapAnimationSpec = PagerNavigationSpringSpec,
+    )
+    var navJob by remember { mutableStateOf<Job?>(null) }
+    var isNavigating by remember { mutableStateOf(false) }
+    // 手指横滑 / 惯性停靠时（非点击导航），才把 pager 的取整页号回写给 selectedTab。
+    LaunchedEffect(pagerState.currentPage, isNavigating) {
+        if (!isNavigating && selectedTab != pagerState.currentPage) {
+            selectedTab = pagerState.currentPage
+        }
+    }
+    val selectTab: (Int) -> Unit = { index ->
+        if (index != selectedTab) {
+            navJob?.cancel()
+            selectedTab = index
+            isNavigating = true
+            navJob = scope.launch {
+                val myJob = coroutineContext.job
+                try {
+                    pagerState.springAnimateToPage(index)
+                } finally {
+                    if (navJob == myJob) {
+                        isNavigating = false
+                        if (pagerState.currentPage != index) selectedTab = pagerState.currentPage
+                    }
+                }
+            }
+        }
+    }
+    // 全屏玻璃搜索：单一布尔状态驱动，enter/exit 转场由 GlassSearchOverlay 与下方联动负责。
+    var searchExpanded by remember { mutableStateOf(false) }
+    val searchBarAlpha = rememberGlassSearchBarAlpha(searchExpanded)
     val scrollBehavior = MiuixScrollBehavior()
     val exploreScrollBehavior = MiuixScrollBehavior()
     val historyScrollBehavior = MiuixScrollBehavior()
@@ -265,11 +313,8 @@ fun HyperApp() {
     }
     fun popRoute() { if (navBackStack.size > 1) navBackStack.removeLastOrNull() }
 
-    val tablet = isLargeScreen(rememberWindowSizeDp())
-
-    
     val miniPlayerShift by animateDpAsState(
-        targetValue = if (tablet || route == null) 0.dp else MiniPlayerHeight + MiniPlayerToNavBarSpacing,
+        targetValue = if (route == null && !searchExpanded) 0.dp else MiniPlayerHeight + MiniPlayerToNavBarSpacing,
         animationSpec = tween(durationMillis = 300),
         label = "miniPlayerShift",
     )
@@ -292,9 +337,21 @@ fun HyperApp() {
         selectionBar = null
     }
     var pickerSongs by remember { mutableStateOf<List<Song>>(emptyList()) }
-    var showImportSheet by remember { mutableStateOf(false) }
-    var importPendingSongs by remember { mutableStateOf<List<Song>>(emptyList()) }
     var exportJson by remember { mutableStateOf<String?>(null) }
+
+    // 「添加歌单」：右上角 + 号弹出菜单（链接 / JSON / 手动创建）。
+    var addMenuExpanded by remember { mutableStateOf(false) }
+    var addMenuAnchor by remember { mutableStateOf(Rect.Zero) }
+    var showLinkImport by remember { mutableStateOf(false) }
+    var linkImportBusy by remember { mutableStateOf(false) }
+    var linkImportStatus by remember { mutableStateOf<String?>(null) }
+    var linkImportError by remember { mutableStateOf<String?>(null) }
+    var linkImportJob by remember { mutableStateOf<Job?>(null) }
+    var showJsonImport by remember { mutableStateOf(false) }
+    var jsonImportBusy by remember { mutableStateOf(false) }
+    var jsonImportStatus by remember { mutableStateOf<String?>(null) }
+    var jsonImportError by remember { mutableStateOf<String?>(null) }
+    var jsonImportJob by remember { mutableStateOf<Job?>(null) }
 
     var confirmDeletePlaylists by remember { mutableStateOf<List<Playlist>>(emptyList()) }
     var confirmDeleteHistory by remember { mutableStateOf<Song?>(null) }
@@ -304,7 +361,6 @@ fun HyperApp() {
     var pendingDirectDelete by remember { mutableStateOf(emptyList<Song>()) }
     var pendingMediaDelete by remember { mutableStateOf(emptyList<Song>()) }
     var downloadsRefreshKey by remember { mutableIntStateOf(0) }
-    var showCrashDialog by remember { mutableStateOf(CrashLogger.lastCrash.isNotBlank()) }
 
     val rootView = LocalView.current
     val focusManager = LocalFocusManager.current
@@ -322,7 +378,7 @@ fun HyperApp() {
         showCreateDialog || renameTarget != null || showQualitySheet ||
         showQueueSheet || showSleepTimer || confirmDeletePlaylists.isNotEmpty() ||
         confirmDeleteHistory != null || downloadDeleteConfirm != null ||
-        showCrashDialog || showImportSheet
+        showLinkImport || showJsonImport || addMenuExpanded
 
     LaunchedEffect(selectedTab, overlayVisible) {
         if (selectedTab != 0 || overlayVisible) hideKeyboard()
@@ -426,6 +482,41 @@ fun HyperApp() {
         }
     }
 
+    // JSON 导入：选完文件直接接着跑，进度/报错都在对话框里显示。
+    val jsonLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        showJsonImport = true
+        jsonImportBusy = true
+        jsonImportError = null
+        jsonImportStatus = "读取文件中…"
+        jsonImportJob = scope.launch {
+            try {
+                val text = withContext(Dispatchers.IO) {
+                    context.contentResolver.openInputStream(uri)
+                        ?.bufferedReader()
+                        ?.use { it.readText() }
+                } ?: throw IllegalStateException("无法读取该文件")
+                val res = PlaylistImporter.importFromJson(text) { done, total ->
+                    jsonImportStatus = "匹配网易云歌曲 $done/$total"
+                }
+                val playlist = MusicLibrary.createPlaylist(res.name)
+                var added = 0
+                res.songs.forEach { if (MusicLibrary.addSongToPlaylist(playlist.id, it)) added++ }
+                Toast.makeText(context, "已添加歌单，共${added}首歌曲", Toast.LENGTH_LONG).show()
+                jsonImportBusy = false
+                jsonImportStatus = null
+                showJsonImport = false
+            } catch (e: Throwable) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                jsonImportBusy = false
+                jsonImportStatus = null
+                jsonImportError = e.message ?: "导入失败"
+            }
+        }
+    }
+
     val notifLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { }
@@ -459,25 +550,34 @@ fun HyperApp() {
 
     val backgroundColor = MiuixTheme.colorScheme.surface
     val wallpaperActive by WallpaperManager.state.collectAsState()
+
+    // 页面内容层：录制范围是 Scaffold 的内容区（壁纸 + 各页面列表），
+    // 顶栏 / 底栏 / 迷你播放器 / 多选栏都在这个范围之外采样，因此不存在
+    //「采样者处在自己采样的图层里」的自引用（自引用会让显示列表引用自身，
+    // 渲染线程回放时无限递归，最终 native 崩溃，且拿不到 Java 堆栈）。
     val backdrop = rememberLayerBackdrop {
         drawRect(backgroundColor)
         drawContent()
     }
 
-    val rootBackdrop = rememberLayerBackdrop {
+    // 壁纸层：只录壁纸，永远不含任何玻璃组件。卡片毛玻璃（cardGlass）、弹层（BottomSheet / Dropdown）
+    // 一律采样这一层，而不是采样页面自己所在的图层。
+    // 必须补一层不透明底色：没有设置壁纸时这里若为空，采样方（尤其是弹层）会拿到全透明内容，
+    // 高级材质就会表现为「面板直接透明、模糊消失」。
+    val wallpaperBackdrop = rememberLayerBackdrop {
         drawRect(backgroundColor)
         drawContent()
     }
 
-    val playerPageBackdrop = rememberLayerBackdrop {
+    // 浮层（迷你播放器 / 底栏 / 多选栏）采样这一层：录制的是「当前整页的渲染结果」，
+    // 包含页面转场与底部淡出，因此二级页面滚动、切页时模糊跟着变，不会变成静态采样。
+    // 挂载点是 NavDisplay 外面的那个 Box，浮层都在它之外，故不会自引用。
+    val navDisplayBackdrop = rememberLayerBackdrop {
         drawRect(backgroundColor)
         drawContent()
     }
 
-    var activeBackdrop by remember { mutableStateOf<Backdrop>(rootBackdrop) }
-    LaunchedEffect(playerState.isExpanded) {
-        activeBackdrop = if (playerState.isExpanded) playerPageBackdrop else rootBackdrop
-    }
+    val activeBackdrop: Backdrop = navDisplayBackdrop
 
     fun playList(songs: List<Song>, index: Int) {
         if (songs.isEmpty()) return
@@ -488,44 +588,70 @@ fun HyperApp() {
     BackHandler(enabled = selectionActive) { exitSelection() }
     BackHandler(enabled = navBackStack.size > 1 && !selectionActive) { popRoute() }
 
-    var exploreSearchEngaged by remember { mutableStateOf(false) }
-    var exploreExitSearchSignal by remember { mutableIntStateOf(0) }
-    BackHandler(
-        enabled = exploreSearchEngaged && !selectionActive && navBackStack.size == 1,
-    ) {
-        exploreExitSearchSignal++
+    // 搜索展开时返回键关闭搜索（GlassSearchOverlay 内部另有一条 NavigationBackHandler，
+    // 但项目禁用了预测式返回，故以这里为准）。
+    BackHandler(enabled = searchExpanded && !selectionActive) {
+        searchExpanded = false
     }
-
-    val overlayDialogStates = remember { mutableStateListOf<MiuixPopupUtils.DialogState>() }
-    val overlayPopupStates = remember { mutableStateListOf<MiuixPopupUtils.PopupState>() }
 
     val advancedMaterial = rememberAdvancedMaterialEnabled()
 
-    CompositionLocalProvider(
-        LocalDialogStates provides overlayDialogStates,
-        LocalPopupStates provides overlayPopupStates,
-        LocalRootDialogStates provides overlayDialogStates,
-        LocalRootPopupStates provides overlayPopupStates,
-        LocalAdvancedMaterialEnabled provides advancedMaterial,
-        LocalActiveBackdrop provides activeBackdrop,
-    ) {
-    @Composable
-    fun NavPage(content: @Composable (LayerBackdrop) -> Unit) {
-        val surface = MiuixTheme.colorScheme.surface
+    // 当前可见页面的内容层，由各页面的 NavPage 发布（见下）。
+    // popup / bottomSheet / dialog 走 LocalPageBackdrop，采样到的是「当前这一页」的
+    // 真实内容；它们画在页面录制范围之外，不会自引用。
+    val activePageLayer = remember { mutableStateOf<Backdrop?>(backdrop) }
 
-        val pageBackdrop = rememberLayerBackdrop {
-            drawRect(surface)
-            drawContent()
-        }
-
-        WallpaperPageBox {
-            content(pageBackdrop)
+    // 播放页自己的内容层。播放页上的队列 / 音质 / 定时 sheet 由 popupHost 承载，
+    // 采样的是 LocalPageBackdrop；播放页展开时把这一层切成播放页自身，
+    // 否则 sheet 会糊到当前 Tab 页（首页）的内容。
+    val playerPageLayer = rememberLayerBackdrop { drawContent() }
+    var pageLayerBeforePlayer by remember { mutableStateOf<Backdrop?>(null) }
+    LaunchedEffect(playerState.isExpanded) {
+        if (playerState.isExpanded) {
+            pageLayerBeforePlayer = activePageLayer.value
+            activePageLayer.value = playerPageLayer
+        } else if (activePageLayer.value === playerPageLayer) {
+            activePageLayer.value = pageLayerBeforePlayer ?: backdrop
         }
     }
 
+    CompositionLocalProvider(
+        LocalAdvancedMaterialEnabled provides advancedMaterial,
+        LocalActiveBackdrop provides wallpaperBackdrop,
+        LocalPageBackdrop provides activePageLayer,
+    ) {
+    @Composable
+    fun NavPage(content: @Composable (LayerBackdrop) -> Unit) {
+        // 每个二级页面一份独立的内容层（照 miuix demo 的 GlassPage）。
+        // 层必须由「页面自己」挂到 Scaffold 的 content Box 上：
+        // 顶栏在 topBar（content 之外），是这一层的兄弟，采样它才不会自引用；
+        // 壁纸层同理挂在 content 内部、只录壁纸，卡片采样它也不会自引用。
+        val pageSurface = MiuixTheme.colorScheme.surface
+        val pageLayer = rememberLayerBackdrop {
+            drawRect(pageSurface)
+            drawContent()
+        }
+        DisposableEffect(pageLayer) {
+            activePageLayer.value = pageLayer
+            onDispose {
+                // 二级页销毁后回到根页面（内容层就是 `backdrop`），
+                // 之后从根页面弹弹层仍然采得到实时内容。
+                if (activePageLayer.value === pageLayer) activePageLayer.value = backdrop
+            }
+        }
+        content(pageLayer)
+    }
+
+    // 最外层 Scaffold：miuix 的 dialog / dropdown 都由 Scaffold 的 popupHost 承载，
+    // 而 popup 是在 content（迷你播放器、导航条、多选栏）之后绘制的。套这一层，
+    // 所有弹窗就稳定压在底部浮层之上，不需要手搓 zIndex 也不怕层级反了。
+    // 无 topBar / bottomBar、insets 置零，布局与原来完全一致。
+    Scaffold(
+        containerColor = Color.Transparent,
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
+    ) { _ ->
     Box(modifier = Modifier.fillMaxSize().background(backgroundColor)) {
 
-        WallpaperBackground()
         val noPredictiveBackOwner = remember {
             object : NavigationEventDispatcherOwner {
                 override val navigationEventDispatcher =
@@ -536,18 +662,35 @@ fun HyperApp() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .layerBackdrop(rootBackdrop),
+                .layerBackdrop(navDisplayBackdrop),
         ) {
+        // 根层壁纸：页面内的壁纸跟着页面转场/缩放，底部内容淡出（bottomContentFade）
+        // 与页面转场时露出来的是这一层。没有它，淡出区域露出的就是 surface 底色，
+        // 看起来就成了「一块白色遮罩」。
+        // 放进采样层内部：navDisplayBackdrop 因此录到「壁纸 + 页面」，搜索展开、
+        // 页面整体 alpha 归零之后，迷你播放器/底栏采样到的仍是壁纸（有细节可糊），
+        // 不会退化成一块纯色。
+        WallpaperBackground()
         CompositionLocalProvider(LocalNavigationEventDispatcherOwner provides noPredictiveBackOwner) {
         NavDisplay(
             backStack = navBackStack,
 
             modifier = Modifier
                 .fillMaxSize()
-                .bottomContentFade(
-
-                    startFromBottom = MiniPlayerToNavBarSpacing + BottomBarAreaHeight + 16.dp,
-                    bottomAlpha = 0.12f,
+                // 搜索展开时整条页面栈一起淡出（不只是 Root 页）：
+                // 从搜索结果直接进艺术家/专辑页时，新页不会从搜索层底下「透出来」。
+                .graphicsLayer { alpha = searchBarAlpha.value }
+                // 关于页的底部渐隐只作用在内容上（由页面内部的 listModifier 施加）：
+                // 这里如果照常整页渐隐，会把流光背景一起淡掉、露出根层壁纸。
+                .then(
+                    if (route is MusicRoute.AboutApp) {
+                        Modifier
+                    } else {
+                        Modifier.bottomContentFade(
+                            startFromBottom = MiniPlayerToNavBarSpacing + BottomBarAreaHeight + 16.dp,
+                            bottomAlpha = 0.12f,
+                        )
+                    }
                 ),
             onBack = { popRoute() },
             transition = NavTransitions.MiuixDefault,
@@ -561,18 +704,56 @@ fun HyperApp() {
             entry<RootRoute> {
 
     
+    // 顶栏标题：进入/退出多选时淡出 → 换字 → 淡入；切 Tab 直接换，不额外加动画。
+    val barTitle = if (selectionActive) {
+        "已选择 ${selectionBar?.count ?: 0} 项"
+    } else {
+        TAB_TITLES[selectedTab]
+    }
+    var shownTitle by remember { mutableStateOf(barTitle) }
+    val titleSwapAlpha = remember { Animatable(1f) }
+    var prevSelection by remember { mutableStateOf(selectionActive) }
+    LaunchedEffect(barTitle, selectionActive) {
+        val selectionChanged = selectionActive != prevSelection
+        prevSelection = selectionActive
+        if (shownTitle == barTitle) return@LaunchedEffect
+        if (selectionChanged) {
+            titleSwapAlpha.animateTo(0f, tween(90, easing = FastOutSlowInEasing))
+            shownTitle = barTitle
+            titleSwapAlpha.animateTo(1f, tween(180, easing = FastOutSlowInEasing))
+        } else {
+            // 计数变化 / 切 Tab：直接替换，不闪。
+            shownTitle = barTitle
+        }
+    }
+
+    // 退出多选时 selectionBar 会立刻置空，但顶栏图标的淡出动画还要再跑 140ms。
+    // 这里留一份最后的状态快照，让淡出阶段仍能看到原来的按钮（而不是先变空再淡出）。
+    var actionsSnapshot by remember { mutableStateOf<SelectionBarState?>(null) }
+    LaunchedEffect(selectionBar) {
+        if (selectionBar != null) actionsSnapshot = selectionBar
+    }
+
+    // 顶栏右上角动作：多选态放全选/批量动作，普通态按 Tab 放清空历史或「添加歌单」。
+    // 只有进入/退出多选才做淡入淡出；切 Tab 时 targetState 不变，图标直接换、没有动画。
     val topActionsContent: (@Composable () -> Unit) = {
         AnimatedContent(
-            targetState = if (selectionActive) -1 else selectedTab,
+            targetState = selectionActive,
             transitionSpec = {
-                fadeIn(animationSpec = tween(190)) togetherWith fadeOut(animationSpec = tween(140))
+                (
+                    fadeIn(animationSpec = tween(200)) +
+                        scaleIn(animationSpec = tween(220), initialScale = 0.9f)
+                    ).togetherWith(fadeOut(animationSpec = tween(140)))
+                    .using(SizeTransform(clip = false) { _, _ -> tween(200, easing = FastOutSlowInEasing) })
             },
-            contentAlignment = Alignment.CenterEnd,
-            label = "topEndActions",
-        ) { key ->
-            if (key == -1) {
-                val extra = selectionBar?.singleAction
-                val selectAll = selectionBar?.selectAllAction
+            contentAlignment = Alignment.Center,
+            label = "topActions",
+        ) { selecting ->
+            if (selecting) {
+                // 进入时 selectionBar 已在；退出时它先被置空，取快照让淡出阶段仍有按钮。
+                val bar = selectionBar ?: actionsSnapshot
+                val extra = bar?.singleAction
+                val selectAll = bar?.selectAllAction
                 Row {
                     if (selectAll != null) {
                         GlassIconButton(
@@ -588,38 +769,31 @@ fun HyperApp() {
                                 tint = (selectAll.tint).takeOrElse { MiuixTheme.colorScheme.onSurface },
                             )
                         }
-                        Spacer(Modifier.width(10.dp))
+                        // 右侧还有按钮时才留间距；否则这 10dp 会把「全选」整体往左推，
+                        // 与普通态的「+」对不齐。
+                        if (extra != null) Spacer(Modifier.width(10.dp))
                     }
-                    GlassIconButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                            if (extra != null) extra.onClick() else exitSelection()
-                        },
-                    ) {
-                        Icon(
-                            imageVector = extra?.icon ?: MiuixIcons.Close,
-                            contentDescription = extra?.label ?: "退出多选",
-                            modifier = Modifier.size(22.dp),
-                            tint = MiuixTheme.colorScheme.onSurface,
-                        )
+                    // 取消/退出多选已移至顶栏左上角；右上角仅保留 singleAction（如添加到歌单）。
+                    if (extra != null) {
+                        GlassIconButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                                extra.onClick()
+                            },
+                        ) {
+                            Icon(
+                                imageVector = extra.icon,
+                                contentDescription = extra.label,
+                                modifier = Modifier.size(22.dp),
+                                tint = MiuixTheme.colorScheme.onSurface,
+                            )
+                        }
                     }
                 }
             } else {
-                when (key) {
-                    0 -> GlassIconButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                            playerState.collapse()
-                            pushRoute(MusicRoute.Downloads())
-                        },
-                    ) {
-                        Icon(
-                            imageVector = MiuixIcons.FileDownloads,
-                            contentDescription = "已下载的歌曲",
-                            modifier = Modifier.size(23.dp),
-                            tint = MiuixTheme.colorScheme.onSurface,
-                        )
-                    }
+                when (selectedTab) {
+                    // 探索页右上角不再放置下载按钮（入口下沉到探索页"已下载的歌曲"卡片）。
+                    0 -> {}
 
                     1 -> GlassIconButton(
                         onClick = {
@@ -636,43 +810,30 @@ fun HyperApp() {
                         )
                     }
 
-                    2 -> Row {
-                        GlassIconButton(
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                                playerState.collapse()
-                                pushRoute(MusicRoute.Favorites())
-                            },
-                        ) {
-                            Icon(
-                                imageVector = MiuixIcons.Favorites,
-                                contentDescription = "我喜欢的歌曲",
-                                modifier = Modifier.size(22.dp),
-                                tint = MiuixTheme.colorScheme.onSurface,
-                            )
-                        }
-                        Spacer(Modifier.width(10.dp))
-                        GlassIconButton(
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                                importPendingSongs = emptyList()
-                                showImportSheet = true
-                            },
-                        ) {
-                            Icon(
-                                imageVector = MiuixIcons.Add,
-                                contentDescription = "添加歌单",
-                                modifier = Modifier.size(23.dp),
-                                tint = MiuixTheme.colorScheme.onSurface,
-                            )
-                        }
+                    2 -> GlassIconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            addMenuExpanded = true
+                        },
+                        // 记录按钮位置，作为「添加歌单」菜单的锚点。
+                        modifier = Modifier.onGloballyPositioned { addMenuAnchor = it.boundsInWindow() },
+                    ) {
+                        Icon(
+                            imageVector = MiuixIcons.Add,
+                            contentDescription = "添加歌单",
+                            modifier = Modifier.size(23.dp),
+                            tint = MiuixTheme.colorScheme.onSurface,
+                        )
                     }
                 }
             }
         }
     }
 
+
                 Scaffold(
+                    modifier = Modifier
+                        .then(if (searchExpanded) Modifier.clearAndSetSemantics { } else Modifier),
                     containerColor = if (wallpaperActive.hasImage) Color.Transparent else MiuixTheme.colorScheme.surface,
                     topBar = {
                         val barScrollBehavior = when (selectedTab) {
@@ -681,49 +842,42 @@ fun HyperApp() {
                             2 -> playlistScrollBehavior
                             else -> scrollBehavior
                         }
-                        if (tablet) {
-                            TabletTopBar(
-                                titles = TAB_TITLES,
-                                selectedTab = selectedTab,
-                                onTabSelected = { selectedTab = it },
-                                backdrop = backdrop,
-                                scrollBehavior = barScrollBehavior,
-                                progressiveBlur = advancedMaterial,
-                                actions = topActionsContent,
-                            )
-                        } else {
-                            val barTitle = if (selectionActive) {
-                                "已选择 ${selectionBar?.count ?: 0} 项"
-                            } else {
-                                TAB_TITLES[selectedTab]
-                            }
-                            GlassTopAppBar(
-                                title = barTitle,
-                                largeTitle = barTitle,
-                                subtitle = if (selectionActive) "" else when (selectedTab) {
-                                    1 -> "共${MusicLibrary.history.collectAsState().value.size}首历史播放歌曲"
-                                    2 -> "共${MusicLibrary.playlists.collectAsState().value.size}个歌单"
-                                    else -> ""
-                                },
-                                backdrop = backdrop,
-                                progressiveBlur = advancedMaterial,
-                                scrollBehavior = barScrollBehavior,
-                                actions = { topActionsContent() },
-                            )
-                        }
+                        GlassTopAppBar(
+                            title = shownTitle,
+                            largeTitle = shownTitle,
+                            subtitle = "",
+                            backdrop = backdrop,
+                            progressiveBlur = advancedMaterial,
+                            scrollBehavior = barScrollBehavior,
+                            titleAlpha = { titleSwapAlpha.value },
+                            contentModifier = Modifier.glassSearchBarTransition(searchExpanded) { 1f },
+                            navigationIcon = {
+                                androidx.compose.animation.AnimatedVisibility(
+                                    visible = selectionActive,
+                                    enter = fadeIn(tween(160)) + scaleIn(tween(200), initialScale = 0.8f),
+                                    exit = fadeOut(tween(120)) + scaleOut(tween(140), targetScale = 0.85f),
+                                ) {
+                                    GlassIconButton(onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                                        exitSelection()
+                                    }) {
+                                        Icon(
+                                            imageVector = MiuixIcons.Close,
+                                            contentDescription = "取消多选",
+                                            modifier = Modifier.size(22.dp),
+                                            tint = MiuixTheme.colorScheme.onSurface,
+                                        )
+                                    }
+                                }
+                            },
+                            actions = { topActionsContent() },
+                        )
                     },
                     bottomBar = {
                         Spacer(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(
-                                    if (tablet) {
-
-                                        MiniPlayerHeight + 32.dp
-                                    } else {
-                                        MiniPlayerHeight + MiniPlayerToNavBarSpacing + BottomBarAreaHeight
-                                    }
-                                ),
+                                .height(MiniPlayerHeight + MiniPlayerToNavBarSpacing + BottomBarAreaHeight),
                         )
                     },
                 ) { contentPadding ->
@@ -732,35 +886,48 @@ fun HyperApp() {
                             .fillMaxSize()
                             .layerBackdrop(backdrop),
                     ) {
-
-                        WallpaperBackground()
-                        Crossfade(
-                            targetState = selectedTab,
+                        // 不透明底色：壁纸淡入期间页面不能是透明的，否则会透出下层页面。
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .background(backgroundColor),
+                        )
+                        // 壁纸层嵌在内容层里（与 demo 一致）：内容层因此录得到壁纸，
+                        // 顶栏 progressiveBlur 采样内容层时才有东西可模糊；
+                        // 而壁纸层自身只含壁纸，卡片采样它不会自引用。
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .layerBackdrop(wallpaperBackdrop),
+                        ) {
+                            WallpaperBackground()
+                        }
+                        HorizontalPager(
+                            state = pagerState,
                             modifier = Modifier.fillMaxSize(),
-                            animationSpec = tween(180, easing = FastOutSlowInEasing),
-                            label = "tabContent",
+                            // 与 miuix demo 一致：停靠用官方的导航弹簧，而不是 Pager 默认的 tween，
+                            // 手指松开到吸附这一段才有连续的减速感，不会「先停一下再弹过去」。
+                            flingBehavior = pagerFlingBehavior,
+                            // 4 页全部预组合，避免第一次滑到某页时才组合造成的掉帧。
+                            beyondViewportPageCount = 3,
                         ) { tab ->
-                            
-                            Box(
-                                modifier = if (tablet) {
-                                    Modifier
-                                        .fillMaxHeight()
-                                        .widthIn(max = 1100.dp)
-                                        .align(Alignment.TopCenter)
-                                } else {
-                                    Modifier.fillMaxSize()
-                                },
-                            ) {
+                            Box(modifier = Modifier.fillMaxSize()) {
                             when (tab) {
                             0 -> ExploreScreen(
                                 onPlaySongs = { list, index -> playList(list, index) },
                                 onMore = { song -> openMore(song, null, "删除歌曲") },
                                 onOpenArtist = { name -> pushRoute(MusicRoute.Artist(name)) },
                                 onOpenAlbum = { name, artist -> pushRoute(MusicRoute.Album(name, artist)) },
+                                onOpenFavorites = {
+                                    playerState.collapse()
+                                    pushRoute(MusicRoute.Favorites())
+                                },
+                                onOpenDownloads = {
+                                    playerState.collapse()
+                                    pushRoute(MusicRoute.Downloads())
+                                },
                                 topInset = contentPadding.calculateTopPadding(),
                                 active = !overlayVisible && !playerState.isExpanded,
-                                onSearchEngagedChange = { exploreSearchEngaged = it },
-                                exitSearchSignal = exploreExitSearchSignal,
                                 scrollBehavior = exploreScrollBehavior,
                             )
 
@@ -794,8 +961,8 @@ fun HyperApp() {
                             2 -> PlaylistScreen(
                                 onOpen = { playlist -> pushRoute(MusicRoute.PlaylistDetail(playlistId = playlist.id)) },
                                 onCreate = {
-                                    importPendingSongs = emptyList()
-                                    showImportSheet = true
+                                    createForSongs = emptyList()
+                                    showCreateDialog = true
                                 },
                                 topInset = contentPadding.calculateTopPadding(),
                                 scrollBehavior = playlistScrollBehavior,
@@ -807,7 +974,7 @@ fun HyperApp() {
                             else -> SettingsScreen(
                                 topInset = contentPadding.calculateTopPadding(),
                                 scrollBehavior = scrollBehavior,
-                                hyperBackdrop = backdrop,
+                                hyperBackdrop = wallpaperBackdrop,
                                 onOpenWallpaper = {
                                     playerState.collapse()
                                     pushRoute(MusicRoute.Wallpaper())
@@ -958,6 +1125,42 @@ fun HyperApp() {
         }
         }
 
+        // 全屏玻璃搜索层：位于页面层之上、迷你播放器/底栏之下。
+        // 层级顺序因此是：NavDisplay → 搜索层 → 播放条/底栏 → 播放页 → popupHost。
+        //  - 搜索结果不会再压住播放条（图3）；
+        //  - 播放条照常采样 navDisplayBackdrop，模糊效果与其他页面一致；
+        //  - 内容走同一条 bottomContentFade，底部和其他界面一样渐隐到壁纸；
+        //  - 搜索展开时整条页面栈 alpha 归零，从结果进二级页不会透出重叠内容（图2）。
+        GlassSearchOverlay(
+            expanded = searchExpanded,
+            onDismissRequest = { searchExpanded = false },
+            label = "搜索歌曲、歌手和专辑...",
+            modifier = Modifier.bottomContentFade(
+                startFromBottom = MiniPlayerToNavBarSpacing + BottomBarAreaHeight + 16.dp,
+                bottomAlpha = 0.12f,
+            ),
+        ) { q ->
+            HyperSearchScreen(
+                query = q,
+                active = searchExpanded,
+                onPlaySongs = { list, index ->
+                    playList(list, index)
+                    searchExpanded = false
+                },
+                onMore = { song -> openMore(song, null, "删除歌曲") },
+                onOpenArtist = { name ->
+                    searchExpanded = false
+                    playerState.collapse()
+                    pushRoute(MusicRoute.Artist(name))
+                },
+                onOpenAlbum = { name, artist ->
+                    searchExpanded = false
+                    playerState.collapse()
+                    pushRoute(MusicRoute.Album(name, artist))
+                },
+            )
+        }
+
         BoxWithConstraints(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.BottomCenter,
@@ -965,11 +1168,7 @@ fun HyperApp() {
             val dockFraction = BottomFloatingWidthFraction
 
             AnimatedVisibility(
-                visible = if (tablet) {
-                    !selectionActive
-                } else {
-                    !selectionActive && route !is MusicRoute.Wallpaper && route !is MusicRoute.PlayerSettings
-                },
+                visible = !selectionActive && route !is MusicRoute.Wallpaper && route !is MusicRoute.PlayerSettings,
                 modifier = Modifier.align(Alignment.BottomCenter),
                 enter = slideInVertically(tween(260)) { it / 2 } + fadeIn(tween(220)),
                 exit = slideOutVertically(tween(240)) { it / 2 } + fadeOut(tween(160)),
@@ -985,12 +1184,10 @@ fun HyperApp() {
                         }
                     },
                     onOpenQueue = { showQueueSheet = true },
-                    widthFraction = if (tablet) TabletBarWidthFraction else MiniPlayerWidthFraction,
+                    widthFraction = MiniPlayerWidthFraction,
                     modifier = Modifier
                         .offset(y = miniPlayerShift)
-                        .padding(
-                            bottom = if (tablet) 24.dp else BottomBarAreaHeight + MiniPlayerToNavBarSpacing,
-                        ),
+                        .padding(bottom = BottomBarAreaHeight + MiniPlayerToNavBarSpacing),
                 )
             }
 
@@ -999,16 +1196,41 @@ fun HyperApp() {
                 contentAlignment = Alignment.Center,
             ) {
                 AnimatedVisibility(
-
-                    visible = route == null && !selectionActive && !tablet,
-                    enter = slideInVertically(tween(300)) { it } + fadeIn(tween(200)),
-                    exit = slideOutVertically(tween(300)) { it } + fadeOut(tween(200)),
+                    visible = route == null && !selectionActive && !searchExpanded,
+                    // 恢复导航条上下移动隐藏/出现的动画；位置高度不变，仅纵向位移+淡入淡出。
+                    enter = slideInVertically(tween(280, easing = FastOutSlowInEasing)) { it / 2 } + fadeIn(tween(220)),
+                    exit = slideOutVertically(tween(240, easing = FastOutSlowInEasing)) { it / 2 } + fadeOut(tween(160)),
                 ) {
+                    // 搜索按钮的收缩/展开交给 GlassNavigationBar 内部统一处理：
+                    // 它会同时动画按钮宽度、间距、缩放与透明度，tab 区域随之重算，
+                    // 不再需要在这里手搓 animateDpAsState + 手写 alpha/scale（那会慢一帧）。
+                    val showSearchButton = selectedTab == 0
                     HyperBottomBar(
                         selectedTab = selectedTab,
-                        onTabSelected = { selectedTab = it },
+                        onTabSelected = selectTab,
                         hyperBackdrop = activeBackdrop,
                         widthFraction = dockFraction,
+                        trailingAction = if (showSearchButton) {
+                            {
+                                GlassIconButton(
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                                        searchExpanded = true
+                                    },
+                                    size = BottomFloatingHeight,
+                                    backdrop = activeBackdrop,
+                                ) {
+                                    Icon(
+                                        imageVector = MiuixIcons.Glass.Search,
+                                        contentDescription = "搜索",
+                                        modifier = Modifier.size(26.dp),
+                                        tint = MiuixTheme.colorScheme.onSurfaceContainer.copy(alpha = 0.8f),
+                                    )
+                                }
+                            }
+                        } else {
+                            null
+                        },
                     )
                 }
 
@@ -1023,7 +1245,7 @@ fun HyperApp() {
                         SelectionActionBar(
                             state = bar,
                             backdrop = activeBackdrop,
-                            widthFraction = if (tablet) TabletBarWidthFraction else BottomFloatingWidthFraction,
+                            widthFraction = BottomFloatingWidthFraction,
                         )
                     }
                 }
@@ -1062,11 +1284,6 @@ fun HyperApp() {
                 backdrop = activeBackdrop,
             )
 
-            CrashReportDialog(
-                show = showCrashDialog,
-                onDismiss = { showCrashDialog = false },
-            )
-
             TrackMoreSheet(
                 song = moreSong,
                 onDismiss = { moreSong = null },
@@ -1089,11 +1306,16 @@ fun HyperApp() {
                     MusicLibrary.toggleFavoriteWithToast(context, song)
                 },
                 onOpenAlbum = { song ->
+                    // 菜单项点击时 TrackMoreSheet 已经调过 onDismiss（弹层自己在回收），
+                    // 这里不再额外等待，直接关搜索层并跳转：跳转与弹层回收同时进行，
+                    // 少掉那 0.3s 的死等。
                     playerState.collapse()
+                    searchExpanded = false
                     pushRoute(MusicRoute.Album(song.albumText, song.artists.firstOrNull() ?: ""))
                 },
                 onOpenArtist = { song ->
                     playerState.collapse()
+                    searchExpanded = false
                     if (song.artists.size > 1) {
                         artistPickerSong = song
                     } else {
@@ -1142,29 +1364,96 @@ fun HyperApp() {
                 },
                 onCreateNew = { songs ->
                     pickerSongs = emptyList()
-                    importPendingSongs = songs
-                    showImportSheet = true
+                    createForSongs = songs
+                    showCreateDialog = true
                 },
             )
 
-            PlaylistImportSheet(
-                visible = showImportSheet,
-                pendingSongs = importPendingSongs,
-                onDismiss = {
-                    showImportSheet = false
-                    importPendingSongs = emptyList()
+            // 「添加歌单」菜单：链接导入 / JSON 导入 / 手动创建
+            PlaylistAddMenuPopup(
+                expanded = addMenuExpanded,
+                anchorBounds = addMenuAnchor,
+                backdrop = activeBackdrop,
+                onDismiss = { addMenuExpanded = false },
+                onImportLink = {
+                    linkImportBusy = false
+                    linkImportStatus = null
+                    linkImportError = null
+                    showLinkImport = true
                 },
-                onImported = { name, songs, _ ->
-                    val playlist = MusicLibrary.createPlaylist(name)
-                    var added = 0
-                    songs.forEach { if (MusicLibrary.addSongToPlaylist(playlist.id, it)) added++ }
-                    Toast.makeText(
-                        context,
-                        "已添加歌单，共${added}首歌曲",
-                        Toast.LENGTH_LONG,
-                    ).show()
-                    showImportSheet = false
-                    importPendingSongs = emptyList()
+                onImportJson = {
+                    jsonLauncher.launch(
+                        arrayOf(
+                            "application/json",
+                            "text/plain",
+                            "application/octet-stream",
+                            "*/*",
+                        ),
+                    )
+                },
+                onCreate = {
+                    createForSongs = emptyList()
+                    showCreateDialog = true
+                },
+            )
+
+            PlaylistLinkImportDialog(
+                show = showLinkImport,
+                busy = linkImportBusy,
+                status = linkImportStatus,
+                error = linkImportError,
+                backdrop = activeBackdrop,
+                onDismiss = {
+                    // 「取消」在导入途中也可点：先中断在跑的任务，再清状态关窗。
+                    linkImportJob?.cancel()
+                    linkImportJob = null
+                    linkImportBusy = false
+                    showLinkImport = false
+                    linkImportStatus = null
+                    linkImportError = null
+                },
+                onImport = { link ->
+                    linkImportJob?.cancel()
+                    linkImportJob = scope.launch {
+                        linkImportBusy = true
+                        linkImportError = null
+                        linkImportStatus = "获取歌单…"
+                        try {
+                            val res = PlaylistImporter.importFromLink(link) { done, total ->
+                                linkImportStatus = "匹配网易云歌曲 $done/$total"
+                            }
+                            val playlist = MusicLibrary.createPlaylist(res.name)
+                            var added = 0
+                            res.songs.forEach { if (MusicLibrary.addSongToPlaylist(playlist.id, it)) added++ }
+                            Toast.makeText(context, "已添加歌单，共${added}首歌曲", Toast.LENGTH_LONG).show()
+                            linkImportBusy = false
+                            linkImportStatus = null
+                            showLinkImport = false
+                        } catch (e: Throwable) {
+                            if (e is kotlinx.coroutines.CancellationException) throw e
+                            linkImportBusy = false
+                            linkImportStatus = null
+                            linkImportError = e.message ?: "导入失败"
+                        } finally {
+                            linkImportJob = null
+                        }
+                    }
+                },
+            )
+
+            PlaylistJsonImportDialog(
+                show = showJsonImport,
+                busy = jsonImportBusy,
+                status = jsonImportStatus,
+                error = jsonImportError,
+                backdrop = activeBackdrop,
+                onDismiss = {
+                    jsonImportJob?.cancel()
+                    jsonImportJob = null
+                    jsonImportBusy = false
+                    jsonImportStatus = null
+                    jsonImportError = null
+                    showJsonImport = false
                 },
             )
 
@@ -1265,8 +1554,7 @@ fun HyperApp() {
 
         HyperPlayerLayer(
             state = playerState,
-            backdrop = activeBackdrop,
-            pageBackdrop = playerPageBackdrop,
+            contentBackdrop = playerPageLayer,
             onOpenQueue = { showQueueSheet = true },
             onOpenSleepTimer = { showSleepTimer = true },
             onMore = {
@@ -1275,65 +1563,8 @@ fun HyperApp() {
             },
         )
 
-        MiuixPopupUtils.MiuixPopupHost()
         }
     }
-}
-
-@Composable
-private fun CrashReportDialog(
-    show: Boolean,
-    onDismiss: () -> Unit,
-) {
-    val context = LocalContext.current
-
-    GlassDialog(
-        title = "上次运行崩溃了",
-        show = show,
-        onDismissRequest = onDismiss,
-        backdrop = LocalActiveBackdrop.current,
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(240.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MiuixTheme.colorScheme.secondaryContainer)
-                    .verticalScroll(rememberScrollState())
-                    .padding(12.dp),
-            ) {
-                Text(
-                    text = CrashLogger.lastCrash,
-                    color = MiuixTheme.colorScheme.onSurface,
-                    fontSize = 11.sp,
-                )
-            }
-            Spacer(Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                TextButton(
-                    text = "复制",
-                    modifier = Modifier.weight(1f),
-                    onClick = {
-                        val manager =
-                            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        manager.setPrimaryClip(
-                            ClipData.newPlainText("crash", CrashLogger.lastCrash)
-                        )
-                        Toast.makeText(context, "已复制崩溃日志", Toast.LENGTH_SHORT).show()
-                        onDismiss()
-                    },
-                )
-                TextButton(
-                    text = "关闭",
-                    modifier = Modifier.weight(1f),
-                    onClick = onDismiss,
-                )
-            }
-        }
     }
 }
 

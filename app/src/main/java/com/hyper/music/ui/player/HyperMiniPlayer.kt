@@ -11,6 +11,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -27,8 +29,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -38,7 +42,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -49,6 +52,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hyper.music.music.CoverSize
+import com.hyper.music.music.MusicLibrary
+import com.hyper.music.music.PlaybackController
 import com.hyper.music.music.NetCover
 import com.hyper.music.ui.components.hyperSurfaceColor
 import com.hyper.music.ui.effects.edgelight.edgeLight
@@ -57,8 +62,9 @@ import com.hyper.music.ui.effects.miuix.LocalAdvancedMaterialEnabled
 import com.hyper.music.ui.utils.BottomFloatingHeight
 import com.hyper.music.ui.utils.BottomFloatingWidthFraction
 import com.hyper.music.ui.utils.isAppDarkTheme
-import top.yukonga.miuix.kmp.glass.GlassCapsule
+import com.hyper.music.ui.GlassCapsule
 import kotlinx.coroutines.launch
+import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.blur
@@ -67,6 +73,7 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Pause
 import top.yukonga.miuix.kmp.icon.extended.Play
 import top.yukonga.miuix.kmp.icon.extended.Playlist
+import top.yukonga.miuix.kmp.icon.glass.OverseasMusic
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import com.hyper.music.ui.components.floatingBarShadow
 
@@ -93,6 +100,10 @@ fun HyperMiniPlayer(
 ) {
     val track = state.track
     val scope = rememberCoroutineScope()
+    val settings by MusicLibrary.settings.collectAsState()
+    val barLyric by PlaybackController.playBarLyric.collectAsState()
+    // 播放条歌词：没有可用歌词行时回退显示歌名。
+    val showBarLyric = settings.playBarLyrics && track.hasSong && barLyric.isNotBlank()
 
     val miniSize = MiniPlayerHeight - 16.dp
 
@@ -131,7 +142,7 @@ fun HyperMiniPlayer(
                     Modifier.drawBackdrop(
                         backdrop = backdrop,
                         shape = { GlassCapsule() },
-                        effects = { blur(24f.dp.toPx()) },
+                        effects = { blur(20f.dp.toPx()) },
                         layerBlock = {},
                         onDrawSurface = { drawRect(frostedSurface) },
                     )
@@ -233,17 +244,27 @@ fun HyperMiniPlayer(
                     .coverPlaceholder(),
                 contentAlignment = Alignment.Center,
             ) {
-                Crossfade(
-                    targetState = track.coverUrl,
-                    animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing),
-                    label = "miniCover",
-                ) { url ->
-                    NetCover(
-                        url = url,
-                        modifier = Modifier.fillMaxSize(),
-                        corner = CoverCircleCorner,
-                        contentDescription = track.title,
-                        maxSize = CoverSize.LARGE.decode,
+                if (track.hasSong) {
+                    Crossfade(
+                        targetState = track.coverUrl,
+                        animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing),
+                        label = "miniCover",
+                    ) { url ->
+                        NetCover(
+                            url = url,
+                            modifier = Modifier.fillMaxSize(),
+                            corner = CoverCircleCorner,
+                            contentDescription = track.title,
+                            maxSize = CoverSize.LARGE.decode,
+                        )
+                    }
+                } else {
+                    // 没有歌曲（队列为空 / 刚启动）：灰色底 + 音乐图标占位。
+                    Icon(
+                        imageVector = MiuixIcons.Glass.OverseasMusic,
+                        contentDescription = null,
+                        modifier = Modifier.size(miniSize * 0.56f),
+                        tint = MiuixTheme.colorScheme.onSurfaceSecondary.copy(alpha = 0.6f),
                     )
                 }
             }
@@ -256,19 +277,38 @@ fun HyperMiniPlayer(
                     .onGloballyPositioned { coords -> corridorWpx = coords.size.width.toFloat() }
                     .padding(horizontal = 2.dp),
             ) {
+                val corridorDp = with(density) { corridorWpx.toDp() }
                 Column(
                     modifier = Modifier
                         .wrapContentWidth(align = Alignment.Start, unbounded = true)
                         .onGloballyPositioned { coords -> textWpx = coords.size.width.toFloat() }
                         .graphicsLayer { translationX = offsetX.value },
                 ) {
-                    Text(
-                        text = track.title,
-                        color = MiuixTheme.colorScheme.onSurface,
-                        fontSize = 14.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    // 开关打开时标题换成当前歌词，换行时上下滚动。
+                    AnimatedContent(
+                        targetState = if (showBarLyric) barLyric else track.title,
+                        transitionSpec = {
+                            (
+                                slideInVertically(
+                                    animationSpec = tween(280, easing = FastOutSlowInEasing),
+                                ) { h -> h } + fadeIn(tween(170))
+                                ).togetherWith(
+                                slideOutVertically(
+                                    animationSpec = tween(280, easing = FastOutSlowInEasing),
+                                ) { h -> -h } + fadeOut(tween(140)),
+                            )
+                        },
+                        label = "miniBarTitle",
+                    ) { text ->
+                        Text(
+                            text = text,
+                            color = MiuixTheme.colorScheme.onSurface,
+                            fontSize = 14.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = if (corridorWpx > 0f) Modifier.widthIn(max = corridorDp) else Modifier,
+                        )
+                    }
                     Text(
                         text = track.artist,
                         color = MiuixTheme.colorScheme.onSurfaceSecondary,
@@ -395,11 +435,4 @@ private fun MiniPlayerControl(
 
 @Composable
 private fun Modifier.coverPlaceholder(): Modifier = this
-    .background(
-        brush = Brush.linearGradient(
-            listOf(
-                MiuixTheme.colorScheme.primary.copy(alpha = 0.85f),
-                MiuixTheme.colorScheme.primaryContainer,
-            )
-        ),
-    )
+    .background(MiuixTheme.colorScheme.secondaryContainer)

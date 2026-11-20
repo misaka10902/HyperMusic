@@ -1,14 +1,19 @@
 package top.yukonga.miuix.kmp.basic
 
+import android.content.Context
 import android.graphics.Typeface
 import android.text.Editable
 import android.text.InputFilter
 import android.text.InputType
 import android.text.TextWatcher
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -17,6 +22,37 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.viewinterop.AndroidView
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+
+/**
+ * 轻量输入框句柄：用于在 Compose 侧主动索要焦点（例如全屏搜索浮层展开时自动聚焦）。
+ * 只暴露 EditText 的焦点操作，不引入 Compose 文本栈。
+ */
+@Stable
+class NativeTextFieldHandle {
+    internal var editText: EditText? = null
+    fun requestFocus() { editText?.requestFocus() }
+    fun clearFocus() { editText?.clearFocus() }
+
+    /**
+     * 索要焦点并主动拉起软键盘。
+     *
+     * Android 里 `requestFocus()` 只改焦点，不会弹输入法（只有触摸、或显式
+     * `showSoftInput` 才会）。所以这里拿到焦点后再调一次 `showSoftInput`；
+     * 用 `post` 是因为 AndroidView 刚组合时 EditText 可能还没 attach 到窗口，
+     * 此时直接 show 会被系统忽略。
+     */
+    fun requestFocusAndShowIme() {
+        val view = editText ?: return
+        view.requestFocus()
+        view.post {
+            val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            imm?.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+        }
+    }
+}
+
+@Composable
+fun rememberNativeTextFieldHandle(): NativeTextFieldHandle = remember { NativeTextFieldHandle() }
 
 @Composable
 fun NativeTextField(
@@ -29,8 +65,12 @@ fun NativeTextField(
     maxLines: Int = 1,
     maxLength: Int = Int.MAX_VALUE,
     textAlign: TextAlign = TextAlign.Start,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    autoFocus: Boolean = false,
+    handle: NativeTextFieldHandle? = null,
+    onDone: (() -> Unit)? = null
 ) {
+    val currentOnDone by rememberUpdatedState(onDone)
     val textColor = textStyle.color.takeIf { it != Color.Unspecified }
         ?: MiuixTheme.colorScheme.onSurface
     val hintColor = MiuixTheme.colorScheme.onSurfaceVariantActions
@@ -49,6 +89,7 @@ fun NativeTextField(
     AndroidView(
         factory = { context ->
             EditText(context).apply {
+                handle?.editText = this
                 setText(value)
                 this.hint = hint
                 this.isSingleLine = singleLine
@@ -88,6 +129,17 @@ fun NativeTextField(
                 textSelectHandleRight?.setTint(themeColor.toArgb())
 
                 addTextChangedListener(textWatcher)
+
+                setOnEditorActionListener { _, actionId, _ ->
+                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+                        currentOnDone?.invoke()
+                        currentOnDone != null
+                    } else {
+                        false
+                    }
+                }
+
+                if (autoFocus) post { requestFocus() }
             }
         },
         update = { editText ->
@@ -100,6 +152,8 @@ fun NativeTextField(
             editText.isEnabled = enabled
 
             editText.highlightColor = themeColor.copy(alpha = 0.2f).toArgb()
+
+            if (autoFocus && !editText.isFocused) editText.requestFocus()
         },
         modifier = modifier
     )

@@ -22,17 +22,18 @@ fun rememberWindowSizeDp(): WindowSizeDp {
 fun isCompactWindow(size: WindowSizeDp): Boolean =
     size.width > size.height || size.height < 600.dp
 
-fun isLargeScreen(size: WindowSizeDp): Boolean =
-    size.width >= 600.dp && size.height >= 600.dp
+/**
+ * 应用仅面向手机：不再对平板/大屏做专门适配，统一按手机单列布局。
+ * 保留这些函数以兼容调用点，固定返回手机值。
+ */
+@ReadOnlyComposable
+fun isLargeScreen(size: WindowSizeDp): Boolean = false
 
 @Composable
 @ReadOnlyComposable
-fun songColumns(): Int = if (isLargeScreen(rememberWindowSizeDp())) 2 else 1
+fun songColumns(): Int = 1
 
-fun contentFraction(columns: Int): Float = if (columns == 2) 2f / 3f else 1f
+fun contentFraction(columns: Int): Float = 1f
 
 @Composable
-fun horizontalContentPadding(): Dp = with(rememberWindowSizeDp().width) {
-    val w = value.toInt()
-    if (w >= 600) ((w - 600).coerceIn(0, 600) / 600f * 112f + 16f).dp else 16.dp
-}
+fun horizontalContentPadding(): Dp = 16.dp

@@ -11,6 +11,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.hyper.music.ui.effects.miuix.LocalAdvancedMaterialEnabled
+import com.hyper.music.ui.effects.miuix.rememberPopupBackdrop
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.blur.Backdrop
@@ -25,7 +26,9 @@ fun ConfirmDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     confirmText: String = "删除",
-    backdrop: Backdrop? = null,
+    // 默认就取「当前页面内容层」：调用方不传 backdrop 时也能拿到毛玻璃底，
+    // 不会退化成一块没有背景的透明面板。传了则优先用传入的层。
+    backdrop: Backdrop? = rememberPopupBackdrop(),
 ) {
     val scheme = MiuixTheme.colorScheme
     val haptic = LocalHapticFeedback.current

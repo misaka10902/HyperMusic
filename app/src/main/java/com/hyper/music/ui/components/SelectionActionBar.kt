@@ -29,12 +29,10 @@ import com.hyper.music.ui.utils.BottomFloatingHeight
 import com.hyper.music.ui.utils.isAppDarkTheme
 import com.hyper.music.ui.utils.BottomFloatingWidthFraction
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.glass.GlassCapsule
+import com.hyper.music.ui.GlassCapsule
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.blur
 import top.yukonga.miuix.kmp.blur.drawBackdrop
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Close
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import com.hyper.music.ui.utils.BottomFloatingPadding
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -77,7 +75,8 @@ fun SelectionActionBar(
     ) {
         val maxBarWidth = maxWidth * widthFraction
         val pitch = (maxBarWidth - BottomFloatingPadding * 2) / 4
-        val buttonCount = 1 + state.actions.size
+        // 取消按钮已移至顶栏左上角，操作条只保留各页的操作项。
+        val buttonCount = state.actions.size
         val targetWidth = (pitch * buttonCount)
             .coerceIn(BottomFloatingHeight, maxBarWidth)
         val barWidth by animateFloatAsState(
@@ -101,13 +100,6 @@ fun SelectionActionBar(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                SelectionBarButton(
-                    icon = MiuixIcons.Close,
-                    label = "取消",
-                    tint = MiuixTheme.colorScheme.onSurfaceSecondary,
-                    onClick = state.onExit,
-                    modifier = Modifier.width(pitch),
-                )
                 state.actions.forEach { action ->
                     SelectionBarButton(
                         icon = action.icon,
@@ -144,7 +136,7 @@ private fun selectionBarSurface(backdrop: Backdrop?): Modifier {
         return Modifier.drawBackdrop(
             backdrop = backdrop,
             shape = { GlassCapsule() },
-            effects = { blur(28.dp.toPx()) },
+            effects = { blur(20.dp.toPx()) },
             onDrawSurface = { drawRect(color = surfaceColor) },
         ).edgeLight(shape = GlassCapsule(), edgeLight = edgeLight)
     }

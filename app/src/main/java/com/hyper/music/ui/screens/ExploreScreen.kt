@@ -1,10 +1,11 @@
 package com.hyper.music.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import kotlin.math.roundToInt
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -27,18 +28,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.zIndex
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -54,22 +53,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import com.hyper.music.music.GdApi
+import com.hyper.music.music.LocalSongs
 import com.hyper.music.music.MusicLibrary
 import com.hyper.music.music.Song
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.glass.GlassShape
-import top.yukonga.miuix.kmp.glass.GlassShadows
 import top.yukonga.miuix.kmp.glass.GlassTabRow
-import top.yukonga.miuix.kmp.glass.glassShadow
-import top.yukonga.miuix.kmp.glass.GlassTabRowDefaults
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.hyper.music.ui.components.EmptyHint
 import com.hyper.music.ui.components.RefreshIndicator
@@ -77,16 +68,13 @@ import com.hyper.music.ui.components.SongPairRow
 import com.hyper.music.ui.components.TrackRow
 import com.hyper.music.ui.basic.chipBounce
 import com.hyper.music.ui.basic.rememberChipBounce
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Close
-import top.yukonga.miuix.kmp.icon.extended.Search
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import java.util.concurrent.atomic.AtomicInteger
-import android.content.Context
 import com.hyper.music.music.CoverSize
 import androidx.compose.ui.text.font.FontWeight
 import top.yukonga.miuix.kmp.icon.extended.Album
@@ -97,10 +85,6 @@ import com.hyper.music.music.CoverLoader
 import com.hyper.music.music.SearchAlbum
 import com.hyper.music.music.SearchArtist
 import androidx.compose.ui.text.style.TextOverflow
-import kotlinx.coroutines.async
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.sp
 import top.yukonga.miuix.kmp.squircle.squircleClip
 import androidx.compose.foundation.layout.width
@@ -111,30 +95,22 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import com.hyper.music.music.SearchHistoryStore
 import com.hyper.music.ui.utils.contentFraction
-import com.hyper.music.ui.utils.horizontalEdgeFade
-import com.hyper.music.ui.utils.isLargeScreen
 import com.hyper.music.ui.utils.songColumns
 import top.yukonga.miuix.kmp.utils.overScrollVertical
-import com.hyper.music.ui.utils.rememberWindowSizeDp
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.updateTransition
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.layout.layout
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import com.hyper.music.ui.components.ConfirmDialog
 import com.hyper.music.ui.effects.miuix.cardGlass
 import com.hyper.music.ui.effects.miuix.cardGlassAlpha
-import com.hyper.music.ui.effects.miuix.LocalActiveBackdrop
+import com.hyper.music.ui.effects.miuix.cardGlassColors
+import com.hyper.music.ui.effects.miuix.rememberSquircleShape
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.icon.glass.OverseasMusic
+import top.yukonga.miuix.kmp.icon.glass.HealthyPhoneUsage
+import top.yukonga.miuix.kmp.icon.glass.FileDownloads
 
-private val SearchFieldHeight = 46.dp
-
-private val SearchFieldTopGap = 10.dp
-
-private val SectionGap = 12.dp
-
-private val TabChipHeight = GlassTabRowDefaults.Height
+internal val SectionGap = 12.dp
 
 private val PlayBarTopReserve = 133.dp
 
@@ -144,412 +120,412 @@ fun ExploreScreen(
     onMore: (Song) -> Unit,
     onOpenArtist: (String) -> Unit,
     onOpenAlbum: (String, String) -> Unit,
+    onOpenFavorites: () -> Unit,
+    onOpenDownloads: () -> Unit,
     modifier: Modifier = Modifier,
     topInset: Dp = 0.dp,
     active: Boolean = true,
-    onSearchEngagedChange: (Boolean) -> Unit = {},
-    exitSearchSignal: Int = 0,
     scrollBehavior: ScrollBehavior? = null,
 ) {
-    var query by remember { mutableStateOf("") }
-    var focused by remember { mutableStateOf(false) }
-    var searchedKeyword by remember { mutableStateOf("") }
-    var searchMode by remember { mutableStateOf(false) }
-    var loading by remember { mutableStateOf(false) }
-    var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
-    var artists by remember { mutableStateOf<List<SearchArtist>>(emptyList()) }
-    var albums by remember { mutableStateOf<List<SearchAlbum>>(emptyList()) }
-    var category by remember { mutableIntStateOf(0) }
-    var page by remember { mutableIntStateOf(1) }
-    var noMore by remember { mutableStateOf(false) }
-    var loadingMore by remember { mutableStateOf(false) }
-    val searchSeq = remember { AtomicInteger(0) }
-
-    val scope = rememberCoroutineScope()
-    var searchJob by remember { mutableStateOf<Job?>(null) }
-    val keyboard = LocalSoftwareKeyboardController.current
     val context = LocalContext.current
-    var inputRef by remember { mutableStateOf<android.widget.EditText?>(null) }
-    val imm = remember {
-        context.getSystemService(Context.INPUT_METHOD_SERVICE)
-            as? android.view.inputmethod.InputMethodManager
-    }
-    val listState = rememberLazyListState()
-    val searched = searchedKeyword.isNotBlank()
-    val searchHistory by SearchHistoryStore.items.collectAsState()
-    LaunchedEffect(Unit) { SearchHistoryStore.init(context) }
+    val scheme = MiuixTheme.colorScheme
+    val history by MusicLibrary.history.collectAsState()
+    val playlists by MusicLibrary.playlists.collectAsState()
+    val favorites by MusicLibrary.favorites.collectAsState()
 
-    var showClearHistoryDialog by remember { mutableStateOf(false) }
-    var pendingClearHistory by remember { mutableStateOf(false) }
-
-    var clearingHistory by remember { mutableStateOf(false) }
-    LaunchedEffect(pendingClearHistory) {
-        if (!pendingClearHistory) return@LaunchedEffect
-        val et = inputRef
-        et?.clearFocus()
-        val token = et?.windowToken
-        if (token != null) imm?.hideSoftInputFromWindow(token, 0)
-        keyboard?.hide()
-        focused = false
-        delay(160)
-        showClearHistoryDialog = true
-        pendingClearHistory = false
+    val localSongs by produceState(initialValue = emptyList<Song>(), context) {
+        value = withContext(Dispatchers.IO) { LocalSongs.scan(context) }
     }
 
-    LaunchedEffect(active) {
-        if (!active) {
-            val et = inputRef
-            et?.clearFocus()
-            val token = et?.windowToken
-            if (token != null) imm?.hideSoftInputFromWindow(token, 0)
-            keyboard?.hide()
+    // 推荐列表用 remember 缓存：仅在历史/歌单变化时重算，避免组合期写全局可变状态、
+    // 也避免每次重组都 shuffled() 造成列表抖动与 LaunchedEffect 反复重启。
+    val recommendSongs: List<Song> = remember(history, playlists) {
+        val pool = (history + playlists.flatMap { it.songs }).distinctBy { it.id }
+        if (pool.isEmpty()) emptyList() else pool.shuffled().take(10)
+    }
+
+    LaunchedEffect(recommendSongs) {
+        recommendSongs.forEach { s ->
+            val c = s.cover
+            if (c.isNotBlank()) CoverLoader.pin(c, CoverSize.MEDIUM.decode)
         }
     }
 
-    suspend fun runThreeWaySearch(keyword: String, forced: Boolean) {
-        val kw = keyword.trim()
-        if (kw.isBlank()) return
-        if (!forced && kw == searchedKeyword) { loading = false; return }
-        loading = true
-        val my = searchSeq.incrementAndGet()
-        val sJob = scope.async {
-            runCatching { GdApi.search(kw, 30, 1) }.getOrElse { emptyList() }
-        }
-        val aJob = scope.async {
-            runCatching { GdApi.searchArtists(kw, 30) }.getOrElse { emptyList() }
-        }
-        val alJob = scope.async {
-            runCatching { GdApi.searchAlbums(kw, 30) }.getOrElse { emptyList() }
-        }
-        val sList = sJob.await()
-        val aList = aJob.await()
-        val alList = alJob.await()
-        if (my != searchSeq.get()) return
-        if (kw != searchedKeyword) category = 0
-        songs = sList
-        artists = aList
-        albums = alList
-        searchedKeyword = kw
-        SearchHistoryStore.add(kw)
-        page = 1
-        noMore = sList.size < 30
-        loading = false
-    }
-
-    fun submit(keyword: String, hideKeyboard: Boolean) {
-        val t = keyword.trim()
-        if (t.isBlank()) return
-        searchJob?.cancel()
-        searchJob = scope.launch { runThreeWaySearch(t, forced = true) }
-        if (hideKeyboard) {
-            keyboard?.hide()
-
-            inputRef?.clearFocus()
-        }
-    }
-
-    fun exitSearch() {
-        searchJob?.cancel()
-        query = ""
-        searchMode = false
-        focused = false
-
-        loading = false
-        songs = emptyList()
-        artists = emptyList()
-        albums = emptyList()
-        searchedKeyword = ""
-        category = 0
-        page = 1
-        noMore = false
-        loadingMore = false
-        val et = inputRef
-        et?.clearFocus()
-        val token = et?.windowToken
-        if (token != null) imm?.hideSoftInputFromWindow(token, 0)
-        keyboard?.hide()
-    }
-
-    val wideScreen = isLargeScreen(rememberWindowSizeDp())
-    
-    val fieldFraction = if (wideScreen) 2f / 3f else 1f
-
-    val searchEngaged = searchMode || query.isNotBlank() || searchedKeyword.isNotBlank()
-
-    val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-
-    fun closeKeyboard() {
-        focused = false
-        val et = inputRef
-        et?.clearFocus()
-        val token = et?.windowToken
-        if (token != null) imm?.hideSoftInputFromWindow(token, 0)
-        keyboard?.hide()
-    }
-
-    LaunchedEffect(exitSearchSignal) {
-        if (exitSearchSignal <= 0) return@LaunchedEffect
-        if (imeVisible) closeKeyboard() else exitSearch()
-    }
-    LaunchedEffect(searchEngaged) { onSearchEngagedChange(searchEngaged) }
-    DisposableEffect(Unit) { onDispose { onSearchEngagedChange(false) } }
-
-    fun loadMoreSongs() {
-        if (loadingMore || loading || noMore || searchedKeyword.isBlank()) return
-        loadingMore = true
-        scope.launch {
-            val next = runCatching {
-                GdApi.search(searchedKeyword, 30, page + 1)
-            }.getOrElse { emptyList() }
-            val fresh = next.filter { n -> songs.none { it.id == n.id } }
-            if (fresh.isEmpty()) noMore = true else {
-                songs = songs + fresh
-                page += 1
-            }
-            loadingMore = false
-        }
-    }
-
-    LaunchedEffect(query) {
-        val kw = query.trim()
-        if (kw.isBlank()) {
-            songs = emptyList()
-            artists = emptyList()
-            albums = emptyList()
-            searchedKeyword = ""
-            loading = false
-            page = 1
-            noMore = false
-            return@LaunchedEffect
-        }
-        delay(500)
-        if (query.trim() != kw) return@LaunchedEffect
-
-        if (kw == searchedKeyword) return@LaunchedEffect
-        searchJob?.cancel()
-        searchJob = scope.launch { runThreeWaySearch(kw, forced = false) }
-    }
-
-    LaunchedEffect(listState, songs.size, category) {
-        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 }
-            .collect { last ->
-                if (searched && category == 0 && songs.isNotEmpty() && last >= songs.size - 6) {
-                    loadMoreSongs()
-                }
-            }
-    }
-
-    val tabsVisible = searchMode && searched
-
-    val screenKey = when {
-        !searchMode -> "browse"
-        !searched -> "history"
-        else -> "results-$category"
-    }
-    val screenAlpha = remember(screenKey) { Animatable(0f) }
-    val screenRisePx = with(LocalDensity.current) { 12.dp.toPx() }
-    LaunchedEffect(screenKey) {
-        screenAlpha.animateTo(1f, tween(280, easing = FastOutSlowInEasing))
-    }
-
-    val searchFieldZone = SearchFieldTopGap + SearchFieldHeight + SectionGap
-    val tabZone = if (tabsVisible) TabChipHeight else 0.dp
-    val contentTop = topInset + searchFieldZone + tabZone
+    val columns = songColumns()
+    val fraction = contentFraction(columns)
+    // 标题与卡片刻意用**两个不同**的边距：
+    //   标题 titlePad = 26.dp  —— 与 GlassTopAppBar 的大标题（TopAppBarDefaults.TitlePadding）左对齐；
+    //   卡片 cardPad  = 20.dp  —— 与全局其他页面的 Card 边距一致。
+    // 推荐卡片的 LazyRow 自己撑满屏宽，用 contentPadding 做内缩，
+    // 这样才能在横滑时让内容一直滑到屏幕边缘、而不是被 padding 提前裁掉。
+    val titlePad = 26.dp
+    val cardPad = 20.dp
+    // 与「猜你想听」推荐卡（squircleClip(20.dp)）同一条 squircle 轮廓：
+    // Card 自身用 squircleSurface 画底，玻璃层必须用同一个 Shape，圆角才不会被
+    // 圆角矩形叠出双层弧线。
+    val cardShape = rememberSquircleShape(20.dp)
+    val cardColors = cardGlassColors()
 
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            // 把overscroll 反馈给 topbar：短内容页无法产生真实滚动时，靠 overscrollOffset 保持模糊渐变。
+            .overScrollVertical(onOffsetChanged = { offset -> scrollBehavior?.state?.overscrollOffset = offset })
+            .then(scrollBehavior?.let { Modifier.nestedScroll(it.nestedScrollConnection) } ?: Modifier),
     ) {
-
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .overScrollVertical()
-                .then(
-                    scrollBehavior?.let { Modifier.nestedScroll(it.nestedScrollConnection) }
-                        ?: Modifier
-                )
-                .graphicsLayer {
-                    alpha = screenAlpha.value
-                    translationY = (1f - screenAlpha.value) * screenRisePx
+                .verticalScroll(rememberScrollState())
+                .padding(
+                    top = topInset + 4.dp,
+                    bottom = PlayBarTopReserve + 24.dp,
+                ),
+        ) {
+            // 猜你想听：有推荐时直接展示可滚动歌曲卡片，不套白色 Card 遮罩。
+            SectionHeading(text = "猜你想听", horizontalPadding = titlePad)
+            // 空占位卡 ↔ 歌曲横滑列表：交叉淡入淡出，容器高度平滑变化，
+            // 下方的「我喜欢的歌曲」等区块因此随内容高度自然下移。
+            AnimatedContent(
+                targetState = recommendSongs.isEmpty(),
+                transitionSpec = {
+                    (
+                        fadeIn(animationSpec = tween(260)) + slideInVertically(
+                            animationSpec = tween(260, easing = FastOutSlowInEasing),
+                        ) { h -> h / 10 }
+                        ).togetherWith(
+                        fadeOut(animationSpec = tween(170)),
+                    ).using(
+                        SizeTransform(clip = false) { _, _ ->
+                            tween(300, easing = FastOutSlowInEasing)
+                        },
+                    )
                 },
-        ) {
-            when {
-
-                loading && searchedKeyword.isBlank() -> SearchLoadingIndicator(topInset = topInset)
-
-                !searchMode -> RecommendSection(
-                    onPlaySongs = onPlaySongs,
-                    topPadding = contentTop,
-                )
-
-                !searched -> SearchHistorySection(
-                    history = searchHistory,
-                    topPadding = contentTop,
-                    clearing = clearingHistory,
-                    onClearFinished = {
-                        SearchHistoryStore.clear()
-                        clearingHistory = false
-                    },
-                    onPick = { kw ->
-                        query = kw
-                        submit(kw, hideKeyboard = true)
-                    },
-                    onClear = { pendingClearHistory = true },
-                )
-
-                else -> SearchResults(
-                    category = category,
-                    songs = songs,
-                    artists = artists,
-                    albums = albums,
-                    loading = loading,
-                    listState = listState,
-                    topPadding = contentTop,
-                    onPlaySongs = onPlaySongs,
-                    onMore = onMore,
-                    onOpenArtist = onOpenArtist,
-                    onOpenAlbum = onOpenAlbum,
-                    onLoadMoreSongs = { loadMoreSongs() },
-                    loadingMoreSongs = loadingMore,
-                )
-            }
-        }
-
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(top = topInset),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Box(modifier = Modifier.fillMaxWidth(fieldFraction)) {
-                SearchField(
-                    query = query,
-                    onQueryChange = { query = it },
-                    onSearch = { submit(query.trim(), hideKeyboard = true) },
-                    onFocusChange = { focused = it; if (it) searchMode = true },
-                    searchMode = searchMode,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            start = if (wideScreen) 0.dp else 24.dp,
-                            end = if (wideScreen) 0.dp else 24.dp,
-                            top = SearchFieldTopGap,
-                        ),
-                    onInputCreated = { inputRef = it },
-                    onInputReleased = { inputRef = null },
-                )
-
-                val showExit = searchMode || query.isNotBlank()
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(
-                            end = if (wideScreen) 0.dp else 24.dp,
-                            top = SearchFieldTopGap,
-                        )
-                        .size(SearchFieldHeight)
-                        .zIndex(10f)
-                        .then(
-                            if (showExit) Modifier.pointerInput(Unit) {
-                                detectTapGestures(onTap = { exitSearch() })
-                            } else Modifier
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    androidx.compose.animation.AnimatedVisibility(
-                        visible = showExit,
-                        enter = scaleIn(
-                            initialScale = 0f,
-                            animationSpec = spring(dampingRatio = 0.55f, stiffness = 420f),
-                        ) + fadeIn(animationSpec = tween(120)),
-                        exit = scaleOut(
-                            targetScale = 0f,
-                            animationSpec = tween(160),
-                        ) + fadeOut(animationSpec = tween(140)),
+                label = "recommendSection",
+            ) { empty ->
+                if (empty) {
+                    Card(
+                        cornerRadius = 20.dp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = cardPad)
+                            .cardGlass(cardShape),
+                        insideMargin = PaddingValues(16.dp),
+                        colors = cardColors,
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(SearchFieldHeight)
-                                .glassShadow(GlassShape(SearchFieldHeight / 2, smoothing = 0f), GlassShadows.Float)
-                                .clip(CircleShape)
-                                .cardGlass(CircleShape),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Image(
-                                imageVector = MiuixIcons.Close,
-                                contentDescription = "退出搜索",
-                                modifier = Modifier.size(20.dp),
-                                colorFilter = ColorFilter.tint(MiuixTheme.colorScheme.onSurfaceSecondary),
-                            )
+                        ExploreEmptyCard(
+                            icon = MiuixIcons.Glass.OverseasMusic,
+                            title = "还没有推荐歌曲",
+                            subtitle = "多听几首歌，我们会为你生成专属推荐",
+                        )
+                    }
+                } else {
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(horizontal = cardPad),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        itemsIndexed(recommendSongs, key = { _, s -> s.id }) { index, song ->
+                            RecommendCard(
+                                song = song,
+                                // 新增卡片（1→2、2→3…）以淡入出现，已有卡片不动；
+                                // 首次加载整排列表时不播放（Compose 只在后续插入时触发）。
+                                modifier = Modifier.animateItem(
+                                    fadeInSpec = tween(320, easing = FastOutSlowInEasing),
+                                    fadeOutSpec = tween(200, easing = FastOutSlowInEasing),
+                                ),
+                            ) { onPlaySongs(recommendSongs, index) }
                         }
                     }
                 }
             }
 
-            if (tabsVisible) {
-                Spacer(Modifier.height(SectionGap))
-                GlassTabRow(
-                    tabs = listOf("歌曲", "歌手", "专辑"),
-                    selectedIndex = category,
-                    onSelect = { category = it },
-                    backdrop = null,
-                    modifier = Modifier
-                        .fillMaxWidth(fieldFraction)
-                        .then(
-                            if (wideScreen) {
-                                Modifier
-                            } else {
-                                Modifier.padding(horizontal = 24.dp)
-                            }
-                        ),
-                    colors = GlassTabRowDefaults.primaryColors(
-                        containerAlpha = cardGlassAlpha(),
-                    ),
+            Spacer(Modifier.height(20.dp))
+
+            // 我喜欢的歌曲
+            SectionHeading(text = "我喜欢的歌曲", horizontalPadding = titlePad)
+            Card(
+                cornerRadius = 20.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = cardPad)
+                    .cardGlass(cardShape),
+                // 底部内边距归零：留白交给「查看收藏」行自己撑，
+                // 这样文字到横线、到卡片下沿的距离才能严格相等。
+                insideMargin = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 0.dp),
+                colors = cardColors,
+            ) {
+                FavoritesCard(
+                    hasSongs = favorites.isNotEmpty(),
+                    count = favorites.size,
+                    covers = favorites.take(3).mapNotNull { it.cover },
+                    onOpen = onOpenFavorites,
                 )
             }
+
+            Spacer(Modifier.height(20.dp))
+
+            // 本地歌曲：右侧不显示专辑封面（cover = null）。
+            SectionHeading(text = "本地歌曲", horizontalPadding = titlePad)
+            Card(
+                cornerRadius = 20.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = cardPad)
+                    .cardGlass(cardShape)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onOpenDownloads,
+                    ),
+                insideMargin = PaddingValues(16.dp),
+                colors = cardColors,
+            ) {
+                if (localSongs.isEmpty()) {
+                    ExploreEmptyCard(
+                        icon = MiuixIcons.Glass.FileDownloads,
+                        title = "还没有本地歌曲",
+                        subtitle = "将歌曲下载到本地，随时离线畅听",
+                    )
+                } else {
+                    ExploreFilledCard(
+                        icon = MiuixIcons.Glass.FileDownloads,
+                        title = "共${localSongs.size}首本地歌曲",
+                        subtitle = "点击管理本地歌曲",
+                        cover = null,
+                    )
+                }
+            }
         }
+    }
+}
 
-        ConfirmDialog(
-            show = showClearHistoryDialog,
-            title = "清除搜索历史",
-            summary = "确认清空所有搜索历史吗？",
-            confirmText = "清空",
-            onConfirm = {
-                showClearHistoryDialog = false
+@Composable
+private fun SectionHeading(
+    text: String,
+    horizontalPadding: Dp = 0.dp,
+) {
+    Text(
+        text = text,
+        color = MiuixTheme.colorScheme.onSurface,
+        fontSize = 18.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(start = horizontalPadding, end = horizontalPadding, top = 4.dp, bottom = 12.dp),
+    )
+}
 
-                clearingHistory = true
-            },
-            onDismiss = { showClearHistoryDialog = false },
-            backdrop = LocalActiveBackdrop.current,
+@Composable
+private fun ExploreEmptyCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    actionText: String? = null,
+    onAction: (() -> Unit)? = null,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Image(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(28.dp),
+            colorFilter = ColorFilter.tint(MiuixTheme.colorScheme.disabledOnSecondaryVariant),
         )
-    }
-
-}
-
-@Composable
-private fun BrandEmptyState() {
-    val scheme = MiuixTheme.colorScheme
-    Box(
-        modifier = Modifier.fillMaxSize().padding(bottom = 72.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Image(
-                imageVector = MiuixIcons.Music,
-                contentDescription = null,
-                modifier = Modifier.size(46.dp),
-                colorFilter = ColorFilter.tint(scheme.onSurfaceSecondary.copy(alpha = 0.55f)),
+        Spacer(Modifier.height(14.dp))
+        Text(text = title, color = MiuixTheme.colorScheme.onSurface, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(6.dp))
+        Text(text = subtitle, color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontSize = 13.sp)
+        if (actionText != null && onAction != null) {
+            Spacer(Modifier.height(14.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(MiuixTheme.colorScheme.onSurface.copy(alpha = 0.12f)),
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
             Text(
-                text = "想听什么？搜一下吧！",
-                color = scheme.onSurfaceSecondary.copy(alpha = 0.85f),
+                text = actionText,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 fontSize = 14.sp,
+                modifier = Modifier.clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onAction,
+                ),
             )
         }
     }
 }
 
 @Composable
-private fun SearchResults(
+private fun ExploreFilledCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    cover: String?,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Image(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(28.dp),
+                colorFilter = ColorFilter.tint(MiuixTheme.colorScheme.disabledOnSecondaryVariant),
+            )
+            Spacer(Modifier.height(14.dp))
+            Text(text = title, color = MiuixTheme.colorScheme.onSurface, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(6.dp))
+            Text(text = subtitle, color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontSize = 13.sp)
+        }
+        if (!cover.isNullOrBlank()) {
+            NetCover(
+                url = cover,
+                modifier = Modifier.size(72.dp).clip(RoundedCornerShape(12.dp)),
+                corner = 12.dp,
+                maxSize = CoverSize.MEDIUM.decode,
+            )
+        }
+    }
+}
+
+/**
+ * 我喜欢的歌曲卡片。
+ *
+ * 点击只在底部「查看收藏」那一行生效；没有收藏时该行常驻但置灰不可点。
+ * 右下角的堆叠封面按参考图画：三张向右下错开，最前面一张最大。
+ */
+@Composable
+private fun FavoritesCard(
+    hasSongs: Boolean,
+    count: Int,
+    covers: List<String>,
+    onOpen: () -> Unit,
+) {
+    val scheme = MiuixTheme.colorScheme
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Image(
+                    imageVector = MiuixIcons.Glass.HealthyPhoneUsage,
+                    contentDescription = null,
+                    modifier = Modifier.size(28.dp),
+                    colorFilter = ColorFilter.tint(scheme.disabledOnSecondaryVariant),
+                )
+                Spacer(Modifier.height(14.dp))
+                Text(
+                    text = if (hasSongs) "共${count}首收藏歌曲" else "还没有喜欢的歌曲",
+                    color = scheme.onSurface,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = if (hasSongs) "点击管理收藏的歌曲" else "快收藏几首喜欢的歌曲吧",
+                    color = scheme.onSurfaceVariantSummary,
+                    fontSize = 13.sp,
+                )
+            }
+            if (covers.isNotEmpty()) {
+                Spacer(Modifier.width(12.dp))
+                FavoritesCoverStack(covers)
+            }
+        }
+        Spacer(Modifier.height(14.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(scheme.onSurface.copy(alpha = 0.12f)),
+        )
+        // 常驻的「查看收藏」行：高度固定，文字落在横线与卡片下沿的正中。
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(46.dp)
+                .clickable(
+                    enabled = hasSongs,
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onOpen,
+                ),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            Text(
+                text = "查看收藏",
+                // 分组标题 18sp Bold 下移 2px → 16sp，行高 46dp 与垂直居中不动。
+                color = if (hasSongs) scheme.primary else scheme.onSurfaceVariantSummary.copy(alpha = 0.5f),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+    }
+}
+
+/**
+ * 封面向左依次减小：最左最大、最右最小，竖直方向统一居中（上下对称）。
+ *
+ * 容器宽度按实际张数算（1 张 64dp、2 张 86dp、3 张 104dp），
+ * 整组始终贴右边，收藏只剩一两首时也不会缩到左边留一块空白。
+ */
+@Composable
+private fun FavoritesCoverStack(covers: List<String>) {
+    if (covers.isEmpty()) return
+    // 每张的宽、高，以及相对「前一张右缘」露出的宽度（第一张无需露出）。
+    val specs = listOf(
+        Triple(64.dp, 84.dp, 0.dp),
+        Triple(53.dp, 70.dp, 22.dp),
+        Triple(43.dp, 57.dp, 18.dp),
+    ).take(covers.size)
+
+    val offsets = specs.indices.map { i ->
+        var x = 0.dp
+        for (k in 1..i) x += specs[k - 1].first - specs[k].first + specs[k].third
+        x
+    }
+    val totalWidth = offsets.last() + specs.last().first
+
+    Box(modifier = Modifier.width(totalWidth).height(84.dp)) {
+        // 从右往左绘制，保证最大的那张压在最上层。
+        for (i in specs.indices.reversed()) {
+            val (w, h, _) = specs[i]
+            StackCover(
+                url = covers.getOrNull(i),
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .offset(x = offsets[i])
+                    .size(w, h),
+            )
+        }
+    }
+}
+
+@Composable
+private fun StackCover(url: String?, modifier: Modifier) {
+    val shape = RoundedCornerShape(10.dp)
+    Box(
+        modifier = modifier
+            .clip(shape)
+            .background(MiuixTheme.colorScheme.surfaceContainer),
+    ) {
+        if (!url.isNullOrBlank()) {
+            NetCover(
+                url = url,
+                modifier = Modifier.fillMaxSize(),
+                corner = 10.dp,
+                maxSize = CoverSize.MEDIUM.decode,
+            )
+        }
+    }
+}
+
+@Composable
+internal fun SearchResults(
     category: Int,
     songs: List<Song>,
     artists: List<SearchArtist>,
@@ -565,7 +541,8 @@ private fun SearchResults(
     loadingMoreSongs: Boolean,
 ) {
     val contentPadding = PaddingValues(
-        top = topPadding + SectionGap,
+        // top 完全由调用方控制，便于与 GlassTabRow 保持精确 12dp 间距。
+        top = topPadding,
         bottom = androidx.compose.foundation.layout.WindowInsets.navigationBars
             .asPaddingValues().calculateBottomPadding() + PlayBarTopReserve + SectionGap,
     )
@@ -624,7 +601,7 @@ private fun SearchResults(
 }
 
 @Composable
-private fun SongResultList(
+internal fun SongResultList(
     songs: List<Song>,
     loading: Boolean,
     listState: androidx.compose.foundation.lazy.LazyListState,
@@ -680,7 +657,7 @@ private fun SongResultList(
 }
 
 @Composable
-private fun ArtistResultRow(artist: SearchArtist, onClick: () -> Unit) {
+internal fun ArtistResultRow(artist: SearchArtist, onClick: () -> Unit) {
     val scheme = MiuixTheme.colorScheme
     Row(
         modifier = Modifier
@@ -712,7 +689,7 @@ private fun ArtistResultRow(artist: SearchArtist, onClick: () -> Unit) {
 }
 
 @Composable
-private fun AlbumResultRow(album: SearchAlbum, onClick: () -> Unit) {
+internal fun AlbumResultRow(album: SearchAlbum, onClick: () -> Unit) {
     val scheme = MiuixTheme.colorScheme
     Row(
         modifier = Modifier
@@ -753,231 +730,11 @@ private fun AlbumResultRow(album: SearchAlbum, onClick: () -> Unit) {
 }
 
 @Composable
-private fun SearchField(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    onSearch: () -> Unit,
-    onFocusChange: (Boolean) -> Unit,
+private fun RecommendCard(
+    song: Song,
     modifier: Modifier = Modifier,
-    searchMode: Boolean = false,
-    onInputCreated: (android.widget.EditText) -> Unit = {},
-    onInputReleased: () -> Unit = {},
+    onClick: () -> Unit,
 ) {
-    val scheme = MiuixTheme.colorScheme
-    val height = SearchFieldHeight
-    val primaryArgb = scheme.primary.toArgb()
-    val fieldShape = RoundedCornerShape(height / 2)
-    val density = LocalDensity.current
-
-    val searchActive = searchMode || query.isNotBlank()
-
-    val transition = updateTransition(searchActive, label = "glassSearch")
-    val progress = transition.animateFloat(
-        transitionSpec = { tween(400, easing = FastOutSlowInEasing) },
-        label = "glassSearchGeometry",
-    ) { if (it) 1f else 0f }
-    val endSpacePx = with(density) { 60.dp.toPx() }
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(height),
-    ) {
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .layout { measurable, constraints ->
-                    val endSpace = (endSpacePx * progress.value).toInt()
-                    val width = (constraints.maxWidth - endSpace).coerceAtLeast(0)
-                    val placeable = measurable.measure(
-                        constraints.copy(minWidth = width, maxWidth = width)
-                    )
-                    layout(constraints.maxWidth, placeable.height) {
-                        placeable.placeRelative(0, 0)
-                    }
-                }
-                .height(height)
-                .glassShadow(GlassShape(height / 2, smoothing = 0f), GlassShadows.Float)
-                .clip(fieldShape)
-                .cardGlass(fieldShape)
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start,
-        ) {
-            Image(
-                imageVector = MiuixIcons.Search,
-                contentDescription = null,
-                modifier = Modifier.size(21.dp),
-                colorFilter = ColorFilter.tint(scheme.onSurfaceSecondary),
-            )
-            Spacer(Modifier.size(10.dp))
-            Box(modifier = Modifier.weight(1f)) {
-                NativeSearchInput(
-                    value = query,
-                    onValueChange = onQueryChange,
-                    onSearch = onSearch,
-                    onFocusChange = onFocusChange,
-                    hint = "搜索歌曲、歌手或专辑...",
-                    primaryArgb = primaryArgb,
-                    textColorArgb = scheme.onSurface.toArgb(),
-                    hintColorArgb = scheme.onSurfaceSecondary.toArgb(),
-                    modifier = Modifier.fillMaxWidth(),
-                    onInputCreated = onInputCreated,
-                    onInputReleased = onInputReleased,
-                )
-            }
-        }
-
-    }
-}
-
-@Composable
-private fun NativeSearchInput(
-    value: String,
-    onValueChange: (String) -> Unit,
-    onSearch: () -> Unit,
-    onFocusChange: (Boolean) -> Unit,
-    hint: String,
-    primaryArgb: Int,
-    textColorArgb: Int,
-    hintColorArgb: Int,
-    modifier: Modifier = Modifier,
-    onInputCreated: (android.widget.EditText) -> Unit = {},
-    onInputReleased: () -> Unit = {},
-) {
-    val watcher = remember(onValueChange) {
-        object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: android.text.Editable?) {
-                s?.toString()?.let { if (it != value) onValueChange(it) }
-            }
-        }
-    }
-
-    AndroidView(
-        factory = { ctx ->
-            android.widget.EditText(ctx).apply {
-                setSingleLine(true)
-                background = null
-                gravity = android.view.Gravity.CENTER_VERTICAL or android.view.Gravity.START
-                setPadding(0, 0, 0, 0)
-                inputType = android.text.InputType.TYPE_CLASS_TEXT or
-                    android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-                imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH or
-                    android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI
-                textSize = 17f
-                typeface = android.graphics.Typeface.create(
-                    typeface, android.graphics.Typeface.NORMAL,
-                )
-                setOnEditorActionListener { _, actionId, _ ->
-                    if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
-                        onSearch()
-                        true
-                    } else false
-                }
-                addTextChangedListener(watcher)
-                onFocusChangeListener =
-                    android.view.View.OnFocusChangeListener { _, hasFocus -> onFocusChange(hasFocus) }
-                setOnClickListener { view ->
-                    view.requestFocus()
-                    view.post {
-                        (ctx.getSystemService(Context.INPUT_METHOD_SERVICE)
-                            as? android.view.inputmethod.InputMethodManager)
-                            ?.showSoftInput(view, 0)
-                    }
-                }
-                onInputCreated(this)
-            }
-        },
-        onRelease = { onInputReleased() },
-        update = { et ->
-            et.hint = hint
-            et.setTextColor(textColorArgb)
-            et.setHintTextColor(hintColorArgb)
-            et.highlightColor = android.graphics.Color.argb(
-                51,
-                android.graphics.Color.red(primaryArgb),
-                android.graphics.Color.green(primaryArgb),
-                android.graphics.Color.blue(primaryArgb),
-            )
-            runCatching {
-                et.textCursorDrawable?.setTint(primaryArgb)
-                et.textSelectHandle?.setTint(primaryArgb)
-                et.textSelectHandleLeft?.setTint(primaryArgb)
-                et.textSelectHandleRight?.setTint(primaryArgb)
-            }
-            if (et.text?.toString() != value) {
-                et.removeTextChangedListener(watcher)
-                et.setText(value)
-                et.setSelection(value.length)
-                et.addTextChangedListener(watcher)
-            }
-        },
-        modifier = modifier,
-    )
-}
-
-private object RecommendCache {
-    var songs: List<Song>? = null
-}
-
-@Composable
-private fun RecommendSection(onPlaySongs: (List<Song>, Int) -> Unit, topPadding: Dp) {
-    val history by MusicLibrary.history.collectAsState()
-    val playlists by MusicLibrary.playlists.collectAsState()
-
-    val songs: List<Song> = RecommendCache.songs ?: run {
-        val pool = (history + playlists.flatMap { it.songs }).distinctBy { it.id }
-        val computed = if (pool.isEmpty()) emptyList() else pool.shuffled().take(10)
-        if (computed.isNotEmpty()) RecommendCache.songs = computed
-        computed
-    }
-
-    LaunchedEffect(RecommendCache.songs) {
-        RecommendCache.songs?.forEach { s ->
-            val c = s.cover
-            if (c.isNotBlank()) CoverLoader.pin(c, CoverSize.MEDIUM.decode)
-        }
-    }
-    if (songs.isEmpty()) {
-        BrandEmptyState()
-        return
-    }
-    val scheme = MiuixTheme.colorScheme
-    val columns = songColumns()
-    val fraction = contentFraction(columns)
-    val sidePad = if (columns == 2) 0.dp else 28.dp
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth(fraction)
-            .verticalScroll(rememberScrollState())
-            .padding(top = topPadding),
-    ) {
-        Text(
-            text = "猜你想听",
-            color = scheme.onSurface,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = sidePad, end = sidePad, top = 8.dp, bottom = 14.dp),
-        )
-        LazyRow(
-            modifier = if (columns == 2) Modifier.horizontalEdgeFade(56.dp) else Modifier,
-            contentPadding = PaddingValues(horizontal = sidePad),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            itemsIndexed(songs, key = { _, s -> s.id }) { index, song ->
-                RecommendCard(song = song) { onPlaySongs(songs, index) }
-            }
-        }
-    }
-    }
-}
-
-@Composable
-private fun RecommendCard(song: Song, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
 
@@ -988,7 +745,7 @@ private fun RecommendCard(song: Song, onClick: () -> Unit) {
         label = "recommendCardHighlight",
     )
     Box(
-        modifier = Modifier
+        modifier = modifier
             .width(200.dp)
             .height(280.dp)
             .chipBounce(bounce)
@@ -1051,7 +808,7 @@ private fun RecommendCard(song: Song, onClick: () -> Unit) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun SearchHistorySection(
+internal fun SearchHistorySection(
     history: List<String>,
     topPadding: Dp,
     onPick: (String) -> Unit,
@@ -1173,7 +930,7 @@ private fun SearchHistorySection(
 }
 
 @Composable
-private fun HistoryChip(
+internal fun HistoryChip(
     keyword: String,
     removing: Boolean,
     chipBg: Color,
@@ -1242,19 +999,5 @@ private fun HistoryChip(
 
             Spacer(Modifier.width(10.dp))
         }
-    }
-}
-
-private val SearchLoadingTop = 320.dp
-
-@Composable
-private fun SearchLoadingIndicator(topInset: Dp) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        RefreshIndicator(
-            text = "正在刷新",
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = topInset + SearchLoadingTop),
-        )
     }
 }

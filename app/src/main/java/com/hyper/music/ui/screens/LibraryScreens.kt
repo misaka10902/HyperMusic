@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +20,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -34,9 +37,12 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -46,13 +52,18 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import com.hyper.music.music.CoverSize
 import com.hyper.music.music.GdApi
 import com.hyper.music.music.MusicLibrary
@@ -68,17 +79,21 @@ import com.hyper.music.ui.components.ConfirmDialog
 import com.hyper.music.ui.components.TrackRow
 import com.hyper.music.ui.components.dragReorderItem
 import com.hyper.music.ui.components.rememberDragReorderState
+import com.hyper.music.ui.utils.isAppDarkTheme
 import com.hyper.music.ui.utils.isLargeScreen
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import com.hyper.music.ui.utils.rememberWindowSizeDp
 import com.hyper.music.ui.utils.songColumns
-import com.hyper.music.ui.effects.miuix.LocalActiveBackdrop
+import com.hyper.music.ui.effects.miuix.rememberPopupBackdrop
+import com.hyper.music.ui.effects.miuix.cardGlass
+import com.hyper.music.ui.effects.miuix.cardGlassColors
+import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Checkbox
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.ListView
-import top.yukonga.miuix.kmp.icon.extended.NotesFill
+import top.yukonga.miuix.kmp.icon.glass.Item
 import top.yukonga.miuix.kmp.icon.extended.Playlist
 import top.yukonga.miuix.kmp.icon.extended.Rename
 import top.yukonga.miuix.kmp.icon.extended.SelectAll
@@ -86,8 +101,6 @@ import top.yukonga.miuix.kmp.icon.extended.WorldClock
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
-import com.hyper.music.R
 
 private val ContentBottomReserve = 145.dp
 
@@ -171,10 +184,10 @@ fun HistoryScreen(
     }
 
     if (showEmpty) {
+        // 真正的垂直居中：此前用 top = topInset + 180.dp 硬顶，位置既不受屏高影响也不居中。
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .padding(top = topInset, bottom = 72.dp)
                 .graphicsLayer { alpha = emptyAlpha },
             contentAlignment = Alignment.Center,
         ) {
@@ -194,7 +207,7 @@ fun HistoryScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer { alpha = listAlpha.value }
-                .overScrollVertical()
+                .overScrollVertical(onOffsetChanged = { offset -> scrollBehavior?.state?.overscrollOffset = offset })
                 .scrollEndHaptic(hapticFeedbackType = HapticFeedbackType.TextHandleMove)
                 .then(
                     scrollBehavior?.let { Modifier.nestedScroll(it.nestedScrollConnection) }
@@ -208,6 +221,15 @@ fun HistoryScreen(
                     pair = group,
                     startIndex = groupIndex * columns,
                     columns = columns,
+                    // 删除历史：被删条目淡出，其余条目同帧平移补位。
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = tween(200),
+                        placementSpec = spring<IntOffset>(
+                            dampingRatio = Spring.DampingRatioNoBouncy,
+                            stiffness = Spring.StiffnessMediumLow,
+                        ),
+                        fadeOutSpec = tween(260),
+                    ),
                 ) { index, song ->
                     TrackRow(
                         song = song,
@@ -252,7 +274,7 @@ fun HistoryScreen(
             confirmDelete = null
         },
         onDismiss = { confirmDelete = null },
-        backdrop = LocalActiveBackdrop.current,
+        backdrop = rememberPopupBackdrop(),
     )
 }
 
@@ -272,6 +294,11 @@ fun PlaylistScreen(
     val haptic = LocalHapticFeedback.current
 
     var selectedIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+
+    // 删除时记下「被删掉的第一个位置」：补位动画按条目离它的距离依次延迟，
+    // 于是后面的一列卡片是一节一节挪上来（火车式），而不是整片同时抽一下。
+    var deleteAnchor by remember { mutableIntStateOf(-1) }
+    val motionScope = rememberCoroutineScope()
 
     var editing by remember { mutableStateOf(false) }
     val multiSelect = editing
@@ -307,8 +334,16 @@ fun PlaylistScreen(
                         tint = scheme.error,
                         enabled = picked.isNotEmpty(),
                     ) {
+                        val removed = picked.map { it.id }.toSet()
+                        val anchor = playlists.indexOfFirst { it.id in removed }
+                        deleteAnchor = if (anchor >= 0) anchor else 0
                         onBatchDelete(picked)
                         exitEdit()
+                        // 动画跑完就恢复默认补位，之后的排序/新增不受影响。
+                        motionScope.launch {
+                            delay(600)
+                            deleteAnchor = -1
+                        }
                     },
                 ),
                 selectAllAction = SelectionAction(
@@ -342,17 +377,42 @@ fun PlaylistScreen(
             info.size.height.toFloat(),
         )
     }
+
+    // 拖到列表上下边缘时自动滚动。没有这段，歌单只能拖到当前可见的那几行，
+    // 想把它放到滚动区外面根本够不到（就是「拖不出页面」的那个问题）。
+    // 速度按「离边缘还有多远」线性加大，靠近边缘时不会像匀速滚动那样拖不动。
+    val density = LocalDensity.current
+    LaunchedEffect(dragState.isDragging) {
+        if (!dragState.isDragging) return@LaunchedEffect
+        val edge = with(density) { 96.dp.toPx() }
+        val maxStep = with(density) { 16.dp.toPx() }
+        val topBound = with(density) { topInset.toPx() }
+        while (isActive) {
+            withFrameNanos { }
+            val info = gridState.layoutInfo
+            val bottom = info.viewportEndOffset.toFloat()
+            val p = dragState.pointer.y
+            val step = when {
+                p < topBound + edge -> -maxStep * ((topBound + edge - p) / edge).coerceIn(0.15f, 1.6f)
+                p > bottom - edge -> maxStep * ((p - (bottom - edge)) / edge).coerceIn(0.15f, 1.6f)
+                else -> 0f
+            }
+            if (step != 0f) {
+                gridState.scrollBy(step)
+                dragState.onViewportScrolled()
+            }
+        }
+    }
     val insetModifier = modifier
 
     if (playlists.isEmpty()) {
         Box(
             modifier = modifier
-                .fillMaxSize()
-                .padding(top = topInset, bottom = 72.dp),
+                .fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
             LibraryEmptyState(
-                icon = MiuixIcons.NotesFill,
+                icon = MiuixIcons.Glass.Item,
                 text = "没有歌单",
             )
         }
@@ -362,10 +422,10 @@ fun PlaylistScreen(
     Box(modifier = Modifier.fillMaxSize()) {
     LazyVerticalGrid(
         state = gridState,
-        columns = GridCells.Fixed(if (wideScreen) 6 else 3),
+        columns = GridCells.Fixed(if (wideScreen) 4 else 2),
         modifier = insetModifier
             .fillMaxSize()
-            .overScrollVertical()
+            .overScrollVertical(onOffsetChanged = { offset -> scrollBehavior?.state?.overscrollOffset = offset })
             .scrollEndHaptic(hapticFeedbackType = HapticFeedbackType.TextHandleMove)
             .then(
                 scrollBehavior?.let { Modifier.nestedScroll(it.nestedScrollConnection) }
@@ -390,7 +450,22 @@ fun PlaylistScreen(
 
                     .animateItem(
                         fadeInSpec = tween(200),
-                        placementSpec = null,
+                        // 拖动排序期间不能用布局补位动画（条目是靠 graphicsLayer 平移的，
+                        // 数据一换位置再叠布局动画会先弹回原位）；其余时候都补位。
+                        placementSpec = if (dragState.isDragging || dragState.settling || dragState.suppressPlacement) {
+                            null
+                        } else if (deleteAnchor >= 0) {
+                            tween<IntOffset>(
+                                durationMillis = 260,
+                                delayMillis = (kotlin.math.abs(index - deleteAnchor) * 20).coerceAtMost(100),
+                                easing = FastOutSlowInEasing,
+                            )
+                        } else {
+                            spring<IntOffset>(
+                                dampingRatio = Spring.DampingRatioNoBouncy,
+                                stiffness = Spring.StiffnessMediumLow,
+                            )
+                        },
                         fadeOutSpec = tween(260),
                     )
                     .dragReorderItem(
@@ -425,28 +500,32 @@ fun PlaylistScreen(
 }
 
 @Composable
-private fun LibraryEmptyState(
+internal fun LibraryEmptyState(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     text: String,
+    modifier: Modifier = Modifier,
 ) {
     val scheme = MiuixTheme.colorScheme
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         androidx.compose.foundation.Image(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(46.dp),
-            colorFilter = ColorFilter.tint(scheme.onSurfaceSecondary.copy(alpha = 0.55f)),
+            modifier = Modifier.size(56.dp),
+            colorFilter = ColorFilter.tint(scheme.disabledOnSecondaryVariant),
         )
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(14.dp))
         Text(
             text = text,
-            color = scheme.onSurfaceSecondary.copy(alpha = 0.85f),
-            fontSize = 14.sp,
+            color = scheme.onSurfaceSecondary.copy(alpha = 0.7f),
+            fontSize = 17.sp,
         )
     }
 }
 
-private val PlaylistCoverCorner = 22.dp
+private val PlaylistCoverCorner = 16.dp
 
 @Composable
 private fun PlaylistCard(
@@ -463,79 +542,75 @@ private fun PlaylistCard(
             GdApi.coverUrl(it, CoverSize.MEDIUM.request).ifBlank { null }
         }
     }
+    val cardShape = RoundedCornerShape(24.dp)
 
-    Column(
+    Card(
+        cornerRadius = 24.dp,
         modifier = dragModifier
             .fillMaxWidth()
-            .alpha(if (selectionMode && !selected) 0.68f else 1f)
-
+            .cardGlass(cardShape)
             .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick,
                 onLongClick = onLongPress,
             ),
+        insideMargin = PaddingValues(12.dp),
+        colors = cardGlassColors(),
     ) {
-        Box {
-            if (cover != null) {
-                NetCover(
-                    url = cover,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f),
-                    corner = PlaylistCoverCorner,
-                    maxSize = CoverSize.MEDIUM.decode,
-                )
-            } else {
-                PlaylistCoverPlaceholder(corner = PlaylistCoverCorner)
+        Column(modifier = Modifier.alpha(if (selectionMode && !selected) 0.68f else 1f)) {
+            Box {
+                if (cover != null) {
+                    NetCover(
+                        url = cover,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(4f / 3f),
+                        corner = PlaylistCoverCorner,
+                        maxSize = CoverSize.MEDIUM.decode,
+                    )
+                } else {
+                    PlaylistCoverPlaceholder(corner = PlaylistCoverCorner)
+                }
+                if (selectionMode) {
+                    Checkbox(
+                        state = if (selected) ToggleableState.On else ToggleableState.Off,
+                        onClick = null,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                            .size(22.dp),
+                    )
+                }
             }
-            if (selectionMode) {
-                Checkbox(
-                    state = if (selected) ToggleableState.On else ToggleableState.Off,
-                    onClick = null,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                        .size(22.dp),
-                )
-            }
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = playlist.name,
+                color = scheme.onSurface,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = "${playlist.songs.size} 首",
+                color = scheme.onSurfaceSecondary,
+                fontSize = 12.sp,
+            )
         }
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = playlist.name,
-            modifier = Modifier.padding(start = 4.dp),
-            color = scheme.onSurface,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Medium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Spacer(Modifier.height(2.dp))
-        Text(
-            text = "${playlist.songs.size} 首",
-            modifier = Modifier.padding(start = 4.dp),
-            color = scheme.onSurfaceSecondary,
-            fontSize = 12.sp,
-        )
     }
 }
 
 @Composable
 private fun PlaylistCoverPlaceholder(corner: Dp) {
-    val scheme = MiuixTheme.colorScheme
+    // 无歌曲时专辑图区固定为中性灰（不跟随卡片的玻璃/壁纸色），与外围明确区分。
+    val placeholderGray = if (!isAppDarkTheme()) Color(0xFFE3E3E6) else Color(0xFF33353A)
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(1f)
+            .aspectRatio(4f / 3f)
             .clip(RoundedCornerShape(corner))
-            .background(scheme.surfaceContainer),
-        contentAlignment = Alignment.Center,
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_playlist_placeholder),
-            contentDescription = null,
-            modifier = Modifier.size(46.dp),
-            colorFilter = ColorFilter.tint(scheme.onSurfaceSecondary.copy(alpha = 0.35f)),
-        )
-    }
+            .background(placeholderGray),
+    )
 }

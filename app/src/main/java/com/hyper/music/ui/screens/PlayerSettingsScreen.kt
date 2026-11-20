@@ -20,6 +20,8 @@ import com.hyper.music.ui.basic.rememberDropdownColors
 import com.hyper.music.ui.effects.miuix.LocalAdvancedMaterialEnabled
 import com.hyper.music.ui.effects.miuix.cardGlass
 import com.hyper.music.ui.effects.miuix.cardGlassColors
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
@@ -42,7 +44,6 @@ fun PlayerSettingsScreen(
 
     DetailPage(
         title = "播放界面",
-        subtitle = "在播放界面左滑可查看歌词",
         onBack = onBack,
         backdrop = backdrop,
         header = {},
@@ -150,13 +151,22 @@ fun PlayerSettingsScreen(
                         valueRange = 14f..36f,
                         steps = 21,
                     )
+                    // 字重改成带档位的滑块（与 miuix demo 的 Slider + steps 一致）：
+                    // 7 个可选值 → 区间内 5 个内部分隔点，拖动即吸附到最近档位。
                     SliderPreference(
                         value = settings.lyricFontWeight.toFloat(),
-                        onValueChange = { MusicLibrary.setLyricFontWeight(it.toInt()) },
+                        onValueChange = { raw ->
+                            val snapped = (raw / 100f).roundToInt() * 100
+                            MusicLibrary.setLyricFontWeight(snapped.coerceIn(300, 900))
+                        },
                         title = "歌词字重",
-                        valueText = weightLabel(settings.lyricFontWeight),
+                        valueText = LyricWeights
+                            .minByOrNull { abs(it.first - settings.lyricFontWeight) }?.second,
                         valueRange = 300f..900f,
-                        steps = 5,
+                        steps = LyricWeights.size - 2,
+                        // 带刻度点的样式（与 miuix demo 的 Slider + showKeyPoints 一致）：
+                        // 每个字重档位在滑轨上都有一个点。
+                        showKeyPoints = true,
                     )
                     SwitchPreference(
                         title = "歌词翻译",
@@ -166,19 +176,27 @@ fun PlayerSettingsScreen(
                             MusicLibrary.setShowLyricsTranslation(it)
                         }
                     )
+                    SwitchPreference(
+                        title = "播放栏歌词",
+                        checked = settings.playBarLyrics,
+                        onCheckedChange = {
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            MusicLibrary.setPlayBarLyrics(it)
+                        }
+                    )
                 }
             }
         }
     }
 }
 
-private fun weightLabel(weight: Int): String = when (weight) {
-    300 -> "细"
-    400 -> "常规"
-    500 -> "中等"
-    600 -> "半粗"
-    700 -> "粗"
-    800 -> "特粗"
-    900 -> "极粗"
-    else -> "$weight"
-}
+/** 字重档位（离散可选，不再用连续滑块）。 */
+private val LyricWeights = listOf(
+    300 to "细",
+    400 to "常规",
+    500 to "中等",
+    600 to "半粗",
+    700 to "粗",
+    800 to "特粗",
+    900 to "极粗",
+)

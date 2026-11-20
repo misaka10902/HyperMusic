@@ -8,16 +8,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 
 @Composable
 fun HyperPlayerLayer(
     state: HyperPlayerState,
-    backdrop: Backdrop,
-    pageBackdrop: LayerBackdrop,
     modifier: Modifier = Modifier,
+    // 播放页内容层：供播放页上的 sheet / dialog 采样（不带任何弹层自身）。
+    contentBackdrop: LayerBackdrop? = null,
     onOpenQueue: () -> Unit = {},
     onMore: () -> Unit = {},
     onOpenSleepTimer: () -> Unit = {},
@@ -27,10 +26,14 @@ fun HyperPlayerLayer(
     }
 
     val progress = state.expandProgress
+    val base = if (contentBackdrop != null) {
+        Modifier.fillMaxSize().layerBackdrop(contentBackdrop)
+    } else {
+        Modifier.fillMaxSize()
+    }
     Box(
         modifier = modifier
-            .fillMaxSize()
-            .layerBackdrop(pageBackdrop)
+            .then(base)
             .graphicsLayer {
                 val p = state.expandProgress.coerceIn(0f, 1f)
                 translationY = (1f - p) * size.height

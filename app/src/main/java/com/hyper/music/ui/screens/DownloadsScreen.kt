@@ -1,7 +1,4 @@
 package com.hyper.music.ui.screens
-import androidx.compose.ui.graphics.graphicsLayer
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.glass.GlassIconButton
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -10,12 +7,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -34,29 +26,22 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.hyper.music.music.LocalSongs
 import com.hyper.music.music.Song
 import com.hyper.music.ui.components.ConfirmDialog
 import com.hyper.music.ui.components.SelectionAction
 import com.hyper.music.ui.components.SelectionBarState
 import com.hyper.music.ui.components.TrackRow
-import com.hyper.music.ui.effects.miuix.LocalActiveBackdrop
+import com.hyper.music.ui.effects.miuix.rememberPopupBackdrop
 import kotlinx.coroutines.launch
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.LinearEasing
-import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.FileDownloads
 import top.yukonga.miuix.kmp.icon.extended.ListView
 import top.yukonga.miuix.kmp.icon.extended.Playlist
-import top.yukonga.miuix.kmp.icon.extended.Refresh
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -78,6 +63,7 @@ fun DownloadsScreen(
     var songs by remember { mutableStateOf(emptyList<Song>()) }
     var loading by remember { mutableStateOf(true) }
     var refreshKey by remember { mutableIntStateOf(0) }
+    var refreshing by remember { mutableStateOf(false) }
 
     val readPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         Manifest.permission.READ_MEDIA_AUDIO
@@ -99,6 +85,7 @@ fun DownloadsScreen(
         loading = true
         songs = LocalSongs.scan(context)
         loading = false
+        refreshing = false
     }
 
     var selectedIds by remember { mutableStateOf<Set<String>>(emptySet()) }
@@ -141,31 +128,6 @@ fun DownloadsScreen(
         onDispose { onSelectionChange(null) }
     }
 
-    val spinTransition = rememberInfiniteTransition(label = "refreshSpin")
-    val spin by spinTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(durationMillis = 900, easing = LinearEasing)),
-        label = "refreshSpinDeg",
-    )
-    val endAction: @Composable () -> Unit = {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            GlassIconButton(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.Confirm)
-                    refreshKey++
-                },
-            ) {
-                Icon(
-                    imageVector = MiuixIcons.Refresh,
-                    contentDescription = "刷新本地歌曲列表",
-                    modifier = Modifier.size(22.dp).graphicsLayer { rotationZ = if (loading) spin else 0f },
-                    tint = MiuixTheme.colorScheme.onSurface,
-                )
-            }
-        }
-    }
-
     ConfirmDialog(
         show = confirmDelete,
         title = "删除歌曲",
@@ -178,19 +140,30 @@ fun DownloadsScreen(
             onRequestDelete(picked)
         },
         onDismiss = { confirmDelete = false },
-        backdrop = LocalActiveBackdrop.current,
+        backdrop = rememberPopupBackdrop(),
     )
 
     DetailPage(
-        title = "已下载的歌曲",
-        subtitle = "下载文件夹中共有${songs.size}首歌曲",
+        title = "本地歌曲",
         onBack = onBack,
         backdrop = backdrop,
+        multiSelect = multiSelect,
+        selectionCount = selectedIds.size,
+        onExitMultiSelect = { selectedIds = emptySet() },
         listState = rememberLazyListState(),
-        endAction = endAction,
         header = {
 
         },
+        // 下拉刷新交给 DetailPage 内部：它知道顶栏高度，刷新头才会出现在顶栏下方，
+        // 而不是从屏幕最顶端（状态栏）往下拉。
+        pullRefresh = PullRefreshSpec(
+            isRefreshing = refreshing,
+            onRefresh = {
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                refreshing = true
+                refreshKey++
+            },
+        ),
     ) {
         if (songs.isEmpty()) {
 
@@ -202,24 +175,10 @@ fun DownloadsScreen(
                         .padding(horizontal = 24.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Image(
-                            imageVector = MiuixIcons.FileDownloads,
-                            contentDescription = null,
-                            modifier = Modifier.size(46.dp),
-                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                                scheme.onSurfaceSecondary.copy(alpha = 0.55f),
-                            ),
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        Text(
-                            text = "没有已下载的歌曲",
-                            color = scheme.onSurfaceSecondary.copy(alpha = 0.85f),
-                            fontSize = 14.sp,
-                        )
-                    }
+                    LibraryEmptyState(
+                        icon = MiuixIcons.FileDownloads,
+                        text = "没有本地歌曲",
+                    )
                 }
             }
         } else {

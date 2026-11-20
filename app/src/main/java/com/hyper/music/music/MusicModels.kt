@@ -67,6 +67,8 @@ data class MusicSettings(
     val lyricFontWeight: Int = 500,
     val titleCentered: Boolean = true,
     val showLyricsTranslation: Boolean = true,
+    /** 播放条（迷你播放器）的标题改为滚动显示当前歌词。 */
+    val playBarLyrics: Boolean = false,
     val advancedMaterial: Boolean = true,
     val audioFade: Boolean = true,
     val liveLyric: Boolean = false,

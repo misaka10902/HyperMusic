@@ -8,13 +8,15 @@ plugins {
 android {
     namespace = "com.hyper.music"
     compileSdk = 37
+    // miuix 0.9.5-beta01 的 AAR 元数据要求 minCompileMinorSdk=2（即 API 37.2）
+    compileSdkMinor = 2
 
     defaultConfig {
         applicationId = "com.hyper.music"
         minSdk = 33
         targetSdk = 37
-        versionCode = 5
-        versionName = "1.0.4"
+        versionCode = 10
+        versionName = "1.1.0"
         ndk {
             abiFilters += listOf("arm64-v8a")
         }
@@ -53,6 +55,9 @@ android {
         }
     }
     packaging {
+        // 注意：不要用 packaging.dex.useLegacyPackaging 去压 dex 换体积 ——
+        // dex 保持 Stored（AGP 默认）才能安装时直接 mmap，冷启动最快。
+        // 体积只能靠 R8 真正裁代码，不做这种数字游戏。
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "/META-INF/DEPENDENCIES"
@@ -92,14 +97,9 @@ composeCompiler {
     stabilityConfigurationFiles.set(listOf(project.layout.projectDirectory.file("compose-stability.conf")))
 }
 
-configurations.all {
-    exclude(group = "top.yukonga.miuix.kmp", module = "miuix-ui-android")
-    exclude(group = "top.yukonga.miuix.kmp", module = "miuix-core-android")
-    exclude(group = "top.yukonga.miuix.kmp", module = "miuix-blur-android")
-    exclude(group = "top.yukonga.miuix.kmp", module = "miuix-shader-android")
-    exclude(group = "top.yukonga.miuix.kmp", module = "miuix-squircle-android")
-    exclude(group = "top.yukonga.miuix.kmp", module = "miuix-preference-android")
-}
+// miuix 0.9.5-beta01 全部改用 maven artifact（glass 在 0.9.5 独立为 miuix-glass-android，
+// GlassShape/GlassShadow 等移入 miuix-material-android）。自研的轻量组件以源码形式保留在
+// com.hyper.music.ui 下及 top.yukonga.miuix.kmp.basic 中的 NativeTextField。
 
 dependencies {
 
@@ -126,16 +126,24 @@ dependencies {
 
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
+    // miuix-core 由 miuix-ui 以 compile scope 传递引入，这里不再重复声明。
+    implementation(libs.miuix.ui)
+    implementation(libs.miuix.material)
+    implementation(libs.miuix.blur)
+    implementation(libs.miuix.squircle)
+    implementation(libs.miuix.preference)
+    implementation(libs.miuix.glass)
     implementation(libs.miuix.icons)
+    implementation(libs.miuix.glass.icons)
     implementation(libs.miuix.nav)
 
     implementation(libs.navigationevent.compose)
 
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.1")
-    implementation("androidx.savedstate:savedstate-compose:1.3.0")
-
-    implementation("org.jetbrains:annotations:26.1.0")
+    // 说明：以下三项经源码 import 全量核对后确认未被直接使用，已移除：
+    //   androidx.lifecycle:lifecycle-viewmodel-compose
+    //   androidx.savedstate:savedstate-compose
+    //   org.jetbrains:annotations（纯编译期注解，运行时无 class 依赖）
+    // 若后续新增 ViewModel/SavedState 用法，再按需加回。
 
     implementation("androidx.media3:media3-exoplayer:1.10.1")
 

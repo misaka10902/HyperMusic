@@ -4,7 +4,9 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.coroutineContext
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -193,6 +195,8 @@ object PlaylistImporter {
         val out = LinkedHashMap<String, Song>()
         var skipped = 0
         refs.forEachIndexed { index, ref ->
+            // 逐首匹配，允许在进度对话框里取消：每首开始前检查一次取消状态。
+            coroutineContext.ensureActive()
             val song = matchOne(ref)
             if (song != null) out.putIfAbsent(song.id, song) else skipped++
             onProgress?.invoke(index + 1, refs.size)

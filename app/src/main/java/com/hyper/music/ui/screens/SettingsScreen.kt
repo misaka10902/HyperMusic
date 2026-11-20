@@ -440,8 +440,7 @@ private fun DownloadSection(
     val haptic = LocalHapticFeedback.current
     SettingsSection(
         title = "下载设置",
-        footnote = "下载列表会列出所有在下载文件夹中保存的歌曲文件，所以可能会出现其他来源的歌曲。" +
-            "由于 GD API 限制，不建议短时间内下载大量歌曲，否则会触发风控临时拉黑，敬请谅解。",
+        footnote = "应用会列出所有在下载文件夹中保存的音乐文件",
     ) {
         ArrowPreference(
             title = "下载位置",

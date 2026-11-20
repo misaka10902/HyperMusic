@@ -1,17 +1,53 @@
 package com.hyper.music.ui.basic
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
+import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.BasicComponentColors
 import top.yukonga.miuix.kmp.basic.BasicComponentDefaults
+import top.yukonga.miuix.kmp.basic.DropdownArrowEndAction
 import top.yukonga.miuix.kmp.basic.DropdownColors
 import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.Backdrop
-import top.yukonga.miuix.kmp.glass.GlassDropdownEntriesMenu
+import top.yukonga.miuix.kmp.glass.GlassDropdownPopup
+import top.yukonga.miuix.kmp.glass.GlassPopupItem
+import top.yukonga.miuix.kmp.glass.GlassPopupSizing
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.MiuixPopupUtils.Companion.PopupLayout
 
+/**
+ * 兼容既有调用点的下拉 preference 包装。
+ *
+ * miuix 0.9.5 的官方 [top.yukonga.miuix.kmp.glass.GlassDropdownPreference] 只接受
+ * `List<String>`，选项的副标题（如音质的 128Kbps）会被丢掉。这里改用官方公开的
+ * [GlassDropdownPopup] + [GlassPopupItem] 自己渲染选项，从而支持 [DropdownEntry]
+ * 里每项的 `summary`，同时保留官方玻璃弹窗的锚点定位与进出场。
+ */
 @Composable
 @Suppress("UNUSED_PARAMETER")
 fun OverlayDropdownMenu(
@@ -32,9 +68,8 @@ fun OverlayDropdownMenu(
     onExpandedChange: ((Boolean) -> Unit)? = null,
     hyperBackdrop: Backdrop? = null,
 ) {
-    val entries = remember(entry) { listOf(entry) }
     OverlayDropdownMenu(
-        entries = entries,
+        entries = remember(entry) { listOf(entry) },
         title = title,
         modifier = modifier,
         titleColor = titleColor,
@@ -69,25 +104,113 @@ fun OverlayDropdownMenu(
     maxHeight: Dp? = null,
     enabled: Boolean = true,
     renderInRootScaffold: Boolean = true,
-    collapseOnSelection: Boolean = entries.size <= 1,
+    collapseOnSelection: Boolean = true,
     onExpandedChange: ((Boolean) -> Unit)? = null,
     hyperBackdrop: Backdrop? = null,
 ) {
-    GlassDropdownEntriesMenu(
-        entries = entries,
+    // 现有调用均为单分组；多分组时展平为单一选项列表。
+    val items = remember(entries) { entries.filter { it.enabled }.flatMap { it.items } }
+    val selectedIndex = remember(items) { items.indexOfFirst { it.selected } }
+    val sizing = remember(maxHeight) {
+        if (maxHeight != null) GlassPopupSizing(maxHeight = maxHeight) else GlassPopupSizing()
+    }
+    val haptic = LocalHapticFeedback.current
+    val currentOnExpandedChange by rememberUpdatedState(onExpandedChange)
+
+    var expanded by remember { mutableStateOf(false) }
+    val mounted = remember { mutableStateOf(false) }
+    var rowBounds by remember { mutableStateOf(Rect.Zero) }
+    val actualEnabled = enabled && items.isNotEmpty()
+    val actionColor = if (actualEnabled) {
+        MiuixTheme.colorScheme.onSurfaceVariantActions
+    } else {
+        MiuixTheme.colorScheme.disabledOnSecondaryVariant
+    }
+
+    val setExpanded: (Boolean) -> Unit = { next ->
+        if (expanded != next) {
+            expanded = next
+            if (next) mounted.value = true
+            currentOnExpandedChange?.invoke(next)
+        }
+    }
+
+    BasicComponent(
         title = title,
-        backdrop = hyperBackdrop,
-        modifier = modifier,
-        titleColor = titleColor,
         summary = summary,
+        titleColor = titleColor,
         summaryColor = summaryColor,
+        modifier = modifier.onGloballyPositioned { rowBounds = it.boundsInWindow() },
         startAction = startAction,
+        endActions = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val value = items.getOrNull(selectedIndex)?.text
+                // 展开时隐藏当前值，避免与弹窗里的选中项重复。
+                if (!expanded && !value.isNullOrEmpty()) {
+                    Text(
+                        text = value,
+                        modifier = Modifier.padding(end = 8.dp).weight(1f, fill = false),
+                        fontSize = MiuixTheme.textStyles.body2.fontSize,
+                        color = actionColor,
+                        textAlign = TextAlign.End,
+                    )
+                }
+                DropdownArrowEndAction(actionColor = actionColor)
+            }
+        },
         bottomAction = bottomAction,
         insideMargin = insideMargin,
-        maxHeight = maxHeight,
-        enabled = enabled,
-        renderInRootScaffold = renderInRootScaffold,
-        collapseOnSelection = collapseOnSelection,
-        onExpandedChange = onExpandedChange,
+        onClick = {
+            if (actualEnabled) {
+                haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
+                setExpanded(!expanded)
+            }
+        },
+        role = Role.DropdownList,
+        holdDownState = mounted.value,
+        enabled = actualEnabled,
     )
+
+    if (!mounted.value) return
+
+    PopupLayout(
+        visible = mounted,
+        enableWindowDim = false,
+        enableBackHandler = false,
+        enterTransition = EnterTransition.None,
+        exitTransition = ExitTransition.None,
+        renderInRootScaffold = renderInRootScaffold,
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            GlassDropdownPopup(
+                show = expanded,
+                onDismissRequest = { setExpanded(false) },
+                anchorBounds = rowBounds,
+                backdrop = hyperBackdrop,
+                sizing = sizing,
+            ) {
+                items.forEachIndexed { index, item ->
+                    GlassPopupItem(
+                        text = item.text,
+                        summary = item.summary,
+                        selected = index == selectedIndex,
+                        enabled = item.enabled,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                            if (collapseOnSelection) setExpanded(false)
+                            item.onClick?.invoke()
+                        },
+                    )
+                }
+            }
+        }
+    }
+
+    // 退出动画结束后再卸载宿主，避免弹窗在收起过程中被直接移除。
+    LaunchedEffect(expanded) {
+        if (!expanded && mounted.value) {
+            delay(260)
+            mounted.value = false
+        }
+    }
 }
